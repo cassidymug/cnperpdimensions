@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting Codes Guide | CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .help-container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; }
+        .help-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 3rem 2rem; text-align: center; }
+        .help-header h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .help-content { padding: 3rem; }
+        .section { margin-bottom: 3rem; }
+        .section h2 { color: #667eea; font-weight: bold; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 3px solid #764ba2; }
+        .feature-card { background: #f5f3ff; border-left: 4px solid #667eea; padding: 1.5rem; margin-bottom: 1rem; border-radius: 8px; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #dee2e6; }
+        ul.check-list { list-style: none; padding-left: 0; }
+        ul.check-list li { padding: 0.5rem 0; padding-left: 2rem; position: relative; }
+        ul.check-list li:before { content: "✓"; position: absolute; left: 0; color: #28a745; font-weight: bold; font-size: 1.2rem; }
+        .account-type-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-right: 0.5rem; }
+        .badge-asset { background: #d4edda; color: #155724; }
+        .badge-liability { background: #f8d7da; color: #721c24; }
+        .badge-equity { background: #cce5ff; color: #004085; }
+        .badge-revenue { background: #d1ecf1; color: #0c5460; }
+        .badge-expense { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="help-container">
+        <div class="help-header">
+            <h1><i class="bi bi-pie-chart me-3"></i>Accounting Codes & Chart of Accounts</h1>
+            <p class="lead">IFRS-Compliant Double-Entry Accounting System</p>
+        </div>
+
+        <div class="help-content">
+            <div class="section">
+                <h2><i class="bi bi-info-circle-fill me-2"></i>Overview</h2>
+                <p class="lead">The Chart of Accounts (COA) is the backbone of your accounting system. It provides a structured framework for recording all financial transactions and generating financial statements that comply with International Financial Reporting Standards (IFRS).</p>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-diagram-3 me-2"></i>Account Types</h2>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-wallet2 me-2"></i>Assets
+                            </div>
+                            <div class="card-body">
+                                <p class="small"><strong>Normal Balance:</strong> Debit</p>
+                                <p class="small"><strong>Examples:</strong></p>
+                                <ul class="small">
+                                    <li>Cash</li>
+                                    <li>Accounts Receivable</li>
+                                    <li>Inventory</li>
+                                    <li>Equipment</li>
+                                    <li>Buildings</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-danger mb-3">
+                            <div class="card-header bg-danger text-white">
+                                <i class="bi bi-credit-card me-2"></i>Liabilities
+                            </div>
+                            <div class="card-body">
+                                <p class="small"><strong>Normal Balance:</strong> Credit</p>
+                                <p class="small"><strong>Examples:</strong></p>
+                                <ul class="small">
+                                    <li>Accounts Payable</li>
+                                    <li>Loans Payable</li>
+                                    <li>Accrued Expenses</li>
+                                    <li>VAT Payable</li>
+                                    <li>Deferred Revenue</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-building me-2"></i>Equity
+                            </div>
+                            <div class="card-body">
+                                <p class="small"><strong>Normal Balance:</strong> Credit</p>
+                                <p class="small"><strong>Examples:</strong></p>
+                                <ul class="small">
+                                    <li>Owner's Capital</li>
+                                    <li>Retained Earnings</li>
+                                    <li>Common Stock</li>
+                                    <li>Dividends</li>
+                                    <li>Treasury Stock</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-cash-stack me-2"></i>Revenue
+                            </div>
+                            <div class="card-body">
+                                <p class="small"><strong>Normal Balance:</strong> Credit</p>
+                                <p class="small"><strong>Examples:</strong></p>
+                                <ul class="small">
+                                    <li>Sales Revenue</li>
+                                    <li>Service Revenue</li>
+                                    <li>Interest Income</li>
+                                    <li>Rental Income</li>
+                                    <li>Commission Income</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-warning mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                <i class="bi bi-receipt me-2"></i>Expenses
+                            </div>
+                            <div class="card-body">
+                                <p class="small"><strong>Normal Balance:</strong> Debit</p>
+                                <p class="small"><strong>Examples:</strong></p>
+                                <ul class="small">
+                                    <li>Cost of Goods Sold</li>
+                                    <li>Salaries Expense</li>
+                                    <li>Rent Expense</li>
+                                    <li>Utilities</li>
+                                    <li>Depreciation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-list-nested me-2"></i>Chart of Accounts Structure</h2>
+                
+                <div class="feature-card">
+                    <h4><i class="bi bi-tree-fill me-2"></i>Hierarchical Organization</h4>
+                    <p>Accounts are organized in a tree structure with parent-child relationships:</p>
+                    
+                    <div class="alert alert-light">
+                        <h6>Example Structure:</h6>
+                        <ul>
+                            <li><strong>1000 - Assets</strong> (Parent)
+                                <ul>
+                                    <li><strong>1100 - Current Assets</strong> (Parent)
+                                        <ul>
+                                            <li>1110 - Cash on Hand</li>
+                                            <li>1120 - Bank Accounts</li>
+                                            <li>1130 - Accounts Receivable</li>
+                                            <li>1140 - Inventory</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>1200 - Fixed Assets</strong> (Parent)
+                                        <ul>
+                                            <li>1210 - Land</li>
+                                            <li>1220 - Buildings</li>
+                                            <li>1230 - Equipment</li>
+                                            <li>1240 - Accumulated Depreciation</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-lightbulb-fill me-2"></i><strong>Best Practice:</strong> Use a consistent numbering system. For example:
+                        <ul class="mt-2 mb-0">
+                            <li>1000-1999: Assets</li>
+                            <li>2000-2999: Liabilities</li>
+                            <li>3000-3999: Equity</li>
+                            <li>4000-4999: Revenue</li>
+                            <li>5000-5999: Expenses</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-star-fill text-warning me-2"></i>Key Features</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-layers text-primary me-2"></i>Sub-Accounts</h4>
+                            <ul class="check-list">
+                                <li>Create unlimited sub-account levels</li>
+                                <li>Organize accounts hierarchically</li>
+                                <li>Roll up balances to parent accounts</li>
+                                <li>Flexible reporting at any level</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-percent text-success me-2"></i>VAT Integration</h4>
+                            <ul class="check-list">
+                                <li>Link VAT rates to accounts</li>
+                                <li>Automatic VAT calculations</li>
+                                <li>Separate VAT tracking accounts</li>
+                                <li>VAT reports and returns</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-shield-check text-info me-2"></i>IFRS Compliance</h4>
+                            <ul class="check-list">
+                                <li>Standard account classifications</li>
+                                <li>Proper balance sheet ordering</li>
+                                <li>Income statement categorization</li>
+                                <li>Audit-ready reports</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-lock text-danger me-2"></i>Account Controls</h4>
+                            <ul class="check-list">
+                                <li>Active/Inactive status</li>
+                                <li>Prevent deletion if used</li>
+                                <li>Parent/sub-account validation</li>
+                                <li>Balance type enforcement</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-gear-fill me-2"></i>Default System Accounts</h2>
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Code</th>
+                                <th>Account Name</th>
+                                <th>Type</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>1000</code></td>
+                                <td>Assets</td>
+                                <td><span class="account-type-badge badge-asset">Asset</span></td>
+                                <td>Parent account for all assets</td>
+                            </tr>
+                            <tr>
+                                <td><code>1100</code></td>
+                                <td>Cash & Bank</td>
+                                <td><span class="account-type-badge badge-asset">Asset</span></td>
+                                <td>Current liquid assets</td>
+                            </tr>
+                            <tr>
+                                <td><code>1130</code></td>
+                                <td>Accounts Receivable</td>
+                                <td><span class="account-type-badge badge-asset">Asset</span></td>
+                                <td>Money owed by customers</td>
+                            </tr>
+                            <tr>
+                                <td><code>1140</code></td>
+                                <td>Inventory</td>
+                                <td><span class="account-type-badge badge-asset">Asset</span></td>
+                                <td>Products for sale</td>
+                            </tr>
+                            <tr>
+                                <td><code>2000</code></td>
+                                <td>Liabilities</td>
+                                <td><span class="account-type-badge badge-liability">Liability</span></td>
+                                <td>Parent account for all liabilities</td>
+                            </tr>
+                            <tr>
+                                <td><code>2100</code></td>
+                                <td>Accounts Payable</td>
+                                <td><span class="account-type-badge badge-liability">Liability</span></td>
+                                <td>Money owed to suppliers</td>
+                            </tr>
+                            <tr>
+                                <td><code>2110</code></td>
+                                <td>VAT Payable</td>
+                                <td><span class="account-type-badge badge-liability">Liability</span></td>
+                                <td>Output VAT collected</td>
+                            </tr>
+                            <tr>
+                                <td><code>3000</code></td>
+                                <td>Equity</td>
+                                <td><span class="account-type-badge badge-equity">Equity</span></td>
+                                <td>Owner's equity and capital</td>
+                            </tr>
+                            <tr>
+                                <td><code>4000</code></td>
+                                <td>Sales Revenue</td>
+                                <td><span class="account-type-badge badge-revenue">Revenue</span></td>
+                                <td>Revenue from sales</td>
+                            </tr>
+                            <tr>
+                                <td><code>5000</code></td>
+                                <td>Cost of Goods Sold</td>
+                                <td><span class="account-type-badge badge-expense">Expense</span></td>
+                                <td>Direct costs of sold items</td>
+                            </tr>
+                            <tr>
+                                <td><code>5100</code></td>
+                                <td>Operating Expenses</td>
+                                <td><span class="account-type-badge badge-expense">Expense</span></td>
+                                <td>Business operating costs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-plus-circle me-2"></i>Creating New Accounts</h2>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-list-ol me-2"></i>Step-by-Step Guide</h5>
+                    </div>
+                    <div class="card-body">
+                        <ol>
+                            <li class="mb-3">
+                                <strong>Navigate to Chart of Accounts</strong>
+                                <p class="text-muted small">Go to Accounting → Chart of Accounts</p>
+                            </li>
+                            <li class="mb-3">
+                                <strong>Click "New Account" Button</strong>
+                                <p class="text-muted small">Opens the account creation form</p>
+                            </li>
+                            <li class="mb-3">
+                                <strong>Enter Account Details:</strong>
+                                <ul>
+                                    <li><strong>Account Code:</strong> Unique numeric code (e.g., 1150)</li>
+                                    <li><strong>Account Name:</strong> Descriptive name (e.g., "Prepaid Expenses")</li>
+                                    <li><strong>Account Type:</strong> Select from Asset, Liability, Equity, Revenue, Expense</li>
+                                    <li><strong>Parent Account:</strong> Optional - select if this is a sub-account</li>
+                                    <li><strong>VAT Code:</strong> Optional - link VAT rate if applicable</li>
+                                    <li><strong>Description:</strong> Optional notes about the account</li>
+                                </ul>
+                            </li>
+                            <li class="mb-3">
+                                <strong>Save the Account</strong>
+                                <p class="text-muted small">Account becomes immediately available for transactions</p>
+                            </li>
+                        </ol>
+
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Important:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Account codes must be unique</li>
+                                <li>Choose appropriate account types for correct financial statements</li>
+                                <li>Parent accounts should not have direct transactions</li>
+                                <li>Cannot delete accounts with transaction history</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-file-earmark-bar-graph me-2"></i>Financial Reports</h2>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center mb-3">
+                            <div class="card-body">
+                                <i class="bi bi-receipt-cutoff" style="font-size: 3rem; color: #667eea;"></i>
+                                <h5 class="card-title mt-3">Balance Sheet</h5>
+                                <p class="card-text small">Assets = Liabilities + Equity</p>
+                                <p class="text-muted small">Shows financial position at a specific date</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center mb-3">
+                            <div class="card-body">
+                                <i class="bi bi-graph-up-arrow" style="font-size: 3rem; color: #764ba2;"></i>
+                                <h5 class="card-title mt-3">Income Statement</h5>
+                                <p class="card-text small">Revenue - Expenses = Net Income</p>
+                                <p class="text-muted small">Shows profitability over a period</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center mb-3">
+                            <div class="card-body">
+                                <i class="bi bi-journal-text" style="font-size: 3rem; color: #667eea;"></i>
+                                <h5 class="card-title mt-3">Trial Balance</h5>
+                                <p class="card-text small">Debits = Credits</p>
+                                <p class="text-muted small">Verifies accounting equation balance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-lightbulb-fill text-warning me-2"></i>Best Practices</h2>
+                
+                <div class="feature-card">
+                    <ul class="check-list">
+                        <li><strong>Use Consistent Numbering:</strong> Maintain a logical numbering system across all account types</li>
+                        <li><strong>Create Sub-Accounts:</strong> Break down major categories for detailed tracking</li>
+                        <li><strong>Document Purpose:</strong> Add descriptions to clarify account usage</li>
+                        <li><strong>Review Regularly:</strong> Periodically audit your chart of accounts</li>
+                        <li><strong>Avoid Duplication:</strong> Ensure each account has a unique purpose</li>
+                        <li><strong>Plan for Growth:</strong> Leave number gaps for future account additions</li>
+                        <li><strong>Follow Standards:</strong> Align with IFRS and local accounting regulations</li>
+                        <li><strong>Inactive vs Delete:</strong> Mark unused accounts as inactive rather than deleting</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <a href="/static/help-center.html" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+                <a href="/static/chart-of-accounts.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-pie-chart me-2"></i>Open Chart of Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

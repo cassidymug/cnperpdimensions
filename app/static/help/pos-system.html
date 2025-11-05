@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System Guide | CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%); min-height: 100vh; padding: 20px; }
+        .help-container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; }
+        .help-header { background: linear-gradient(135deg, #ff6e7f, #bfe9ff); color: white; padding: 3rem 2rem; text-align: center; }
+        .help-header h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .help-content { padding: 3rem; }
+        .section { margin-bottom: 3rem; }
+        .section h2 { color: #ff6e7f; font-weight: bold; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 3px solid #bfe9ff; }
+        .section h3 { color: #ff6e7f; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; }
+        .feature-card { background: #fff5f7; border-left: 4px solid #ff6e7f; padding: 1.5rem; margin-bottom: 1rem; border-radius: 8px; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #dee2e6; }
+        ul.check-list { list-style: none; padding-left: 0; }
+        ul.check-list li { padding: 0.5rem 0; padding-left: 2rem; position: relative; }
+        ul.check-list li:before { content: "✓"; position: absolute; left: 0; color: #28a745; font-weight: bold; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+    <div class="help-container">
+        <div class="help-header">
+            <h1><i class="bi bi-cash-register me-3"></i>Point of Sale (POS) System</h1>
+            <p class="lead">Modern Touch-Optimized Retail Solution</p>
+        </div>
+
+        <div class="help-content">
+            <div class="section">
+                <h2><i class="bi bi-info-circle-fill me-2"></i>Overview</h2>
+                <p class="lead">The POS system is a modern, touch-optimized point of sale interface designed for retail environments. It provides a comprehensive solution for processing sales, managing inventory, and handling customer transactions with advanced features for taxation, currency handling, and product visualization.</p>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-star-fill text-warning me-2"></i>Core Features</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-hand-index text-primary me-2"></i>Touch-Optimized Interface</h4>
+                            <ul class="check-list">
+                                <li>Large, touch-friendly buttons for tablets</li>
+                                <li>Responsive design for all screen sizes</li>
+                                <li>No text selection during touch interactions</li>
+                                <li>Smooth animations and transitions</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-box-seam text-success me-2"></i>Product Management</h4>
+                            <ul class="check-list">
+                                <li>Product images for better customer experience</li>
+                                <li>Automatic image optimization and thumbnails</li>
+                                <li>Product categorization and filtering</li>
+                                <li>Real-time stock level tracking with alerts</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-cart text-info me-2"></i>Advanced Sales Processing</h4>
+                            <ul class="check-list">
+                                <li>Real-time shopping cart functionality</li>
+                                <li>Touch-friendly quantity management</li>
+                                <li>Automatic price calculations</li>
+                                <li>Cash and card payment processing</li>
+                                <li>Receipt generation (print or email)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-percent text-warning me-2"></i>Taxation System</h4>
+                            <ul class="check-list">
+                                <li>Dual taxation logic (taxable/non-taxable)</li>
+                                <li>Configurable VAT rates</li>
+                                <li>Tax-inclusive pricing options</li>
+                                <li>Clear tax breakdown on receipts</li>
+                                <li>Visual tax status indicators</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-credit-card me-2"></i>Payment & Transaction Management</h2>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-cash-stack me-2"></i>Amount Tracking
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>Record exact amount received</li>
+                                    <li>Automatic change calculation</li>
+                                    <li>Grand total display with taxes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-credit-card-2-front me-2"></i>Payment Methods
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>Cash payments</li>
+                                    <li>Card payments</li>
+                                    <li>Multiple payment types</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-shield-check me-2"></i>Validation
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>Sufficient payment checks</li>
+                                    <li>Transaction validation</li>
+                                    <li>Complete audit trail</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-gear me-2"></i>Configuration Options</h2>
+                
+                <h3>Business Settings</h3>
+                <div class="feature-card">
+                    <ul>
+                        <li><strong>Company Information:</strong> Name, address, contact details</li>
+                        <li><strong>Tax Registration:</strong> VAT number and tax rates</li>
+                        <li><strong>Currency Settings:</strong> Local currency and exchange rates</li>
+                        <li><strong>Receipt Customization:</strong> Header, footer, and formatting</li>
+                    </ul>
+                </div>
+
+                <h3>POS Configuration</h3>
+                <div class="feature-card">
+                    <ul>
+                        <li><strong>Display Options:</strong> Product grid layout and size</li>
+                        <li><strong>Payment Methods:</strong> Enable/disable payment types</li>
+                        <li><strong>Tax Display:</strong> Show prices with or without tax</li>
+                        <li><strong>Receipt Options:</strong> Print, email, or both</li>
+                        <li><strong>Language Settings:</strong> Interface language and localization</li>
+                    </ul>
+                </div>
+
+                <h3>Security Settings</h3>
+                <div class="feature-card">
+                    <ul>
+                        <li><strong>User Authentication:</strong> Login requirements and session management</li>
+                        <li><strong>Access Control:</strong> Role-based permissions</li>
+                        <li><strong>Audit Logging:</strong> Track all transactions and changes</li>
+                        <li><strong>Data Encryption:</strong> Secure storage of sensitive information</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-graph-up me-2"></i>Reporting & Analytics</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-bar-chart-line me-2"></i>Sales Reports
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>Daily, weekly, monthly summaries</li>
+                                    <li>Product performance analysis</li>
+                                    <li>Category sales breakdown</li>
+                                    <li>Payment method analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-receipt me-2"></i>Tax Reports
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>VAT summaries (collected & payable)</li>
+                                    <li>Taxable vs non-taxable breakdown</li>
+                                    <li>Monthly/quarterly tax summaries</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-box-seam me-2"></i>Inventory Reports
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>Current stock levels and status</li>
+                                    <li>Stock movements (incoming and outgoing)</li>
+                                    <li>Low stock alerts and reorder notifications</li>
+                                    <li>Product turnover analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-rocket-takeoff me-2"></i>Getting Started</h2>
+                
+                <div class="alert alert-info">
+                    <h5 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Prerequisites</h5>
+                    <ul class="mb-0">
+                        <li>Modern web browser (Chrome, Firefox, Safari, Edge)</li>
+                        <li>Touch screen device (recommended for optimal experience)</li>
+                        <li>Internet connection for backend integration</li>
+                        <li>Product images (optional but recommended)</li>
+                    </ul>
+                </div>
+
+                <h3>Setup Instructions</h3>
+                <div class="alert alert-light border-start border-primary border-4">
+                    <ol>
+                        <li class="mb-2"><strong>Configure business settings:</strong> Set up company information and tax rates</li>
+                        <li class="mb-2"><strong>Add products:</strong> Create product catalog with images and tax status</li>
+                        <li class="mb-2"><strong>Configure payment methods:</strong> Enable cash, card, or other payment types</li>
+                        <li class="mb-2"><strong>Test the system:</strong> Process test transactions</li>
+                        <li class="mb-2"><strong>Train staff:</strong> Provide staff training on POS operations</li>
+                        <li class="mb-2"><strong>Go live:</strong> Start processing real customer transactions</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-cpu me-2"></i>Technical Features</h2>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5><i class="bi bi-server text-primary me-2"></i>Backend</h5>
+                        <ul class="small">
+                            <li>RESTful API integration</li>
+                            <li>Real-time database sync</li>
+                            <li>Robust error handling</li>
+                            <li>Secure session management</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h5><i class="bi bi-image text-success me-2"></i>Image Processing</h5>
+                        <ul class="small">
+                            <li>Automatic optimization</li>
+                            <li>Thumbnail generation</li>
+                            <li>Watermarking support</li>
+                            <li>Multiple format support</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h5><i class="bi bi-hdd text-info me-2"></i>Data Management</h5>
+                        <ul class="small">
+                            <li>Local caching</li>
+                            <li>Offline capability</li>
+                            <li>Data synchronization</li>
+                            <li>Automatic backup</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <a href="/static/help-center.html" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+                <a href="/static/pos.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-cash-register me-2"></i>Open POS System
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

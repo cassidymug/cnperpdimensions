@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manufacturing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        .dark-mode {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        /* Original manufacturing styles below */
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .data-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: none;
+            color: white;
+            height: 100%;
+        }
+
+        .data-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .data-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Make manufacturing tabs text purple and visible */
+        #mfgTabs .nav-link {
+            color: purple !important;
+        }
+
+        #mfgTabs .nav-link.active {
+            color: purple !important;
+            font-weight: bold;
+        }
+
+        .data-card .icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .materials-card {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        }
+
+        .labor-card {
+            background: linear-gradient(135deg, #198754, #146c43);
+        }
+
+        .overhead-card {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #343a40;
+        }
+
+        .intangible-card {
+            background: linear-gradient(135deg, #6f42c1, #59359a);
+        }
+
+        .wip-card {
+            background: linear-gradient(135deg, #fd7e14, #d96d11);
+        }
+
+        .total-cost-card {
+            background: linear-gradient(135deg, #dc3545, #b02a37);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .table-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            border: none;
+            color: white;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #0056b3, var(--primary-color));
+            color: white;
+        }
+    </style>
+
+
+</head>
+
+<body data-page-id="manufacturing">
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+    <!-- Navbar Scripts -->
+    <script src="js/navbar.js?v=20250106001"></script>
+
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <div id="main-container" class="container-fluid">
+        <div id="alertPlaceholder"></div>
+        <div id="sidebar-container" class="d-none">
+            <!-- Sidebar is hidden for full-width layout -->
+        </div>
+        <div id="content-container" class="col-12">
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-3" id="mfgTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard"
+                        type="button" role="tab">Dashboard</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="bom-tab" data-bs-toggle="tab" data-bs-target="#bomEditor" type="button"
+                        role="tab">BOM Editor</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="mfgTabsContent">
+                <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                    <!-- Existing dashboard content starts here -->
+                    <!-- Page Header -->
+                    <div class="row mb-4">
+                        <div class="col">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h1 class="display-6 fw-bold">
+                                        <i class="bi bi-gear text-primary me-3"></i>
+                                        Manufacturing & Production
+                                    </h1>
+                                    <p class="lead text-muted" id="page-subtitle">IFRS-compliant cost tracking for
+                                        tangible & intangible products</p>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-info" onclick="manufacturing.init()"><i
+                                            class="bi bi-arrow-clockwise"></i> Refresh</button>
+                                    <button class="btn btn-gradient" onclick="manufacturing.openAddProductModal()"><i
+                                            class="bi bi-plus-circle me-2"></i>Add New Manufactured Product</button>
+                                    <button class="btn btn-success" data-bs-toggle="modal"
+                                        data-bs-target="#addManufacturingModal"><i
+                                            class="bi bi-plus-circle me-2"></i>Add Cost Entry</button>
+                                    <button class="btn btn-primary"
+                                        onclick="manufacturing.openCompleteProductionModal()"><i
+                                            class="bi bi-journal-text me-2"></i>Manufacture from Recipe</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                            <div class="card data-card materials-card">
+                                <div class="card-body">
+                                    <div class="icon"><i class="bi bi-box-seam"></i></div>
+                                    <h5 class="fw-bold">Raw Materials</h5>
+                                    <h3 id="totalMaterials" class="mb-0" data-currency data-amount="0">P 0.00</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                            <div class="card data-card labor-card">
+                                <div class="card-body">
+                                    <div class="icon"><i class="bi bi-person-workspace"></i></div>
+                                    <h5 class="fw-bold">Direct Labor</h5>
+                                    <h3 id="totalLabor" class="mb-0" data-currency data-amount="0">P 0.00</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                            <div class="card data-card overhead-card">
+                                <div class="card-body">
+                                    <div class="icon"><i class="bi bi-gear-wide-connected"></i></div>
+                                    <h5 class="fw-bold">Manufacturing OH</h5>
+                                    <h3 id="totalOverhead" class="mb-0" data-currency data-amount="0">P 0.00</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                            <div class="card data-card intangible-card">
+                                <div class="card-body">
+                                    <div class="icon"><i class="bi bi-lightbulb"></i></div>
+                                    <h5 class="fw-bold">Intangible Costs</h5>
+                                    <h3 id="totalIntangible" class="mb-0" data-currency data-amount="0">P 0.00</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                            <div class="card data-card wip-card">
+                                <div class="card-body">
+                                    <div class="icon"><i class="bi bi-hourglass-split"></i></div>
+                                    <h5 class="fw-bold">WIP Inventory</h5>
+                                    <h3 id="totalWIP" class="mb-0" data-currency data-amount="0">P 0.00</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                            <div class="card data-card total-cost-card">
+                                <div class="card-body">
+                                    <div class="icon"><i class="bi bi-calculator"></i></div>
+                                    <h5 class="fw-bold">Total Prod. Cost</h5>
+                                    <h3 id="totalProductionCost" class="mb-0" data-currency data-amount="0">P 0.00</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Charts -->
+                    <div class="row mb-4">
+                        <div class="col-lg-6 mb-3">
+                            <div class="card table-card">
+                                <div class="card-header"><i class="bi bi-pie-chart me-2"></i>Cost Breakdown</div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="costBreakdownChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-3">
+                            <div class="card table-card">
+                                <div class="card-header"><i class="bi bi-graph-up me-2"></i>Products by Type</div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="productTypeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 mb-4">
+        <div class="card table-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Intangible Assets - Cost Tracking</h5>
+                <span class="badge bg-warning text-dark">IFRS IAS 38 Compliant</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="intangibleProductsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Asset Code</th>
+                                <th>Asset Name</th>
+                                <th>Type</th>
+                                <th>Development Cost</th>
+                                <th>Licensing Cost</th>
+                                <th>Implementation Cost</th>
+                                <th>Total Cost</th>
+                                <th>Amortization</th>
+                                <th>Book Value</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="intangibleProductsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 mb-4">
+        <div class="card table-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-phone me-2"></i>Digital Products & Services</h5>
+                <span class="badge bg-info">IFRS 15 Revenue Recognition</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="digitalProductsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Service Code</th>
+                                <th>Service Name</th>
+                                <th>Category</th>
+                                <th>Platform Cost</th>
+                                <th>Development Cost</th>
+                                <th>Marketing Cost</th>
+                                <th>Operating Cost</th>
+                                <th>Total Cost Per Unit</th>
+                                <th>Revenue Model</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="digitalProductsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Tangible Products Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card table-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-boxes me-2"></i>Tangible Products</h5>
+                    <span class="badge bg-secondary">Manufactured & Goods</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tangibleProductsTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Product Code</th>
+                                    <th>Product Name</th>
+                                    <th>Raw Materials</th>
+                                    <th>Direct Labor</th>
+                                    <th>Manufacturing OH</th>
+                                    <th>Total Unit Cost</th>
+                                    <th>Inventory Value</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tangibleProductsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="tab-pane fade" id="bomEditor" role="tabpanel">
+        <div class="card table-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Bill of Materials Editor</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info py-2">
+                    Server converts BOM quantities to component base units when issuing from HQ. Non-base UOMs use their
+                    conversion factor and are rounded up to whole base units.
+                </div>
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Finished Product</label>
+                        <select class="form-select" id="bomProductSelect"></select>
+                        <small id="bomProductUom" class="text-muted"></small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn btn-sm btn-outline-primary" onclick="manufacturing.loadBomForEditor()"><i
+                                class="bi bi-download"></i> Load BOM</button>
+                        <button class="btn btn-sm btn-primary" onclick="manufacturing.saveBomFromEditor()"><i
+                                class="bi bi-save"></i> Save BOM</button>
+                    </div>
+                </div>
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Clone from Product</label>
+                        <div class="input-group">
+                            <select class="form-select" id="bomCloneSourceSelect"></select>
+                            <button class="btn btn-outline-secondary" type="button"
+                                onclick="manufacturing.cloneBomFromProduct()"><i class="bi bi-files"></i> Clone</button>
+                        </div>
+                        <small class="text-muted">Cloning merges lines by component (summing quantities) and keeps
+                            existing lines.</small>
+                    </div>
+                    <div class="col-md-6 text-end"></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width:30%">Component</th>
+                                <th style="width:15%">UOM</th>
+                                <th class="text-end" style="width:15%">Qty/Unit</th>
+                                <th class="text-end" style="width:15%">Unit Cost</th>
+                                <th style="width:20%">Notes</th>
+                                <th style="width:5%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bomEditorBody">
+                            <tr class="text-muted">
+                                <td colspan="6">Select a finished product and click Load BOM</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-outline-secondary" onclick="manufacturing.addBomRow()"><i
+                        class="bi bi-plus-circle"></i> Add Component</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Complete Production Modal -->
+    <div class="modal fade" id="completeProductionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-cpu me-2"></i>Manufacture from Recipe</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Recipe-Based Manufacturing:</strong> Select a recipe created in the Recipes page.
+                        The system will use the recipe's BOM to consume ingredients from branch inventory and produce
+                        finished goods to HQ.
+                    </div>
+                    <form id="completeProductionForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="bi bi-journal-text me-1"></i>Recipe (from Recipes
+                                    Page) *</label>
+                                <select class="form-select" id="cpProductSelect" required></select>
+                                <small id="cpProductUom" class="text-muted d-block mt-1"></small>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Quantity *</label>
+                                <input type="number" class="form-control" id="cpQuantity" min="1" value="1" required />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" id="cpDate" />
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Labor Cost</label>
+                                <input type="number" class="form-control" id="cpLabor" step="0.01" value="0" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Overhead Cost</label>
+                                <input type="number" class="form-control" id="cpOverhead" step="0.01" value="0" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Notes</label>
+                                <input type="text" class="form-control" id="cpNotes" />
+                            </div>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <h6 class="mb-2"><i class="bi bi-list-check me-2"></i>Recipe Ingredients (Bill of Materials)
+                            </h6>
+                            <small class="text-muted d-block mb-2">These ingredients will be consumed from branch
+                                inventory during manufacturing</small>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Component</th>
+                                            <th>SKU</th>
+                                            <th class="text-end">Qty per Unit</th>
+                                            <th>UOM</th>
+                                            <th class="text-end">Batch Qty (base)</th>
+                                            <th class="text-end">Unit Cost</th>
+                                            <th class="text-end">Total for Batch</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cpBomBody">
+                                        <tr>
+                                            <td colspan="7" class="text-muted">Select a finished product to view BOM…
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" id="cpSubmitBtn">Post to HQ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Product Modal -->
+    <div class="modal fade" id="addProductModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addProductModalLabel"><i class="bi bi-box me-2"></i>Add New Manufactured
+                        Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm" onsubmit="return false">
+                        <input type="hidden" id="productId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="productName" class="form-label">Product Name *</label>
+                                <input type="text" class="form-control" id="productName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="productSku" class="form-label">Product SKU (Code) *</label>
+                                <input type="text" class="form-control" id="productSku" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="productType" class="form-label">Product Type *</label>
+                                <select class="form-select" id="productType" required>
+                                    <option value="manufactured" selected>Manufactured (Tangible)</option>
+                                    <option value="tangible">Tangible Goods</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="productUom" class="form-label">Unit of Measure</label>
+                                <select class="form-select" id="productUom"></select>
+                                <small class="text-muted">Used as the finished product UOM</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="productCategory" class="form-label">Category</label>
+                                <input type="text" class="form-control" id="productCategory" placeholder="manufactured">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="productDescription" rows="2"></textarea>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="unitPrice" class="form-label">Unit Price</label>
+                                <input type="number" class="form-control" id="unitPrice" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="costPrice" class="form-label">Cost Price</label>
+                                <input type="number" class="form-control" id="costPrice" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="isActive" checked>
+                            <label class="form-check-label" for="isActive">
+                                Product is Active
+                            </label>
+                        </div>
+
+                        <!-- BOM builder for manufactured product -->
+                        <div class="mt-4">
+                            <h6 class="text-primary">Bill of Materials for this Product</h6>
+                            <div class="alert alert-info py-2">
+                                Pick components from your inventory. Quantities may be in non-base UOM; we'll convert to
+                                base when issuing from HQ.
+                            </div>
+                            <div class="row g-2 align-items-end mb-2">
+                                <div class="col-md-8">
+                                    <label class="form-label">Clone from Product</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="npBomCloneSourceSelect"></select>
+                                        <button class="btn btn-outline-secondary" type="button" id="npCloneBtn"
+                                            onclick="manufacturing.cloneNewProductBomFromProduct()"><i
+                                                class="bi bi-files"></i> Clone</button>
+                                    </div>
+                                    <small class="text-muted">Clones BOM lines; merges duplicates by component (summing
+                                        quantities).</small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button class="btn btn-sm btn-outline-danger" type="button" id="npClearBtn"
+                                        onclick="manufacturing.clearNewProductBom()"><i class="bi bi-trash"></i> Remove
+                                        all components</button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:30%">Component</th>
+                                            <th style="width:15%">UOM</th>
+                                            <th class="text-end" style="width:15%">Qty/Unit</th>
+                                            <th class="text-end" style="width:15%">Est. Unit Cost</th>
+                                            <th style="width:20%">Notes</th>
+                                            <th style="width:5%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="npBomBody">
+                                        <tr class="text-muted">
+                                            <td colspan="6">Click Add Component to start building the BOM</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-outline-secondary" type="button" id="npAddComponentBtn">
+                                <i class="bi bi-plus-circle"></i> Add Component
+                            </button>
+                        </div>
+
+                        <!-- Type-specific fields (legacy placeholders, hidden) -->
+                        <div id="tangibleFields" class="product-type-fields" style="display: none;">
+                            <h6 class="text-primary mt-4">Tangible Product Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="weight" class="form-label">Weight</label>
+                                    <input type="number" class="form-control" id="weight">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="dimensions" class="form-label">Dimensions (L x W x H)</label>
+                                    <input type="text" class="form-control" id="dimensions">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="digitalFields" class="product-type-fields" style="display: none;">
+                            <h6 class="text-info mt-4">Digital Product Details</h6>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="downloadUrl" class="form-label">Download URL</label>
+                                    <input type="text" class="form-control" id="downloadUrl">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="intangibleFields" class="product-type-fields" style="display: none;">
+                            <h6 class="text-warning mt-4">Intangible Asset Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="lifespan" class="form-label">Useful Lifespan (years)</label>
+                                    <input type="number" class="form-control" id="lifespan">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="manufacturing.saveProduct()">Save
+                        Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Manufacturing Cost Modal -->
+    <div class="modal fade" id="addManufacturingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add Cost Entry</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="manufacturingForm">
+                        <input type="hidden" id="manufacturingCostId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="productSelect" class="form-label">Product *</label>
+                                <select class="form-select" id="productSelect" required></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="entryDate" class="form-label">Date *</label>
+                                <input type="date" class="form-control" id="entryDate" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="batchNumber" class="form-label">Batch Number</label>
+                                <input type="text" class="form-control" id="batchNumber">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="quantity" class="form-label">Batch Size (Quantity) *</label>
+                                <input type="number" class="form-control" id="quantity" step="1" value="1" required>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="mb-3">Cost Breakdown</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="materialCost" class="form-label">Total Material Cost</label>
+                                <input type="number" class="form-control" id="materialCost" step="0.01"
+                                    placeholder="0.00">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="laborCost" class="form-label">Total Labor Cost</label>
+                                <input type="number" class="form-control" id="laborCost" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="overheadCost" class="form-label">Total Overhead Cost</label>
+                                <input type="number" class="form-control" id="overheadCost" step="0.01"
+                                    placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 bg-light p-3 rounded">
+                            <div class="col-md-6">
+                                <label for="totalCost" class="form-label fw-bold">Total Manufacturing Cost</label>
+                                <input type="number" class="form-control form-control-lg" id="totalCost" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="unitCost" class="form-label fw-bold">Cost per Unit</label>
+                                <input type="number" class="form-control form-control-lg" id="unitCost" readonly>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="costNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="costNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveCostButton">Save Cost Entry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- API Configuration -->
+    <script src="js/api-config.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+
+
+    <script>
+        class ManufacturingApp {
+            constructor() {
+                this.products = [];
+                this.costEntries = [];
+                this.charts = {};
+                this.appSettings = {};
+
+                // Element selectors
+                this.productSelect = document.getElementById('productSelect');
+                this.entryDateInput = document.getElementById('entryDate');
+                this.quantityInput = document.getElementById('quantity');
+                this.totalCostInput = document.getElementById('totalCost');
+                this.unitCostInput = document.getElementById('unitCost');
+                this.costNotesInput = document.getElementById('costNotes');
+                this.manufacturingCostIdInput = document.getElementById('manufacturingCostId');
+
+                this.materialCostInput = document.getElementById('materialCost');
+                this.laborCostInput = document.getElementById('laborCost');
+                this.overheadCostInput = document.getElementById('overheadCost');
+                this.batchNumberInput = document.getElementById('batchNumber');
+
+                this.saveCostButton = document.getElementById('saveCostButton');
+                this.addCostButton = document.getElementById('addCostButton');
+
+                this.addCostModal = new bootstrap.Modal(document.getElementById('addManufacturingModal'));
+                this.completeProductionModal = new bootstrap.Modal(document.getElementById('completeProductionModal'));
+                this.units = [];
+                // Forms
+                this.manufacturingForm = document.getElementById('manufacturingForm');
+            }
+
+            async init() {
+                await this.loadAppSettings();
+                await this.loadProducts();
+                await this.loadUnits();
+                await this.loadCostEntries();
+                this.initializeCharts();
+                this.updateSummaryStats();
+                this.initializeEventListeners();
+                this.updateProductTables();
+                document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+                const cpDate = document.getElementById('cpDate');
+                if (cpDate) cpDate.value = new Date().toISOString().split('T')[0];
+                // populate product UOM select
+                this.populateProductUomSelect();
+            }
+
+            async loadUnits() {
+                try {
+                    const resp = await fetch('/api/v1/inventory/units-of-measure');
+                    if (resp.ok) this.units = await resp.json();
+                } catch (e) { console.warn('UOM load failed', e); }
+            }
+
+            async loadAppSettings() {
+                try {
+                    const response = await fetch(API_CONFIG.ENDPOINTS.SETTINGS);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const settings = await response.json();
+                    this.appSettings = this.normalizeSettings(settings.data || settings);
+                    console.log('Normalized App Settings:', this.appSettings);
+                    this.applySettings();
+                } catch (error) {
+                    console.error('Failed to load application settings:', error);
+                    this.showAlert('Could not load application settings. Using defaults.', 'warning');
+                    this.appSettings = this.normalizeSettings({});
+                    this.applySettings();
+                }
+            }
+
+            normalizeSettings(settings) {
+                const defaults = {
+                    general: { company_name: 'CNPERP', date_format: 'YYYY-MM-DD', timezone: 'UTC' },
+                    currency: { currency: 'BWP', currency_symbol: 'P', decimal_places: 2, thousand_separator: ',', decimal_separator: '.' },
+                    regional: { locale: 'en-US' },
+                    vat: { vat_enabled: false, vat_rate: 0 }
+                };
+                const s = settings || {};
+                const normalized = {
+                    general: { ...defaults.general, ...(s.general_settings || s.general) },
+                    currency: { ...defaults.currency, ...(s.currency_settings || s.currency) },
+                    regional: { ...defaults.regional, ...(s.regional_settings || s.regional) },
+                    vat: { ...defaults.vat, ...(s.vat_settings || s.vat) }
+                };
+                normalized.currency.currency_symbol = normalized.currency.currency_symbol || normalized.currency.symbol || 'P';
+                normalized.currency.currency = normalized.currency.currency_code || normalized.currency.currency || 'BWP';
+                normalized.regional.locale = normalized.regional.locale || 'en-US';
+                return normalized;
+            }
+
+            getCurrencySettings() { return this.appSettings.currency || {}; }
+            getCurrencyCode() { return this.getCurrencySettings().currency || 'BWP'; }
+            getLocale() { return this.appSettings.regional?.locale || 'en-US'; }
+            getTimezone() { return this.appSettings.general?.timezone || 'UTC'; }
+            getVatRate() {
+                const vatSettings = this.appSettings.vat || {};
+                return vatSettings.vat_enabled ? (parseFloat(vatSettings.vat_rate) || 0) : 0;
+            }
+
+            formatCurrency(amount, currencyCode = null) {
+                const settings = this.getCurrencySettings();
+                const code = currencyCode || settings.currency || 'BWP';
+                const symbol = settings.currency_symbol || 'P';
+                const locale = this.getLocale();
+
+                try {
+                    // Use Intl.NumberFormat for robust currency formatting
+                    return new Intl.NumberFormat(locale, {
+                        style: 'currency',
+                        currency: code,
+                        minimumFractionDigits: settings.decimal_places || 2,
+                        maximumFractionDigits: settings.decimal_places || 2,
+                    }).format(amount);
+                } catch (e) {
+                    // Fallback for invalid currency codes
+                    return `${symbol} ${amount.toFixed(settings.decimal_places || 2)}`;
+                }
+            }
+
+            updateAllCurrencyDisplays() {
+                document.querySelectorAll('[data-currency]').forEach(el => {
+                    const amount = parseFloat(el.dataset.amount || '0');
+                    el.textContent = this.formatCurrency(amount);
+                });
+            }
+
+            applySettings() {
+                const companyName = this.appSettings.general?.company_name;
+                const currencySymbol = this.appSettings.currency?.currency_symbol || 'P';
+                const locale = this.getLocale();
+                const vatRate = this.getVatRate();
+
+                document.title = `Manufacturing - ${companyName || 'CNPERP'}`;
+                const pageTitle = document.querySelector('h1');
+                if (pageTitle) pageTitle.innerHTML = `<i class="bi bi-gear text-primary me-3"></i>Manufacturing & Production`;
+
+                const subtitle = document.getElementById('page-subtitle');
+                if (subtitle) {
+                    const vatText = vatRate > 0 ? ` • VAT ${vatRate}%` : '';
+                    subtitle.textContent = `IFRS-compliant cost tracking (${currencySymbol} • ${locale}${vatText})`;
+                }
+
+                this.updateAllCurrencyDisplays();
+                ['totalMaterials', 'totalLabor', 'totalOverhead', 'totalIntangible', 'totalWIP', 'totalProductionCost'].forEach(cardId => {
+                    const element = document.getElementById(cardId);
+                    if (element) this.updateSummaryCard(cardId, parseFloat(element.dataset.amount || '0'));
+                });
+            }
+
+            initializeEventListeners() {
+                document.getElementById('productType').addEventListener('change', () => this.toggleProductFields());
+
+                // Event listener for recipe selection in Complete Production modal
+                const cpProductSelect = document.getElementById('cpProductSelect');
+                if (cpProductSelect) {
+                    console.log('✅ Attaching change listener to cpProductSelect');
+                    cpProductSelect.addEventListener('change', async () => {
+                        console.log('🔔 Recipe selection changed, loading BOM...');
+                        await this.loadBomForSelectedProduct();
+                        this.showFinishedUom();
+                    });
+                } else {
+                    console.error('❌ cpProductSelect element not found during initialization');
+                }
+
+                // Event listener for quantity changes in Complete Production modal
+                const cpQuantity = document.getElementById('cpQuantity');
+                if (cpQuantity) {
+                    cpQuantity.addEventListener('input', () => {
+                        this.renderBomTable();  // Recalculate batch quantities
+                    });
+                }
+
+                // Event listener for Submit button in Complete Production modal
+                const cpSubmitBtn = document.getElementById('cpSubmitBtn');
+                if (cpSubmitBtn) {
+                    cpSubmitBtn.addEventListener('click', () => this.submitCompleteProduction());
+                }
+
+                // Event listeners for the Add/Edit Cost Modal
+                const manufacturingModal = document.getElementById('addManufacturingModal');
+                if (manufacturingModal) {
+                    const costInputs = ['materialCost', 'laborCost', 'overheadCost', 'quantity'];
+                    costInputs.forEach(id => {
+                        const input = document.getElementById(id);
+                        if (input) input.addEventListener('input', () => this.updateCalculatedCosts());
+                    });
+
+                    const saveButton = manufacturingModal.querySelector('.btn-primary');
+                    if (saveButton) saveButton.addEventListener('click', () => this.saveManufacturingCost());
+                }
+            }
+
+            toggleProductFields() {
+                // For manufactured flow we keep fields simple; no-op placeholder for legacy sections
+            }
+
+            calculateTotal() {
+                // This function is deprecated in favor of updateCalculatedCosts
+                this.updateCalculatedCosts();
+            }
+
+            updateCalculatedCosts() {
+                const materialCost = parseFloat(this.materialCostInput.value) || 0;
+                const laborCost = parseFloat(this.laborCostInput.value) || 0;
+                const overheadCost = parseFloat(this.overheadCostInput.value) || 0;
+                const quantity = parseFloat(this.quantityInput.value) || 1;
+
+                const totalCost = materialCost + laborCost + overheadCost;
+                const unitCost = totalCost / quantity;
+
+                this.totalCostInput.value = totalCost.toFixed(2);
+                this.unitCostInput.value = unitCost.toFixed(2);
+            }
+
+            async showAddCostModal(costId = null) {
+                if (this.manufacturingForm) this.manufacturingForm.reset();
+                this.manufacturingCostIdInput.value = '';
+                this.entryDateInput.value = new Date().toISOString().slice(0, 10);
+                this.quantityInput.value = 1;
+
+                if (costId) {
+                    try {
+                        const response = await fetch(`/api/v1/manufacturing/costs/${costId}`);
+                        if (!response.ok) throw new Error('Failed to fetch manufacturing cost details.');
+                        const cost = await response.json();
+
+                        this.manufacturingCostIdInput.value = cost.id;
+                        this.productSelect.value = cost.product_id;
+                        this.entryDateInput.value = cost.date;
+                        this.quantityInput.value = cost.quantity;
+                        this.batchNumberInput.value = cost.batch_number || '';
+                        this.materialCostInput.value = cost.material_cost || '';
+                        this.laborCostInput.value = cost.labor_cost || '';
+                        this.overheadCostInput.value = cost.overhead_cost || '';
+                        this.costNotesInput.value = cost.notes || '';
+                        this.updateCalculatedCosts();
+
+                    } catch (error) {
+                        console.error('Error fetching cost details:', error);
+                        this.showToast('Error fetching cost details.', 'error');
+                        return;
+                    }
+                }
+
+                this.addCostModal.show();
+            }
+
+            async saveManufacturingCost() {
+                if (this.manufacturingForm && !this.manufacturingForm.checkValidity()) {
+                    this.manufacturingForm.reportValidity();
+                    return;
+                }
+
+                const costId = this.manufacturingCostIdInput.value;
+                const url = costId ? `/api/v1/manufacturing/costs/${costId}` : '/api/v1/manufacturing/costs';
+                const method = costId ? 'PUT' : 'POST';
+
+                const costData = {
+                    product_id: this.productSelect.value,
+                    date: this.entryDateInput.value,
+                    quantity: parseFloat(this.quantityInput.value),
+                    batch_number: this.batchNumberInput.value,
+                    material_cost: parseFloat(this.materialCostInput.value) || 0,
+                    labor_cost: parseFloat(this.laborCostInput.value) || 0,
+                    overhead_cost: parseFloat(this.overheadCostInput.value) || 0,
+                    notes: this.costNotesInput.value
+                };
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(costData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Failed to save manufacturing cost.');
+                    }
+
+                    this.showToast(`Manufacturing cost ${costId ? 'updated' : 'added'} successfully.`, 'success');
+                    this.addCostModal.hide();
+                    this.loadCostEntries();
+                    this.updateSummaryStats();
+                } catch (error) {
+                    console.error('Error saving manufacturing cost:', error);
+                    this.showToast(error.message, 'error');
+                }
+            }
+
+            async loadProducts() {
+                try {
+                    const response = await fetch('/api/v1/inventory/products');
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const productsData = await response.json();
+                    this.products = productsData.map(p => ({
+                        id: p.id, code: p.sku, name: p.name, type: p.product_type || this.categorizeProduct(p.category),
+                        category: p.category, description: p.description, unit_price: (p.unit_price ?? p.selling_price) || 0, cost_price: p.cost_price || 0,
+                        is_active: p.is_active, status: p.is_active ? 'active' : 'inactive', raw_material_cost: 0, direct_labor_cost: 0,
+                        manufacturing_overhead: 0, total_cost: p.cost_price || 0, inventory_value: (p.cost_price || 0) * (p.stock_quantity || 0)
+                    }));
+                    await this.loadProductManufacturingDetails();
+                    this.populateProductSelects();
+                    this.updateProductTables();
+                } catch (error) {
+                    console.error('Error loading products:', error);
+                    this.showAlert('Error loading products from database', 'danger');
+                }
+            }
+
+            categorizeProduct(category) {
+                if (!category) return 'tangible';
+                const cat = category.toLowerCase();
+                if (['digital', 'software', 'airtime', 'subscription'].some(c => cat.includes(c))) return 'digital';
+                if (['license', 'intellectual_property'].some(c => cat.includes(c))) return 'license';
+                if (['intangible', 'patent', 'trademark', 'brand'].some(c => cat.includes(c))) return 'intangible';
+                if (cat === 'service') return 'service';
+                return 'tangible';
+            }
+
+            async loadProductManufacturingDetails() {
+                await Promise.all(this.products.map(async (product) => {
+                    try {
+                        const response = await fetch(`/api/v1/manufacturing/products/${product.id}/details`);
+                        if (response.ok) {
+                            const details = await response.json();
+                            Object.assign(product, {
+                                raw_material_cost: details.cost_summary?.material_cost || 0,
+                                direct_labor_cost: details.cost_summary?.labor_cost || 0,
+                                manufacturing_overhead: details.cost_summary?.overhead_cost || 0,
+                                total_cost: details.cost_summary?.total_cost || product.cost_price || 0,
+                            });
+                        }
+                    } catch (e) { console.debug(`No manufacturing details for product ${product.id}`); }
+                }));
+            }
+
+            async populateProductSelects() {
+                const select = document.getElementById('productSelect');
+                select.innerHTML = '<option value="">Select a product...</option>';
+                this.products.forEach(p => select.add(new Option(`${p.code} - ${p.name}`, p.id)));
+
+                // Load recipes for Complete Production modal
+                const cpSelect = document.getElementById('cpProductSelect');
+                if (cpSelect) {
+                    cpSelect.innerHTML = '<option value="">Select recipe to manufacture…</option>';
+
+                    try {
+                        // Load manufacturing products
+                        const response = await fetch('/api/v1/manufacturing/products');
+                        if (response.ok) {
+                            const data = await response.json();
+                            const productsWithBOM = Array.isArray(data) ? data : (data.products || []);
+
+                            // Load BOM for each product to verify it has a recipe
+                            const recipesWithBom = [];
+                            for (const product of productsWithBOM) {
+                                try {
+                                    const bomResponse = await fetch(`/api/v1/manufacturing/products/${product.id}/bom`);
+                                    if (bomResponse.ok) {
+                                        const bomData = await bomResponse.json();
+                                        if (bomData.bom && bomData.bom.length > 0) {
+                                            recipesWithBom.push({
+                                                ...product,
+                                                bomCount: bomData.bom.length
+                                            });
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn(`Failed to load BOM for ${product.name}:`, e);
+                                }
+                            }
+
+                            // Populate dropdown with products that have recipes
+                            if (recipesWithBom.length > 0) {
+                                const optgroup = document.createElement('optgroup');
+                                optgroup.label = `📋 Recipes (${recipesWithBom.length})`;
+                                recipesWithBom.forEach(p => {
+                                    const option = new Option(
+                                        `${p.sku || p.code} - ${p.name} (${p.bomCount} ingredients)`,
+                                        p.id
+                                    );
+                                    optgroup.appendChild(option);
+                                });
+                                cpSelect.appendChild(optgroup);
+                            } else {
+                                cpSelect.innerHTML = '<option value="">No recipes available - create recipes first</option>';
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Failed to load recipes:', e);
+                        cpSelect.innerHTML = '<option value="">Error loading recipes</option>';
+                    }
+                }
+
+                const bomSelect = document.getElementById('bomProductSelect');
+                if (bomSelect) {
+                    bomSelect.innerHTML = '<option value="">Select finished product…</option>';
+                    this.products.filter(p => p.type === 'tangible').forEach(p => bomSelect.add(new Option(`${p.code} - ${p.name}`, p.id)));
+                }
+                this.populateCloneSelect();
+                this.populateProductUomSelect();
+                this.populateNewProductCloneSelect();
+            }
+
+            populateCloneSelect() {
+                const cloneSel = document.getElementById('bomCloneSourceSelect');
+                if (!cloneSel) return;
+                const targetId = document.getElementById('bomProductSelect')?.value;
+                cloneSel.innerHTML = '<option value="">Select source product…</option>';
+                this.products.filter(p => p.type === 'tangible' && p.id !== targetId).forEach(p => cloneSel.add(new Option(`${p.code} - ${p.name}`, p.id)));
+            }
+
+            populateProductUomSelect() {
+                const uomSel = document.getElementById('productUom');
+                if (!uomSel) return;
+                uomSel.innerHTML = '<option value="">Select UOM…</option>';
+                (this.units || []).forEach(u => uomSel.add(new Option(`${u.name} (${u.abbreviation})${u.is_base_unit ? ' • base' : ''}`, u.id)));
+            }
+
+            showFinishedUom() {
+                const prodId = document.getElementById('cpProductSelect').value;
+                const p = this.products.find(x => x.id == prodId);
+                const uomEl = document.getElementById('cpProductUom');
+                if (!p || !uomEl) { if (uomEl) uomEl.textContent = ''; return; }
+                // Attempt to resolve UOM name if inventory endpoint includes it later
+                const unit = (this.units || []).find(u => u.id === p.unit_of_measure_id);
+                if (unit) {
+                    uomEl.textContent = `UOM: ${unit.name} (${unit.abbreviation})${unit.is_base_unit ? ' • base' : ''}`;
+                } else {
+                    uomEl.textContent = '';
+                }
+            }
+
+            updateProductTables() {
+                this.updateTable('tangibleProductsTableBody', this.products.filter(p => p.type === 'tangible'), this.createTangibleProductRow.bind(this));
+                this.updateTable('intangibleProductsTableBody', this.products.filter(p => ['intangible', 'license'].includes(p.type)), this.createIntangibleProductRow.bind(this));
+                this.updateTable('digitalProductsTableBody', this.products.filter(p => ['digital', 'service'].includes(p.type)), this.createDigitalProductRow.bind(this));
+            }
+
+            updateTable(bodyId, data, rowCreator) {
+                const body = document.getElementById(bodyId);
+                if (!body) { console.warn(`Table body not found: ${bodyId}`); return; }
+                body.innerHTML = '';
+                if (!data || data.length === 0) {
+                    body.innerHTML = '<tr><td colspan="100%" class="text-center text-muted"><i class="bi bi-database me-2"></i>No data found</td></tr>';
+                    return;
+                }
+                data.forEach(item => body.appendChild(rowCreator(item)));
+            }
+
+            createTangibleProductRow(p) {
+                const r = document.createElement('tr');
+                r.innerHTML = `<td><strong>${p.code}</strong></td><td>${p.name}</td>
+                    <td data-currency data-amount="${p.raw_material_cost}">${this.formatCurrency(p.raw_material_cost)}</td>
+                    <td data-currency data-amount="${p.direct_labor_cost}">${this.formatCurrency(p.direct_labor_cost)}</td>
+                    <td data-currency data-amount="${p.manufacturing_overhead}">${this.formatCurrency(p.manufacturing_overhead)}</td>
+                    <td><strong data-currency data-amount="${p.total_cost}">${this.formatCurrency(p.total_cost)}</strong></td>
+                    <td data-currency data-amount="${p.inventory_value}">${this.formatCurrency(p.inventory_value)}</td>
+                    <td><span class="badge ${p.status === 'active' ? 'bg-success' : 'bg-secondary'}">${p.status}</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="manufacturing.editProduct('${p.id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="manufacturing.deleteProduct('${p.id}')"><i class="bi bi-trash"></i></button></td>`;
+                return r;
+            }
+
+            createIntangibleProductRow(p) {
+                const r = document.createElement('tr');
+                const bookValue = (p.total_cost || 0) * 0.8; // Simplified
+                const amortization = (p.total_cost || 0) * 0.2; // Simplified
+                r.innerHTML = `<td><strong>${p.code}</strong></td><td>${p.name}</td>
+                    <td><span class="badge ${p.type === 'license' ? 'bg-info' : 'bg-warning text-dark'}">${p.type}</span></td>
+                    <td data-currency data-amount="${p.development_cost || 0}">${this.formatCurrency(p.development_cost || 0)}</td>
+                    <td data-currency data-amount="${p.licensing_cost || 0}">${this.formatCurrency(p.licensing_cost || 0)}</td>
+                    <td data-currency data-amount="${p.implementation_cost || 0}">${this.formatCurrency(p.implementation_cost || 0)}</td>
+                    <td><strong data-currency data-amount="${p.total_cost}">${this.formatCurrency(p.total_cost)}</strong></td>
+                    <td data-currency data-amount="${amortization}">${this.formatCurrency(amortization)}</td>
+                    <td><strong data-currency data-amount="${bookValue}">${this.formatCurrency(bookValue)}</strong></td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="manufacturing.editProduct('${p.id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="manufacturing.deleteProduct('${p.id}')"><i class="bi bi-trash"></i></button></td>`;
+                return r;
+            }
+
+            createDigitalProductRow(p) {
+                const r = document.createElement('tr');
+                r.innerHTML = `<td><strong>${p.code}</strong></td><td>${p.name}</td>
+                    <td><span class="badge ${p.type === 'service' ? 'bg-success' : 'bg-info'}">${p.type}</span></td>
+                    <td data-currency data-amount="${p.platform_cost || 0}">${this.formatCurrency(p.platform_cost || 0)}</td>
+                    <td data-currency data-amount="${p.development_cost || 0}">${this.formatCurrency(p.development_cost || 0)}</td>
+                    <td data-currency data-amount="${p.marketing_cost || 0}">${this.formatCurrency(p.marketing_cost || 0)}</td>
+                    <td data-currency data-amount="${p.operating_cost || 0}">${this.formatCurrency(p.operating_cost || 0)}</td>
+                    <td><strong data-currency data-amount="${p.total_cost}">${this.formatCurrency(p.total_cost)}</strong></td>
+                    <td><span class="badge bg-secondary">${p.revenue_model || 'N/A'}</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="manufacturing.editProduct('${p.id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="manufacturing.deleteProduct('${p.id}')"><i class="bi bi-trash"></i></button></td>`;
+                return r;
+            }
+
+            async loadCostEntries() {
+                try {
+                    const response = await fetch('/api/v1/manufacturing/costs');
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    this.costEntries = await response.json();
+                } catch (error) {
+                    console.error('Error loading cost entries:', error);
+                    this.showAlert('Error loading cost entries', 'danger');
+                }
+            }
+
+            async updateSummaryStats() {
+                try {
+                    const response = await fetch('/api/v1/manufacturing/stats');
+                    if (response.ok) {
+                        const stats = await response.json();
+                        this.updateSummaryCard('totalMaterials', stats.totals.total_materials);
+                        this.updateSummaryCard('totalLabor', stats.totals.total_labor);
+                        this.updateSummaryCard('totalOverhead', stats.totals.total_overhead);
+                        this.updateSummaryCard('totalIntangible', stats.totals.total_intangible);
+                        this.updateSummaryCard('totalWIP', stats.totals.total_wip);
+                        this.updateSummaryCard('totalProductionCost', stats.totals.total_manufacturing);
+                        this.updateChartsWithData(stats);
+                    } else { this.calculateSummaryStatsFallback(); }
+                } catch (error) { this.calculateSummaryStatsFallback(); }
+            }
+
+            updateSummaryCard(elementId, amount) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.dataset.amount = amount;
+                    element.textContent = this.formatCurrency(amount);
+                }
+            }
+
+            calculateSummaryStatsFallback() {
+                console.warn('Stats API failed, calculating from product data.');
+                const totals = this.products.reduce((acc, p) => {
+                    acc.totalMaterials += p.raw_material_cost || 0;
+                    acc.totalLabor += p.direct_labor_cost || 0;
+                    acc.totalOverhead += p.manufacturing_overhead || 0;
+                    if (['intangible', 'license'].includes(p.type)) {
+                        acc.totalIntangible += p.total_cost || 0;
+                    }
+                    return acc;
+                }, { totalMaterials: 0, totalLabor: 0, totalOverhead: 0, totalIntangible: 0, totalWIP: 0 });
+
+                this.updateSummaryCard('totalMaterials', totals.totalMaterials);
+                this.updateSummaryCard('totalLabor', totals.totalLabor);
+                this.updateSummaryCard('totalOverhead', totals.totalOverhead);
+                this.updateSummaryCard('totalIntangible', totals.totalIntangible);
+                this.updateSummaryCard('totalWIP', totals.totalWIP);
+                this.updateSummaryCard('totalProductionCost', totals.totalMaterials + totals.totalLabor + totals.totalOverhead + totals.totalIntangible);
+            }
+
+            updateChartsWithData(stats) {
+                if (this.charts.costBreakdown) {
+                    this.charts.costBreakdown.data.datasets[0].data = [
+                        stats.totals.total_materials, stats.totals.total_labor, stats.totals.total_overhead,
+                        stats.totals.total_intangible, stats.totals.total_wip
+                    ];
+                    this.charts.costBreakdown.update();
+                }
+                if (this.charts.productType && stats.product_type_distribution) {
+                    this.charts.productType.data.labels = stats.product_type_distribution.map(pt => pt.type);
+                    this.charts.productType.data.datasets[0].data = stats.product_type_distribution.map(pt => pt.count);
+                    this.charts.productType.update();
+                }
+            }
+
+            initializeCharts() {
+                const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } };
+                const costEl = document.getElementById('costBreakdownChart');
+                const typeEl = document.getElementById('productTypeChart');
+                if (costEl) {
+                    if (this.charts.costBreakdown) this.charts.costBreakdown.destroy();
+                    this.charts.costBreakdown = new Chart(costEl, {
+                        type: 'doughnut', data: { labels: ['Materials', 'Labor', 'Overhead', 'Intangible', 'WIP'], datasets: [{ data: [], backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#6f42c1', '#fd7e14'] }] },
+                        options: { ...commonOptions, plugins: { ...commonOptions.plugins, tooltip: { callbacks: { label: c => `${c.label}: ${this.formatCurrency(c.raw)}` } } } }
+                    });
+                }
+                if (typeEl) {
+                    if (this.charts.productType) this.charts.productType.destroy();
+                    this.charts.productType = new Chart(typeEl, {
+                        type: 'pie', data: { labels: [], datasets: [{ data: [], backgroundColor: ['#28a745', '#ffc107', '#007bff', '#6f42c1'] }] },
+                        options: { ...commonOptions, plugins: { ...commonOptions.plugins, tooltip: { callbacks: { label: c => `${c.label}: ${c.raw}` } } } }
+                    });
+                }
+            }
+
+            async saveProduct() {
+                // Create manufactured product and attach BOM in one flow
+                const form = this.getProductFormData();
+                if (!form.name || !form.sku) return this.showAlert('Product Name and SKU are required.', 'danger');
+                const bomItems = this.collectNewProductBomItems();
+                try {
+                    // 1) Create product via manufacturing endpoint (accepts category/UOM)
+                    const payload = {
+                        productName: form.name,
+                        productCode: form.sku,
+                        productDescription: form.description,
+                        productType: form.product_type || 'manufactured',
+                        category: form.category || 'manufactured',
+                        unitOfMeasureId: form.unit_of_measure_id || null,
+                        unitPrice: form.unit_price || 0,
+                    };
+                    const resp = await fetch('/api/v1/manufacturing/products', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                    });
+                    if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({}));
+                        throw new Error(err.detail || `Failed to create product (${resp.status})`);
+                    }
+                    const created = await resp.json();
+                    const newId = created.id;
+
+                    // 2) If BOM provided, set it
+                    if (bomItems.length) {
+                        const bomResp = await fetch(`/api/v1/manufacturing/products/${newId}/bom`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: bomItems })
+                        });
+                        if (!bomResp.ok) {
+                            const err = await bomResp.json().catch(() => ({}));
+                            throw new Error(err.detail || 'Product created but BOM failed to save');
+                        }
+                    }
+
+                    this.showAlert('Manufactured product created successfully' + (bomItems.length ? ' with BOM.' : '.'), 'success');
+                    await this.loadProducts();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+                    if (modal) modal.hide();
+
+                    // Optional: Open Complete Production modal pre-selected
+                    const cpSel = document.getElementById('cpProductSelect');
+                    if (cpSel) {
+                        cpSel.value = newId;
+                        this.loadBomForSelectedProduct();
+                        this.completeProductionModal.show();
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.showAlert(`Error: ${e.message}`, 'danger');
+                }
+            }
+
+            getProductFormData() {
+                return {
+                    id: document.getElementById('productId').value,
+                    name: document.getElementById('productName').value,
+                    sku: document.getElementById('productSku').value,
+                    description: document.getElementById('productDescription').value,
+                    product_type: document.getElementById('productType').value,
+                    category: document.getElementById('productCategory').value || 'manufactured',
+                    unit_price: parseFloat(document.getElementById('unitPrice').value) || 0,
+                    cost_price: parseFloat(document.getElementById('costPrice').value) || 0,
+                    is_active: document.getElementById('isActive').checked,
+                    unit_of_measure_id: document.getElementById('productUom').value || null,
+                };
+            }
+
+            openAddProductModal() {
+                document.getElementById('productForm').reset();
+                document.getElementById('productId').value = '';
+                document.getElementById('addProductModalLabel').textContent = 'Add New Manufactured Product';
+                document.getElementById('productType').value = 'manufactured';
+                document.getElementById('productCategory').value = 'manufactured';
+                this.populateProductUomSelect();
+                this.populateNewProductCloneSelect();
+                // reset BOM body
+                const body = document.getElementById('npBomBody');
+                if (body) body.innerHTML = '<tr class="text-muted"><td colspan="6">Click Add Component to start building the BOM</td></tr>';
+
+                // Remove any existing event listener and add a new one
+                const addBtn = document.getElementById('npAddComponentBtn');
+                if (addBtn) {
+                    // Clone the button to remove all existing event listeners
+                    const newBtn = addBtn.cloneNode(true);
+                    addBtn.parentNode.replaceChild(newBtn, addBtn);
+
+                    // Add single event listener
+                    newBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Button clicked, calling addNewProductBomRow');
+                        this.addNewProductBomRow();
+                    });
+                }
+                new bootstrap.Modal(document.getElementById('addProductModal')).show();
+            }
+
+            async editProduct(productId) {
+                const p = this.products.find(p => p.id == productId);
+                if (!p) return;
+                document.getElementById('productForm').reset();
+                document.getElementById('addProductModalLabel').textContent = `Edit Manufactured Product: ${p.name}`;
+                Object.keys(p).forEach(key => {
+                    const el = document.getElementById({ code: 'productSku', name: 'productName', type: 'productType' }[key] || key);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = p[key];
+                        else el.value = p[key];
+                    }
+                });
+                document.getElementById('productType').value = 'manufactured';
+                document.getElementById('productCategory').value = p.category || 'manufactured';
+                document.getElementById('costPrice').value = p.total_cost;
+                this.populateProductUomSelect();
+                new bootstrap.Modal(document.getElementById('addProductModal')).show();
+            }
+
+            async deleteProduct(productId) {
+                if (!confirm('Are you sure?')) return;
+                try {
+                    const response = await fetch(`/api/v1/inventory/products/${productId}`, { method: 'DELETE' });
+                    if (!response.ok) throw new Error((await response.json()).detail || 'Failed to delete');
+                    this.showAlert('Product deleted.', 'success');
+                    await this.loadProducts();
+                } catch (error) { this.showAlert(`Error: ${error.message}`, 'danger'); }
+            }
+
+            showAlert(message, type = 'info') {
+                const placeholder = document.getElementById('alertPlaceholder');
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                placeholder.append(wrapper);
+                setTimeout(() => wrapper.remove(), 5000);
+            }
+
+            async openCompleteProductionModal() {
+                console.log('Opening complete production modal');
+                // reset
+                const form = document.getElementById('completeProductionForm');
+                if (form) form.reset();
+                // repopulate products with recipes
+                await this.populateProductSelects();
+                console.log('Products populated');
+                // clear BOM
+                const tbody = document.getElementById('cpBomBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-muted">Select a recipe to view ingredients…</td></tr>';
+                    console.log('BOM table cleared');
+                }
+                this.completeProductionModal.show();
+            }
+
+            async loadBomForSelectedProduct() {
+                const productId = document.getElementById('cpProductSelect').value;
+                if (!productId) {
+                    console.log('No product selected');
+                    return;
+                }
+                console.log('Loading BOM for product:', productId);
+                try {
+                    this.currentBom = [];
+                    const resp = await fetch(`/api/v1/manufacturing/products/${productId}/bom`);
+                    console.log('BOM API response status:', resp.status);
+                    if (!resp.ok) throw new Error(`Failed to load BOM (${resp.status})`);
+                    const data = await resp.json();
+                    console.log('BOM data received:', data);
+                    this.currentBom = data.bom || [];
+                    console.log('Current BOM items:', this.currentBom.length);
+                    this.renderBomTable();
+                } catch (e) {
+                    console.error('Error loading BOM:', e);
+                    this.showAlert('Failed to load BOM', 'danger');
+                }
+            }
+
+            renderBomTable() {
+                const tbody = document.getElementById('cpBomBody');
+                if (!tbody) {
+                    console.error('cpBomBody tbody not found!');
+                    return;
+                }
+                const qty = parseInt(document.getElementById('cpQuantity').value || '1', 10);
+                console.log('Rendering BOM table with', this.currentBom?.length, 'items, quantity:', qty);
+                if (!this.currentBom || this.currentBom.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-muted">No BOM items</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = '';
+                this.currentBom.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const perUnit = parseFloat(item.quantity || 0);
+                    const batchQty = perUnit * qty;
+
+                    // Look up the product to get the actual cost price
+                    const component = this.products.find(p => p.id === item.component_id);
+                    let unitCost = parseFloat(item.unit_cost || 0);
+
+                    // If no unit_cost in BOM, try to get from product
+                    if (unitCost === 0 && component) {
+                        // Use cost_price first, then selling_price as fallback
+                        unitCost = parseFloat(component.cost_price || component.selling_price || 0);
+                        console.log(`Using product cost for ${item.component_name}: ${unitCost}`);
+                    }
+
+                    const unit = item.unit_of_measure || (this.units || []).find(u => u.id === item.unit_of_measure_id);
+                    let baseBatch = batchQty;
+                    if (unit && !unit.is_base_unit) {
+                        const f = parseFloat(unit.conversion_factor || '1') || 1;
+                        baseBatch = Math.ceil(batchQty * f);
+                    }
+
+                    // Calculate total: unit cost × batch quantity (in base units for accurate costing)
+                    const total = unitCost * baseBatch;
+
+                    console.log(`BOM item: ${item.component_name}, perUnit: ${perUnit}, batchQty: ${batchQty}, baseBatch: ${baseBatch}, unitCost: ${unitCost}, total: ${total}`);
+
+                    tr.innerHTML = `
+                        <td>${item.component_name || item.component_id}</td>
+                        <td>${item.component_sku || ''}</td>
+                        <td class="text-end">${perUnit.toFixed(2)}</td>
+                        <td>${unit ? `${unit.abbreviation || ''}${unit.is_base_unit ? ' • base' : ''}` : ''}</td>
+                        <td class="text-end">${baseBatch.toFixed(2)}</td>
+                        <td class="text-end">${this.formatCurrency(unitCost)}</td>
+                        <td class="text-end">${this.formatCurrency(total)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            onBomProductChanged() {
+                const prodId = document.getElementById('bomProductSelect').value;
+                const p = this.products.find(x => x.id == prodId);
+                const el = document.getElementById('bomProductUom');
+                if (!el) return;
+                if (!p) { el.textContent = ''; return; }
+                const unit = (this.units || []).find(u => u.id === p.unit_of_measure_id);
+                el.textContent = unit ? `UOM: ${unit.name} (${unit.abbreviation})${unit.is_base_unit ? ' • base' : ''}` : '';
+            }
+
+            async loadBomForEditor() {
+                const prodId = document.getElementById('bomProductSelect').value;
+                if (!prodId) { this.showAlert('Select finished product', 'warning'); return; }
+                try {
+                    const resp = await fetch(`/api/v1/manufacturing/products/${prodId}/bom`);
+                    if (!resp.ok) throw new Error('Failed to load BOM');
+                    const data = await resp.json();
+                    const items = data.bom || [];
+                    this.renderBomEditor(items);
+                } catch (e) {
+                    console.error(e); this.showAlert('Failed to load BOM', 'danger');
+                }
+            }
+
+            renderBomEditor(items) {
+                const body = document.getElementById('bomEditorBody');
+                body.innerHTML = '';
+                const ensureRow = (item = {}) => {
+                    const tr = document.createElement('tr');
+                    const compSel = document.createElement('select');
+                    compSel.className = 'form-select form-select-sm';
+                    const uomSel = document.createElement('select');
+                    uomSel.className = 'form-select form-select-sm';
+                    const uomHint = document.createElement('div');
+                    uomHint.className = 'form-text text-muted';
+                    const qty = document.createElement('input'); qty.type = 'number'; qty.className = 'form-control form-control-sm text-end'; qty.step = '0.0001'; qty.value = item.quantity ?? '';
+                    const cost = document.createElement('input'); cost.type = 'number'; cost.className = 'form-control form-control-sm text-end'; cost.step = '0.01'; cost.value = item.unit_cost ?? '';
+                    const notes = document.createElement('input'); notes.type = 'text'; notes.className = 'form-control form-control-sm'; notes.value = item.notes ?? '';
+                    const del = document.createElement('button'); del.className = 'btn btn-sm btn-outline-danger'; del.innerHTML = '<i class="bi bi-trash"></i>';
+                    del.onclick = () => tr.remove();
+
+                    // populate selects
+                    compSel.innerHTML = '<option value="">Select component…</option>';
+                    (this.products || []).forEach(p => compSel.add(new Option(`${p.code} - ${p.name}`, p.id)));
+                    if (item.component_id) compSel.value = item.component_id;
+
+                    uomSel.innerHTML = '<option value="">Select UOM…</option>';
+                    (this.units || []).forEach(u => uomSel.add(new Option(`${u.name} (${u.abbreviation})${u.is_base_unit ? ' • base' : ''}`, u.id)));
+                    if (item.unit_of_measure_id) uomSel.value = item.unit_of_measure_id;
+                    const updateUomHint = () => {
+                        const u = (this.units || []).find(x => x.id === uomSel.value);
+                        if (!u) { uomHint.textContent = ''; return; }
+                        const factor = parseFloat(u.conversion_factor || '1') || 1;
+                        if (u.is_base_unit) {
+                            uomHint.textContent = `Base unit`;
+                        } else {
+                            let base = u.base_unit || (this.units || []).find(b => b.id === u.base_unit_id);
+                            const baseLbl = base ? (base.abbreviation || base.name || 'base') : 'base';
+                            uomHint.textContent = `1 ${u.abbreviation || u.name} = ${factor} ${baseLbl}`;
+                        }
+                    };
+                    uomSel.addEventListener('change', updateUomHint);
+                    updateUomHint();
+
+                    // assemble row
+                    const td1 = document.createElement('td'); td1.appendChild(compSel);
+                    const td2 = document.createElement('td'); td2.appendChild(uomSel); td2.appendChild(uomHint);
+                    const td3 = document.createElement('td'); td3.className = 'text-end'; td3.appendChild(qty);
+                    const td4 = document.createElement('td'); td4.className = 'text-end'; td4.appendChild(cost);
+                    const td5 = document.createElement('td'); td5.appendChild(notes);
+                    const td6 = document.createElement('td'); td6.className = 'text-end'; td6.appendChild(del);
+                    // store refs
+                    tr._bom = { compSel, uomSel, qty, cost, notes };
+                    body.appendChild(tr);
+                };
+                if (!items.length) { ensureRow(); return; }
+                items.forEach(it => ensureRow(it));
+            }
+
+            addBomRow() { this.renderBomEditor([]); this.renderBomEditor([{}]); }
+
+            // --- New Product BOM builder helpers ---
+            async addNewProductBomRow(ifEmptyOnly = false) {
+                console.log('addNewProductBomRow called!');
+                let item = null;
+                if (arguments.length > 1) {
+                    item = arguments[1];
+                }
+                const body = document.getElementById('npBomBody');
+                if (!body) { console.warn('npBomBody not found'); return; }
+
+                // Count existing non-placeholder rows
+                const existingRows = body.querySelectorAll('tr:not(.text-muted)');
+                console.log('Existing rows count:', existingRows.length);
+
+                // Only clear placeholder on first row
+                const placeholder = body.querySelector('.text-muted');
+                if (placeholder && existingRows.length === 0) {
+                    placeholder.remove();
+                }
+
+                // Use cached products instead of fetching every time
+                let componentProducts = this.products || [];
+                if (componentProducts.length === 0) {
+                    console.warn('No products available');
+                    return;
+                }
+
+                if (!this.units || this.units.length === 0) {
+                    try { await this.loadUnits(); } catch (e) { console.warn('Failed to load units before adding BOM row', e); }
+                }
+
+                console.log('Creating new BOM row...');
+
+                // Create row element programmatically
+                const tr = document.createElement('tr');
+                tr.className = 'bom-row';
+
+                // Component select
+                const td1 = document.createElement('td');
+                const compSel = document.createElement('select');
+                compSel.className = 'form-select form-select-sm bom-component-select';
+                compSel.innerHTML = '<option value="">Select component…</option>';
+                componentProducts
+                    .filter(p => p.is_active !== false)
+                    .forEach(p => {
+                        const option = document.createElement('option');
+                        option.value = p.id;
+                        option.textContent = `${p.code} - ${p.name}`;
+                        compSel.appendChild(option);
+                    });
+                td1.appendChild(compSel);
+
+                // UOM select
+                const td2 = document.createElement('td');
+                const uomSel = document.createElement('select');
+                uomSel.className = 'form-select form-select-sm bom-uom-select';
+                uomSel.innerHTML = '<option value="">Select UOM…</option>';
+                (this.units || []).forEach(u => {
+                    const option = document.createElement('option');
+                    option.value = u.id;
+                    option.textContent = `${u.name} (${u.abbreviation})${u.is_base_unit ? ' • base' : ''}`;
+                    uomSel.appendChild(option);
+                });
+                const uomHint = document.createElement('div');
+                uomHint.className = 'form-text text-muted bom-uom-hint';
+                td2.appendChild(uomSel);
+                td2.appendChild(uomHint);
+
+                // Quantity input
+                const td3 = document.createElement('td');
+                td3.className = 'text-end';
+                const qty = document.createElement('input');
+                qty.type = 'number';
+                qty.step = '0.0001';
+                qty.className = 'form-control form-control-sm text-end bom-qty';
+                td3.appendChild(qty);
+
+                // Cost input
+                const td4 = document.createElement('td');
+                td4.className = 'text-end';
+                const cost = document.createElement('input');
+                cost.type = 'number';
+                cost.step = '0.01';
+                cost.className = 'form-control form-control-sm text-end bom-cost';
+                td4.appendChild(cost);
+
+                // Notes input
+                const td5 = document.createElement('td');
+                const notes = document.createElement('input');
+                notes.type = 'text';
+                notes.className = 'form-control form-control-sm bom-notes';
+                td5.appendChild(notes);
+
+                // Delete button
+                const td6 = document.createElement('td');
+                td6.className = 'text-end';
+                const del = document.createElement('button');
+                del.type = 'button';
+                del.className = 'btn btn-sm btn-outline-danger bom-delete';
+                del.innerHTML = '<i class="bi bi-trash"></i>';
+                del.onclick = () => tr.remove();
+                td6.appendChild(del);
+
+                // Assemble row
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                tr.appendChild(td3);
+                tr.appendChild(td4);
+                tr.appendChild(td5);
+                tr.appendChild(td6);
+
+                // Store refs
+                tr._bom = { compSel, uomSel, qty, cost, notes };
+
+                // Add event listeners
+                compSel.addEventListener('change', () => {
+                    const selectedProduct = componentProducts.find(p => p.id == compSel.value);
+                    if (selectedProduct) {
+                        cost.value = selectedProduct.cost_price || 0;
+                        if (selectedProduct.unit_of_measure_id) {
+                            uomSel.value = selectedProduct.unit_of_measure_id;
+                            updateUomHint();
+                        }
+                    }
+                });
+
+                const updateUomHint = () => {
+                    const u = (this.units || []).find(x => x.id === uomSel.value);
+                    if (!u) { uomHint.textContent = ''; return; }
+                    if (u.is_base_unit) uomHint.textContent = 'Base unit'; else uomHint.textContent = `1 ${u.abbreviation || u.name} = ${u.conversion_factor} ${(this.units || []).find(b => b.id === u.base_unit_id)?.abbreviation || 'base'}`;
+                };
+                uomSel.addEventListener('change', updateUomHint);
+
+                // Apply defaults if provided via item
+                if (item) {
+                    if (item.component_id) compSel.value = item.component_id;
+                    if (item.unit_of_measure_id) { uomSel.value = item.unit_of_measure_id; updateUomHint(); }
+                    if (typeof item.quantity !== 'undefined') qty.value = item.quantity;
+                    if (typeof item.unit_cost !== 'undefined' && item.unit_cost !== null) cost.value = item.unit_cost;
+                    if (item.notes) notes.value = item.notes;
+                }
+
+                // Append to body
+                body.appendChild(tr);
+                console.log('BOM row added successfully, total rows:', body.querySelectorAll('tr:not(.text-muted)').length);
+            }
+
+            populateNewProductCloneSelect() {
+                const cloneSel = document.getElementById('npBomCloneSourceSelect');
+                if (!cloneSel) return;
+                cloneSel.innerHTML = '<option value="">Select source product…</option>';
+                (this.products || []).filter(p => p.type === 'tangible').forEach(p => cloneSel.add(new Option(`${p.code} - ${p.name}`, p.id)));
+            }
+
+            clearNewProductBom() {
+                const body = document.getElementById('npBomBody');
+                if (!body) return;
+                body.innerHTML = '<tr class="text-muted"><td colspan="6">Click Add Component to start building the BOM</td></tr>';
+            }
+
+            async cloneNewProductBomFromProduct() {
+                const sourceId = document.getElementById('npBomCloneSourceSelect')?.value;
+                if (!sourceId) { this.showAlert('Select a source product to clone from', 'warning'); return; }
+                try {
+                    const resp = await fetch(`/api/v1/manufacturing/products/${sourceId}/bom`);
+                    if (!resp.ok) throw new Error('Failed to load source BOM');
+                    const data = await resp.json();
+                    const sourceItems = data.bom || [];
+                    const body = document.getElementById('npBomBody');
+                    if (!body) return;
+                    // Collect existing rows into a map by component_id
+                    const existing = new Map();
+                    for (const tr of Array.from(body.querySelectorAll('tr'))) {
+                        if (!tr._bom) continue;
+                        const { compSel, uomSel, qty, cost, notes } = tr._bom;
+                        if (!compSel.value) continue;
+                        const key = compSel.value;
+                        const obj = existing.get(key) || { component_id: compSel.value, unit_of_measure_id: uomSel.value || null, quantity: 0, unit_cost: parseFloat(cost.value || '0') || 0, notes: notes.value || null };
+                        obj.quantity += parseFloat(qty.value || '0') || 0;
+                        // keep highest cost
+                        obj.unit_cost = Math.max(parseFloat(obj.unit_cost || '0') || 0, parseFloat(cost.value || '0') || 0);
+                        existing.set(key, obj);
+                    }
+                    // Merge source
+                    for (const it of sourceItems) {
+                        const key = it.component_id;
+                        const obj = existing.get(key) || { component_id: it.component_id, unit_of_measure_id: it.unit_of_measure_id || null, quantity: 0, unit_cost: parseFloat(it.unit_cost || '0') || 0, notes: it.notes || null };
+                        obj.quantity += parseFloat(it.quantity || '0') || 0;
+                        // prefer existing UOM if present
+                        obj.unit_of_measure_id = obj.unit_of_measure_id || (it.unit_of_measure_id || null);
+                        // keep higher unit cost
+                        obj.unit_cost = Math.max(parseFloat(obj.unit_cost || '0') || 0, parseFloat(it.unit_cost || '0') || 0);
+                        existing.set(key, obj);
+                    }
+                    // Render merged into modal
+                    body.innerHTML = '';
+                    const items = Array.from(existing.values());
+                    if (!items.length) {
+                        this.clearNewProductBom();
+                    } else {
+                        items.forEach(it => this.addNewProductBomRow(false, it));
+                    }
+                    this.showAlert('Cloned and merged BOM into new product', 'success');
+                } catch (e) {
+                    console.error(e);
+                    this.showAlert('Failed to clone BOM', 'danger');
+                }
+            }
+
+            collectNewProductBomItems() {
+                const body = document.getElementById('npBomBody');
+                if (!body) return [];
+                const rows = Array.from(body.querySelectorAll('tr'));
+                const items = [];
+                for (const tr of rows) {
+                    if (!tr._bom) continue;
+                    const { compSel, uomSel, qty, cost, notes } = tr._bom;
+                    const compId = compSel.value;
+                    if (!compId) continue;
+                    const q = parseFloat(qty.value || '0');
+                    const c = parseFloat(cost.value || '0');
+                    if (q < 0) { this.showAlert('BOM quantity cannot be negative', 'warning'); return []; }
+                    if (c < 0) { this.showAlert('BOM unit cost cannot be negative', 'warning'); return []; }
+                    if (q === 0) continue;
+                    items.push({ component_id: compId, unit_of_measure_id: uomSel.value || null, quantity: q, unit_cost: c || null, notes: notes.value || null });
+                }
+                return items;
+            }
+
+            async saveBomFromEditor() {
+                const prodId = document.getElementById('bomProductSelect').value;
+                if (!prodId) { this.showAlert('Select finished product', 'warning'); return; }
+                const body = document.getElementById('bomEditorBody');
+                const rows = Array.from(body.querySelectorAll('tr'));
+                const items = [];
+                let errors = [];
+                for (const tr of rows) {
+                    if (!tr._bom) continue;
+                    const { compSel, uomSel, qty, cost, notes } = tr._bom;
+                    [compSel, qty, cost].forEach(el => el.classList.remove('is-invalid'));
+                    if (!compSel.value) continue;
+                    const q = parseFloat(qty.value || '0');
+                    const c = parseFloat(cost.value || '0');
+                    if (q < 0) { qty.classList.add('is-invalid'); errors.push('Quantity cannot be negative'); }
+                    if (c < 0) { cost.classList.add('is-invalid'); errors.push('Unit cost cannot be negative'); }
+                    if (q === 0) continue;
+                    items.push({
+                        component_id: compSel.value,
+                        unit_of_measure_id: uomSel.value || null,
+                        quantity: q,
+                        unit_cost: c,
+                        notes: notes.value || null,
+                    });
+                }
+                if (errors.length) { this.showAlert(errors[0], 'warning'); return; }
+                try {
+                    const resp = await fetch(`/api/v1/manufacturing/products/${prodId}/bom`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items })
+                    });
+                    if (!resp.ok) throw new Error((await resp.json()).detail || 'Failed to save BOM');
+                    this.showAlert('BOM saved', 'success');
+                    this.loadBomForEditor();
+                } catch (e) { console.error(e); this.showAlert('Failed to save BOM', 'danger'); }
+            }
+
+            async cloneBomFromProduct() {
+                const targetId = document.getElementById('bomProductSelect').value;
+                const sourceId = document.getElementById('bomCloneSourceSelect').value;
+                if (!targetId) { this.showAlert('Select a finished product first', 'warning'); return; }
+                if (!sourceId) { this.showAlert('Select a source product to clone from', 'warning'); return; }
+                try {
+                    const resp = await fetch(`/api/v1/manufacturing/products/${sourceId}/bom`);
+                    if (!resp.ok) throw new Error('Failed to load source BOM');
+                    const data = await resp.json();
+                    const sourceItems = data.bom || [];
+                    // Merge with existing editor rows
+                    const body = document.getElementById('bomEditorBody');
+                    const rows = Array.from(body.querySelectorAll('tr'));
+                    const existing = new Map();
+                    // Collect existing
+                    for (const tr of rows) {
+                        if (!tr._bom) continue;
+                        const { compSel, uomSel, qty, cost, notes } = tr._bom;
+                        if (!compSel.value) continue;
+                        const key = compSel.value; // merge by component only
+                        const obj = existing.get(key) || { component_id: compSel.value, unit_of_measure_id: uomSel.value || null, quantity: 0, unit_cost: parseFloat(cost.value || '0'), notes: notes.value || null };
+                        obj.quantity += parseFloat(qty.value || '0');
+                        existing.set(key, obj);
+                    }
+                    // Add/merge source
+                    for (const it of sourceItems) {
+                        const key = it.component_id;
+                        const obj = existing.get(key) || { component_id: it.component_id, unit_of_measure_id: it.unit_of_measure_id || null, quantity: 0, unit_cost: parseFloat(it.unit_cost || '0'), notes: it.notes || null };
+                        obj.quantity += parseFloat(it.quantity || '0');
+                        // prefer existing UOM if present, else source
+                        obj.unit_of_measure_id = obj.unit_of_measure_id || (it.unit_of_measure_id || null);
+                        // keep higher of the two unit_costs (conservative)
+                        obj.unit_cost = Math.max(parseFloat(obj.unit_cost || '0'), parseFloat(it.unit_cost || '0'));
+                        existing.set(key, obj);
+                    }
+                    // Render merged
+                    this.renderBomEditor(Array.from(existing.values()));
+                    this.showAlert('Cloned and merged BOM from source product', 'success');
+                } catch (e) {
+                    console.error(e);
+                    this.showAlert('Failed to clone BOM', 'danger');
+                }
+            }
+
+            async submitCompleteProduction() {
+                const productId = document.getElementById('cpProductSelect').value;
+                const quantity = parseInt(document.getElementById('cpQuantity').value || '0', 10);
+                const labor = parseFloat(document.getElementById('cpLabor').value || '0');
+                const overhead = parseFloat(document.getElementById('cpOverhead').value || '0');
+                const notes = document.getElementById('cpNotes').value || '';
+                if (!productId || quantity <= 0) {
+                    this.showAlert('Select product and enter a valid quantity', 'warning');
+                    return;
+                }
+                try {
+                    const resp = await fetch('/api/v1/manufacturing/produce-to-hq', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id: productId, quantity, labor_cost: labor, overhead_cost: overhead, notes })
+                    });
+                    if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({ detail: 'Failed' }));
+                        throw new Error(err.detail || 'Failed');
+                    }
+                    const data = await resp.json();
+                    this.showAlert(`Posted to HQ: ${quantity} units of ${data.product_name} @ ${this.formatCurrency(data.unit_cost)} each`, 'success');
+                    this.completeProductionModal.hide();
+                } catch (e) {
+                    console.error(e);
+                    this.showAlert(`Error posting production: ${e.message}`, 'danger');
+                }
+            }
+        }
+
+        window.manufacturing = new ManufacturingApp();
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof createNavbar === 'function') {
+                createNavbar('manufacturing');
+            }
+            window.manufacturing.init()
+        });
+    </script>
+</body>
+
+</html>

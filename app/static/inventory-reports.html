@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Inventory Reports</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Fallback CSS for Bootstrap -->
+    <style>
+        /* Bootstrap fallback styles */
+        .container-fluid {
+            width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -15px;
+            margin-left: -15px;
+        }
+
+        .col-md-4,
+        .col-md-6,
+        .col-md-3,
+        .col-12 {
+            position: relative;
+            width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+        }
+
+        .col-md-4 {
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+        }
+
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+
+        .col-md-3 {
+            flex: 0 0 25%;
+            max-width: 25%;
+        }
+
+        .col-12 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .btn {
+            display: inline-block;
+            font-weight: 400;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.25rem;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .btn-warning {
+            color: #212529;
+            background-color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        .btn-outline-warning {
+            color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        .btn-outline-warning:hover {
+            color: #212529;
+            background-color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: #fff;
+            background-clip: border-box;
+            border: 1px solid rgba(0, 0, 0, .125);
+            border-radius: 0.25rem;
+        }
+
+        .card-body {
+            flex: 1 1 auto;
+            padding: 1rem;
+        }
+
+        .card-header {
+            padding: 0.5rem 1rem;
+            margin-bottom: 0;
+            background-color: rgba(0, 0, 0, .03);
+            border-bottom: 1px solid rgba(0, 0, 0, .125);
+        }
+
+        .d-flex {
+            display: flex !important;
+        }
+
+        .justify-content-between {
+            justify-content: space-between !important;
+        }
+
+        .align-items-center {
+            align-items: center !important;
+        }
+
+        .mb-0 {
+            margin-bottom: 0 !important;
+        }
+
+        .mb-4 {
+            margin-bottom: 1.5rem !important;
+        }
+
+        .mt-4 {
+            margin-top: 1.5rem !important;
+        }
+
+        .text-warning {
+            color: #ffc107 !important;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        .h3 {
+            font-size: 1.75rem;
+        }
+
+        @media (max-width: 767.98px) {
+
+            .col-md-4,
+            .col-md-6,
+            .col-md-3 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Include Standardized Navbar -->
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-box text-warning"></i> Inventory Reports
+                            <span id="locationIndicator" class="badge bg-secondary ms-2">All Locations</span>
+                        </h1>
+                        <p class="text-muted mb-0">Comprehensive inventory analytics and stock management with branch
+                            allocation support</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-warning" onclick="exportReport()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <button class="btn btn-warning" onclick="printReport()">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Filters -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Branch</label>
+                                <select class="form-select" id="branchFilter" onchange="loadInventoryData()">
+                                    <option value="">All Branches</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Report Type</label>
+                                <select class="form-select" id="reportType" onchange="loadInventoryData()">
+                                    <option value="summary">Inventory Summary</option>
+                                    <option value="low-stock" selected>Low Stock Alerts</option>
+                                    <option value="categories">Category Analysis</option>
+                                    <option value="valuation">Inventory Valuation</option>
+                                    <option value="stock-movement">Stock Movement</option>
+                                    <option value="aging-analysis">Aging Analysis</option>
+                                    <option value="abc-analysis">ABC Analysis</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Category Filter</label>
+                                <select class="form-select" id="categoryFilter" onchange="loadInventoryData()">
+                                    <option value="">All Categories</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Summary -->
+        <div id="inventorySummary" class="report-section">
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-boxes fs-1 text-primary mb-2"></i>
+                            <h4 id="totalProducts">0</h4>
+                            <p class="text-muted mb-0">Total Products</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-exclamation-triangle fs-1 text-warning mb-2"></i>
+                            <h4 id="lowStockProducts">0</h4>
+                            <p class="text-muted mb-0">Low Stock Items</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-x-circle fs-1 text-danger mb-2"></i>
+                            <h4 id="outOfStockProducts">0</h4>
+                            <p class="text-muted mb-0">Out of Stock</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-currency-dollar fs-1 text-success mb-2"></i>
+                            <h4 id="totalInventoryValue">$0</h4>
+                            <p class="text-muted mb-0">Total Value</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-pie-chart"></i> Inventory by Category
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="categoryChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-exclamation-triangle"></i> Low Stock Alerts
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="lowStockAlertsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div id="lowStockAlerts" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-exclamation-triangle"></i> Low Stock Alerts
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h4 id="totalLowStock">0</h4>
+                                        <p class="text-muted">Total Low Stock Items</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h4 id="criticalStock">0</h4>
+                                        <p class="text-danger">Critical Stock Items</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h4 id="reorderValue">$0</h4>
+                                        <p class="text-warning">Reorder Value</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="lowStockAlertsTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Analysis -->
+        <div id="categoryAnalysis" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-tags"></i> Category Analysis
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="categorySummary" class="mb-4"></div>
+                            <div id="categoryAnalysisTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Valuation -->
+        <div id="inventoryValuation" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-graph-up"></i> Valuation Trends
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="valuationChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-calculator"></i> Valuation Summary
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="valuationSummary"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Movement -->
+        <div id="stockMovement" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-arrow-left-right"></i> Stock Movement Report
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="stockMovementTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aging Analysis -->
+        <div id="agingAnalysis" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-clock-history"></i> Inventory Aging Analysis
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="agingChart" class="mb-4">
+                                <canvas id="agingChartCanvas" width="400" height="200"></canvas>
+                            </div>
+                            <div id="agingTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABC Analysis -->
+        <div id="abcAnalysis" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-bar-chart"></i> ABC Analysis
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="abcSummary" class="mb-4"></div>
+                            <div id="abcChart" class="mb-4">
+                                <canvas id="abcChartCanvas" width="400" height="200"></canvas>
+                            </div>
+                            <div id="abcTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CNPERP Core Library -->
+    <script src="js/cnperp-core.js"></script>
+
+
+
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    <!-- Currency Utils -->
+    <script src="js/currency-utils.js"></script>
+
+    <script>
+        // API base URL (fix ReferenceError)
+        const apiBaseUrl = (window.CNPERP && CNPERP.Config && CNPERP.Config.API_BASE) ? CNPERP.Config.API_BASE : 'http://localhost:8010/api/v1';
+
+        // Global variables
+        let inventoryData = {};
+        let charts = {};
+        let appSettings = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function () {
+            console.log('🚀 Initializing Inventory Reports...');
+
+            // Load application settings first
+            await loadApplicationSettings();
+
+            // Then load data
+            loadBranches();
+            const branchSelect = document.getElementById('branchFilter');
+            branchSelect.addEventListener('change', () => {
+                const selectedOption = branchSelect.options[branchSelect.selectedIndex];
+                updateLocationIndicator(branchSelect.value, selectedOption.text);
+                loadCategories();
+                loadInventoryData();
+            });
+
+            // Load initial data after a short delay to ensure settings are loaded
+            setTimeout(() => {
+                loadInventoryData();
+            }, 1000);
+        });
+
+        // Update location indicator based on selected branch
+        function updateLocationIndicator(branchId, branchName) {
+            const indicator = document.getElementById('locationIndicator');
+            if (!indicator) return;
+
+            if (!branchId || branchId === '') {
+                indicator.textContent = 'All Locations';
+                indicator.className = 'badge bg-secondary ms-2';
+            } else if (branchId === 'headquarters') {
+                indicator.textContent = '📍 Headquarters (HQ)';
+                indicator.className = 'badge bg-primary ms-2';
+            } else {
+                const isManufacturing = branchName && branchName.toLowerCase().includes('manufactur');
+                const icon = isManufacturing ? '🏭' : '🏢';
+                indicator.textContent = `${icon} ${branchName}`;
+                indicator.className = isManufacturing ? 'badge bg-warning ms-2' : 'badge bg-info ms-2';
+            }
+        }
+
+        async function loadBranches() {
+            try {
+                const data = await CNPERP.API.get('/branches/public');
+                const branches = CNPERP.Utils.extractData(data) || [];
+
+                const branchSelect = document.getElementById('branchFilter');
+                // Add HQ option first
+                let options = '<option value="">All Locations</option>';
+                options += '<option value="headquarters">📍 Headquarters (HQ)</option>';
+
+                // Add branches with type indicators
+                branches.forEach(branch => {
+                    const isManufacturing = branch.name && (branch.name.toLowerCase().includes('manufacturing') || branch.name.toLowerCase().includes('factory'));
+                    const icon = isManufacturing ? '🏭' : '🏢';
+                    const option = `<option value="${branch.id}">${icon} ${branch.name || branch.code}</option>`;
+                    options += option;
+                });
+
+                branchSelect.innerHTML = options;
+                // Default to first branch if none selected
+                if (!branchSelect.value && branches.length) {
+                    branchSelect.value = branches[0].id;
+                }
+                // After branches loaded, load dependent data
+                loadCategories();
+                loadInventoryData();
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
+
+        async function loadCategories() {
+            const branchSelect = document.getElementById('branchFilter');
+            const branchId = branchSelect.value;
+
+            // Different endpoint for HQ vs branches
+            let url;
+            if (branchId === 'headquarters') {
+                url = `${apiBaseUrl}/inventory-allocation/headquarters/categories`;
+            } else {
+                url = `${apiBaseUrl}/reports/inventory/category-analysis?branch_id=${branchId}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(result => {
+                    console.log('Category summary response:', result);
+                    const select = document.getElementById('categoryFilter');
+                    // reset to default option
+                    select.innerHTML = '<option value="">All Categories</option>';
+
+                    const categories = (result.data && result.data.categories) || result.categories || [];
+                    categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.id || cat.category;
+                        option.text = `${cat.name || cat.category} (${cat.count})`;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading categories:', error));
+        }
+
+        async function loadInventoryData() {
+            const reportType = document.getElementById('reportType').value;
+            const branchId = document.getElementById('branchFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+
+            // Update location indicator
+            const branchSelect = document.getElementById('branchFilter');
+            const selectedOption = branchSelect.options[branchSelect.selectedIndex];
+            updateLocationIndicator(branchId, selectedOption.text);
+
+            showLoading();
+
+            try {
+                console.log(`Loading ${reportType} report for:`, branchId === 'headquarters' ? 'HQ' : branchId === '' ? 'All Locations' : `Branch ${branchId}`);
+
+                switch (reportType) {
+                    case 'summary':
+                        await loadInventorySummary(branchId);
+                        break;
+                    case 'low-stock':
+                        await loadLowStockAlerts(branchId);
+                        break;
+                    case 'categories':
+                        await loadCategoryAnalysis(branchId);
+                        break;
+                    case 'valuation':
+                        await loadInventoryValuation(branchId);
+                        break;
+                    case 'stock-movement':
+                        await loadStockMovement(branchId);
+                        break;
+                    case 'aging-analysis':
+                        await loadAgingAnalysis(branchId);
+                        break;
+                    case 'abc-analysis':
+                        await loadABCAnalysis(branchId);
+                        break;
+                }
+            } catch (error) {
+                console.error('Error loading inventory data:', error);
+                const location = branchId === 'headquarters' ? 'HQ' : branchId === '' ? 'all locations' : `branch ${branchId}`;
+                showError(`Failed to load inventory data for ${location}. Some endpoints may not be implemented yet.`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Application Settings Integration
+        async function loadApplicationSettings() {
+            try {
+                console.log('🔧 Loading application settings...');
+                const data = await CNPERP.API.get('/settings/');
+                appSettings = CNPERP.Utils.extractData(data) || {};
+                console.log('✅ Application settings loaded:', appSettings);
+
+                // Apply settings to the UI
+                applySettingsToUI();
+            } catch (error) {
+                console.error('❌ Error loading app settings:', error);
+                appSettings = getDefaultSettings();
+            }
+        }
+
+        function getDefaultSettings() {
+            return {
+                currency: 'BWP',
+                currency_symbol: 'P',
+                vat_rate: 14.0,
+                country: 'BW',
+                locale: 'en',
+                timezone: 'Africa/Gaborone',
+                company_name: 'Your Company',
+                app_name: 'CNPERP ERP System'
+            };
+        }
+
+        function applySettingsToUI() {
+            try {
+                if (!appSettings) return;
+
+                // Update page title with company name
+                if (appSettings.company_name) {
+                    document.title = `${appSettings.company_name} - Inventory Reports`;
+                }
+
+                console.log('✅ Applied settings to UI');
+            } catch (error) {
+                console.error('❌ Error applying settings to UI:', error);
+            }
+        }
+
+        async function loadInventorySummary(branchId) {
+            try {
+                const params = new URLSearchParams();
+                if (branchId && branchId !== 'headquarters') {
+                    params.append('branch_id', branchId);
+                }
+
+                console.log('Loading inventory summary for:', branchId === 'headquarters' ? 'HQ' : `branch ${branchId}`);
+
+                // Use different endpoint for HQ vs branch data
+                let endpoint;
+                if (branchId === 'headquarters') {
+                    endpoint = `${apiBaseUrl}/inventory-allocation/headquarters/summary`;
+                } else {
+                    endpoint = `${apiBaseUrl}/reports/inventory/summary?${params}`;
+                }
+
+                const response = await fetch(endpoint);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Inventory summary data:', result);
+                const payload = (result.data) || result; // Handle different response formats
+
+                // Update summary metrics
+                document.getElementById('totalProducts').textContent = payload.total_products || 0;
+                document.getElementById('lowStockProducts').textContent = payload.low_stock_count || 0;
+                document.getElementById('outOfStockProducts').textContent = payload.out_of_stock_count || 0;
+                document.getElementById('totalInventoryValue').textContent = formatCurrency(payload.total_value || 0);
+
+                // Update top products chart
+                updateCategoryChart(payload.categories || []);
+
+                // Update low stock alerts list (if available)
+                updateLowStockAlertsList(payload.low_stock_alerts || []);
+
+                showReportSection('inventorySummary');
+            } catch (error) {
+                console.error('Error loading inventory summary:', error);
+                showError('Failed to load inventory summary');
+            }
+        }
+
+        async function loadLowStockAlerts(branchId) {
+            try {
+                const params = new URLSearchParams();
+                if (branchId && branchId !== 'headquarters') {
+                    params.append('branch_id', branchId);
+                }
+
+                // Use appropriate endpoint based on location
+                let endpoint;
+                if (branchId === 'headquarters') {
+                    endpoint = `${apiBaseUrl}/inventory-allocation/headquarters/low-stock`;
+                } else {
+                    endpoint = `${apiBaseUrl}/reports/inventory/summary?${params}`;
+                }
+
+                const response = await fetch(endpoint);
+                const result = await response.json();
+                const payload = result.data || result;
+
+                // Update low stock metrics
+                document.getElementById('totalLowStock').textContent = payload.low_stock_count || 0;
+                document.getElementById('criticalStock').textContent = payload.out_of_stock_count || 0;
+
+                // Calculate reorder value based on low stock alerts
+                const reorderValue = (payload.low_stock_alerts || []).reduce((sum, item) => {
+                    const currentQty = item.current_quantity || item.quantity || 0;
+                    const reorderPoint = item.reorder_point || item.reorder_level || 0;
+                    return sum + (item.cost_price * Math.max(0, reorderPoint - currentQty));
+                }, 0);
+                document.getElementById('reorderValue').textContent = formatCurrency(reorderValue);
+
+                // Update low stock alerts list and table
+                updateLowStockAlertsList(payload.low_stock_alerts || []);
+                updateLowStockAlertsTable(payload.low_stock_alerts || []);
+
+                showReportSection('lowStockAlerts');
+            } catch (error) {
+                console.error('Error loading low stock alerts:', error);
+                showError('Failed to load low stock alerts');
+            }
+        }
+
+        async function loadCategoryAnalysis(branchId) {
+            try {
+                const params = new URLSearchParams();
+                if (branchId && branchId !== 'headquarters') {
+                    params.append('branch_id', branchId);
+                }
+
+                // Use branch-specific endpoint or HQ endpoint
+                let endpoint;
+                if (branchId === 'headquarters') {
+                    endpoint = `${apiBaseUrl}/inventory-allocation/headquarters/category-analysis`;
+                } else {
+                    endpoint = `${apiBaseUrl}/reports/inventory/category-analysis?${params}`;
+                }
+
+                const response = await fetch(endpoint);
+                const result = await response.json();
+                const categoryData = result.data || result;
+
+                // Update category analysis table with real category data
+                updateCategoryAnalysisTable(categoryData.categories || []);
+
+                // Update category summary metrics
+                updateCategorySummary(categoryData.summary || {});
+
+                showReportSection('categoryAnalysis');
+            } catch (error) {
+                console.error('Error loading category analysis:', error);
+                showError('Failed to load category analysis');
+            }
+        }
+
+        async function loadInventoryValuation(branchId) {
+            const params = new URLSearchParams();
+            if (branchId && branchId !== 'headquarters') {
+                params.append('branch_id', branchId);
+            }
+
+            // Get valuation methods comparison with manufacturing support
+            let valuationEndpoint, categoryEndpoint;
+
+            if (branchId === 'headquarters') {
+                valuationEndpoint = `${apiBaseUrl}/inventory-allocation/headquarters/valuation-methods`;
+                categoryEndpoint = `${apiBaseUrl}/inventory-allocation/headquarters/category-analysis`;
+            } else {
+                valuationEndpoint = `${apiBaseUrl}/reports/inventory/valuation-methods?${params}`;
+                categoryEndpoint = `${apiBaseUrl}/reports/inventory/category-analysis?${params}`;
+            }
+
+            const valuationResponse = await fetch(valuationEndpoint);
+            const valuationResult = await valuationResponse.json();
+            const valuationData = valuationResult.data || {};
+
+            // Get category analysis for charts
+            const categoryResponse = await fetch(categoryEndpoint);
+            const categoryResult = await categoryResponse.json();
+            const categoryData = categoryResult.data || {};
+
+            // Update valuation charts and summary
+            updateValuationCharts(categoryData);
+            updateValuationSummary(valuationData);
+
+            showReportSection('inventoryValuation');
+        }
+
+        function updateCategoryChart(categories) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (charts.category) charts.category.destroy();
+
+            charts.category = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories.map(cat => cat.category),
+                    datasets: [{
+                        data: categories.map(cat => cat.value),
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 205, 86, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateLowStockAlertsList(alerts) {
+            const container = document.getElementById('lowStockAlertsList');
+
+            let html = '';
+            alerts.slice(0, 10).forEach((alert, index) => {
+                const currentQty = alert.current_quantity || alert.quantity || 0;
+                const statusClass = currentQty === 0 ? 'text-danger' : 'text-warning';
+                const statusText = currentQty === 0 ? 'Out of Stock' : 'Low Stock';
+
+                html += `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span class="fw-bold">${index + 1}. ${alert.name}</span>
+                            <br>
+                            <small class="text-muted">SKU: ${alert.sku}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="${statusClass} fw-bold">${currentQty}</span>
+                            <br>
+                            <small class="text-muted">${statusText}</small>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateLowStockAlertsTable(alerts) {
+            const container = document.getElementById('lowStockAlertsTable');
+
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-modern">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>SKU</th>
+                                <th>Current Quantity</th>
+                                <th>Reorder Level</th>
+                                <th>Cost Price</th>
+                                <th>Status</th>
+                                <th>Reorder Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            alerts.forEach(alert => {
+                const currentQty = alert.current_quantity || alert.quantity || 0;
+                const reorderPoint = alert.reorder_point || alert.reorder_level || 0;
+                const statusClass = currentQty === 0 ? 'danger' : 'warning';
+                const statusText = currentQty === 0 ? 'Out of Stock' : 'Low Stock';
+                const reorderAmount = Math.max(0, reorderPoint - currentQty);
+
+                html += `
+                    <tr class="table-${statusClass}">
+                        <td>${alert.name}</td>
+                        <td>${alert.sku}</td>
+                        <td class="${currentQty === 0 ? 'text-danger' : 'text-warning'} fw-bold">${currentQty}</td>
+                        <td>${reorderPoint}</td>
+                        <td>${formatCurrency(alert.cost_price)}</td>
+                        <td><span class="badge-modern badge-${statusClass}">${statusText}</span></td>
+                        <td class="text-success">${reorderAmount}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function updateCategoryAnalysisTable(categories) {
+            const container = document.getElementById('categoryAnalysisTable');
+
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-modern">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Product Count</th>
+                                <th>Total Value</th>
+                                <th>Average Value</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            const totalValue = categories.reduce((sum, cat) => sum + cat.value, 0);
+
+            categories.forEach(category => {
+                const percentage = totalValue > 0 ? ((category.value / totalValue) * 100).toFixed(1) : 0;
+                const averageValue = category.count > 0 ? category.value / category.count : 0;
+
+                html += `
+                    <tr>
+                        <td>${category.category}</td>
+                        <td>${category.count}</td>
+                        <td class="text-success">${formatCurrency(category.value)}</td>
+                        <td>${formatCurrency(averageValue)}</td>
+                        <td>${percentage}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function updateValuationCharts(data) {
+            // Valuation Chart
+            const valuationCtx = document.getElementById('valuationChart').getContext('2d');
+            if (charts.valuation) charts.valuation.destroy();
+
+            // Get categories from the correct location in the data structure
+            const categories = data.report_data?.categories || data.categories || [];
+
+            charts.valuation = new Chart(valuationCtx, {
+                type: 'bar',
+                data: {
+                    labels: categories.map(cat => cat.category),
+                    datasets: [{
+                        label: 'Inventory Value',
+                        data: categories.map(cat => cat.value),
+                        backgroundColor: 'rgba(255, 205, 86, 0.8)',
+                        borderColor: 'rgba(255, 205, 86, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateValuationSummary(data) {
+            const container = document.getElementById('valuationSummary');
+
+            const summary = data.summary || {};
+            const productValuations = data.product_valuations || [];
+
+            // Calculate totals from the valuation data
+            const fifoTotal = summary.fifo_total || 0;
+            const lifoTotal = summary.lifo_total || 0;
+            const avgCostTotal = summary.avg_cost_total || 0;
+            const totalProducts = summary.total_products || 0;
+
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="text-success">${formatCurrency(fifoTotal)}</h5>
+                            <p class="text-muted mb-0">FIFO Valuation</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="text-warning">${formatCurrency(lifoTotal)}</h5>
+                            <p class="text-muted mb-0">LIFO Valuation</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="text-primary">${formatCurrency(avgCostTotal)}</h5>
+                            <p class="text-muted mb-0">Average Cost</p>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <h6>Valuation Method Differences:</h6>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>FIFO vs Average Cost:</span>
+                        <span class="${summary.fifo_vs_avg_diff > 0 ? 'text-success' : 'text-danger'}">${formatCurrency(summary.fifo_vs_avg_diff || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>LIFO vs Average Cost:</span>
+                        <span class="${summary.lifo_vs_avg_diff > 0 ? 'text-success' : 'text-danger'}">${formatCurrency(summary.lifo_vs_avg_diff || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>FIFO vs LIFO:</span>
+                        <span class="${summary.fifo_vs_lifo_diff > 0 ? 'text-success' : 'text-danger'}">${formatCurrency(summary.fifo_vs_lifo_diff || 0)}</span>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function showReportSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.report-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show selected section
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading';
+            loadingDiv.className = 'position-fixed top-50 start-50 translate-middle';
+            loadingDiv.innerHTML = `
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            `;
+            document.body.appendChild(loadingDiv);
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.remove();
+            }
+        }
+
+        function showError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        function formatCurrency(amount) {
+            const currencySymbol = appSettings?.currency_symbol || 'P';
+            const locale = appSettings?.locale || 'en';
+            const country = appSettings?.country || 'BW';
+            const currency = appSettings?.currency || 'BWP';
+
+            try {
+                const localeCode = country === 'BW' ? 'en-BW' : (locale === 'en' ? 'en-US' : locale);
+                return new Intl.NumberFormat(localeCode, {
+                    style: 'currency',
+                    currency: currency,
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(amount || 0);
+            } catch (error) {
+                // Fallback formatting
+                return `${currencySymbol} ${(amount || 0).toFixed(2)}`;
+            }
+        }
+
+        function updateCategoryAnalysisTable(categories) {
+            const container = document.getElementById('categoryAnalysisTable');
+            if (!container) return;
+
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Products</th>
+                                <th>Total Quantity</th>
+                                <th>Total Value</th>
+                                <th>Avg Cost</th>
+                                <th>Low Stock</th>
+                                <th>% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            categories.forEach(category => {
+                html += `
+                    <tr>
+                        <td><strong>${category.category}</strong></td>
+                        <td>${category.product_count || 0}</td>
+                        <td>${category.total_quantity || 0}</td>
+                        <td>${formatCurrency(category.total_value)}</td>
+                        <td>${formatCurrency(category.avg_cost_price)}</td>
+                        <td><span class="badge bg-warning">${category.low_stock_count || 0}</span></td>
+                        <td>${category.percentage_of_total.toFixed(1)}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function updateCategorySummary(summary) {
+            if (summary.total_categories !== undefined) {
+                const summaryElement = document.getElementById('categorySummary');
+                if (summaryElement) {
+                    summaryElement.innerHTML = `
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h4 class="text-primary">${summary.total_categories}</h4>
+                                <p class="text-muted mb-0">Categories</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-success">${summary.total_products}</h4>
+                                <p class="text-muted mb-0">Products</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-warning">${formatCurrency(summary.total_value)}</h4>
+                                <p class="text-muted mb-0">Total Value</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function updateLowStockAlertsTable(alerts) {
+            const container = document.getElementById('lowStockAlertsTable');
+            if (!container) return;
+
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Current Stock</th>
+                                <th>Reorder Point</th>
+                                <th>Cost Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            alerts.forEach(alert => {
+                html += `
+                    <tr>
+                        <td><strong>${alert.name}</strong></td>
+                        <td>${alert.sku || 'N/A'}</td>
+                        <td><span class="badge bg-warning">${alert.current_quantity || alert.quantity || 0}</td>
+                        <td>${alert.reorder_level}</td>
+                        <td>${formatCurrency(alert.cost_price)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="initiateReorder('${alert.id}')">
+                                <i class="bi bi-cart-plus"></i> Reorder
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            if (alerts.length === 0) {
+                html = '<div class="text-center text-muted py-4">No low stock alerts at this time.</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updateLowStockAlertsList(alerts) {
+            const container = document.getElementById('lowStockAlertsList');
+            if (!container) return;
+
+            let html = '';
+
+            alerts.slice(0, 5).forEach(alert => {
+                html += `
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                        <div>
+                            <strong>${alert.name}</strong><br>
+                            <small class="text-muted">Stock: ${alert.current_quantity || alert.quantity || 0} (Min: ${alert.reorder_point || alert.reorder_level || 0})</small>
+                        </div>
+                        <span class="badge bg-warning">Low Stock</span>
+                    </div>
+                `;
+            });
+
+            if (alerts.length === 0) {
+                html = '<div class="text-center text-muted">No low stock alerts.</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function loadStockMovement(branchId) {
+            const params = new URLSearchParams();
+            if (branchId && branchId !== 'headquarters') {
+                params.append('branch_id', branchId);
+            }
+
+            // Use inventory allocation movement endpoint for comprehensive tracking
+            let endpoint;
+            if (branchId === 'headquarters') {
+                endpoint = `${apiBaseUrl}/inventory-allocation/reports/inventory-movement`;
+            } else {
+                endpoint = `${apiBaseUrl}/reports/inventory/stock-movement?${params}`;
+            }
+
+            const response = await fetch(endpoint);
+            const result = await response.json();
+            const movementData = result.data || [];
+
+            updateStockMovementTable(movementData);
+            showReportSection('stockMovement');
+        }
+
+        async function loadAgingAnalysis(branchId) {
+            const params = new URLSearchParams();
+            if (branchId && branchId !== 'headquarters') {
+                params.append('branch_id', branchId);
+            }
+
+            // Use HQ-specific endpoint for headquarters inventory aging
+            let endpoint;
+            if (branchId === 'headquarters') {
+                endpoint = `${apiBaseUrl}/inventory-allocation/headquarters/aging-analysis`;
+            } else {
+                endpoint = `${apiBaseUrl}/reports/inventory/aging-analysis?${params}`;
+            }
+
+            const response = await fetch(endpoint);
+            const result = await response.json();
+            const agingData = result.data || {};
+
+            updateAgingChart(agingData.aging_buckets || {});
+            updateAgingTable(agingData.aging_buckets || {});
+            showReportSection('agingAnalysis');
+        }
+
+        async function loadABCAnalysis(branchId) {
+            const params = new URLSearchParams();
+            if (branchId && branchId !== 'headquarters') {
+                params.append('branch_id', branchId);
+            }
+
+            // Use appropriate endpoint for manufacturing vs regular branches
+            let endpoint;
+            if (branchId === 'headquarters') {
+                endpoint = `${apiBaseUrl}/inventory-allocation/headquarters/abc-analysis`;
+            } else {
+                endpoint = `${apiBaseUrl}/reports/inventory/abc-analysis?${params}`;
+            }
+
+            const response = await fetch(endpoint);
+            const result = await response.json();
+            const abcData = result.data || {};
+
+            updateABCSummary(abcData.summary || {});
+            updateABCChart(abcData.abc_categories || {});
+            updateABCTable(abcData.abc_categories || {});
+            showReportSection('abcAnalysis');
+        }
+
+        function updateStockMovementTable(movements) {
+            const container = document.getElementById('stockMovementTable');
+            if (!container) return;
+
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>Quantity</th>
+                                <th>Unit Cost</th>
+                                <th>Total Value</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            movements.forEach(movement => {
+                // Handle different movement types with appropriate badges
+                let typeBadge = '';
+                const type = movement.transaction_type || movement.movement_type;
+
+                if (type === 'headquarters_receipt') {
+                    typeBadge = '<span class="badge bg-success">HQ Receipt</span>';
+                } else if (type === 'branch_allocation') {
+                    typeBadge = '<span class="badge bg-info">Branch Allocation</span>';
+                } else if (type === 'production_receipt') {
+                    typeBadge = '<span class="badge bg-primary">Manufacturing</span>';
+                } else if (type === 'issue_to_wip') {
+                    typeBadge = '<span class="badge bg-warning">WIP Issue</span>';
+                } else {
+                    typeBadge = `<span class="badge bg-secondary">${type}</span>`;
+                }
+
+                const location = movement.from_location && movement.to_location
+                    ? `${movement.from_location} → ${movement.to_location}`
+                    : (movement.branch_name || movement.location || 'N/A');
+
+                html += `
+                    <tr>
+                        <td>${new Date(movement.date || movement.created_at).toLocaleDateString()}</td>
+                        <td><strong>${movement.product_name}</strong></td>
+                        <td>${movement.product_sku || movement.sku || 'N/A'}</td>
+                        <td>${typeBadge}</td>
+                        <td>${location}</td>
+                        <td>${movement.quantity || 0}</td>
+                        <td>${formatCurrency(movement.unit_cost)}</td>
+                        <td>${formatCurrency(movement.total_value || movement.total_cost)}</td>
+                        <td>${movement.reference || movement.allocation_reference || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            if (movements.length === 0) {
+                html = '<div class="text-center text-muted py-4">No stock movements found for the selected period.</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updateAgingChart(agingBuckets) {
+            const ctx = document.getElementById('agingChartCanvas');
+            if (!ctx) return;
+
+            if (charts.aging) charts.aging.destroy();
+
+            const bucketNames = Object.keys(agingBuckets);
+            const bucketValues = bucketNames.map(bucket => agingBuckets[bucket].value || 0);
+
+            charts.aging = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: bucketNames.map(name => name.replace('_', ' ')),
+                    datasets: [{
+                        label: 'Inventory Value',
+                        data: bucketValues,
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 205, 86, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(255, 99, 132, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateAgingTable(agingBuckets) {
+            const container = document.getElementById('agingTable');
+            if (!container) return;
+
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Age Range</th>
+                                <th>Product Count</th>
+                                <th>Total Value</th>
+                                <th>Top Products</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            Object.keys(agingBuckets).forEach(bucket => {
+                const data = agingBuckets[bucket];
+                const topProducts = (data.products || []).slice(0, 3);
+
+                html += `
+                    <tr>
+                        <td><strong>${bucket.replace('_', ' ')}</strong></td>
+                        <td>${data.count || 0}</td>
+                        <td>${formatCurrency(data.value || 0)}</td>
+                        <td>
+                            ${topProducts.map(p => `<small>${p.name}</small>`).join('<br>')}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function updateABCSummary(summary) {
+            const container = document.getElementById('abcSummary');
+            if (!container) return;
+
+            const html = `
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h5 class="text-danger">Category A</h5>
+                        <p class="mb-0">${summary.category_A_count || 0} products</p>
+                        <small class="text-muted">${formatCurrency(summary.category_A_value || 0)}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-warning">Category B</h5>
+                        <p class="mb-0">${summary.category_B_count || 0} products</p>
+                        <small class="text-muted">${formatCurrency(summary.category_B_value || 0)}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-success">Category C</h5>
+                        <p class="mb-0">${summary.category_C_count || 0} products</p>
+                        <small class="text-muted">${formatCurrency(summary.category_C_value || 0)}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-primary">Total</h5>
+                        <p class="mb-0">${summary.total_products || 0} products</p>
+                        <small class="text-muted">${formatCurrency(summary.total_value || 0)}</small>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function updateABCChart(abcCategories) {
+            const ctx = document.getElementById('abcChartCanvas');
+            if (!ctx) return;
+
+            if (charts.abc) charts.abc.destroy();
+
+            const categoryA = abcCategories.A || [];
+            const categoryB = abcCategories.B || [];
+            const categoryC = abcCategories.C || [];
+
+            const data = [
+                categoryA.reduce((sum, p) => sum + p.inventory_value, 0),
+                categoryB.reduce((sum, p) => sum + p.inventory_value, 0),
+                categoryC.reduce((sum, p) => sum + p.inventory_value, 0)
+            ];
+
+            charts.abc = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Category A (High Value)', 'Category B (Medium Value)', 'Category C (Low Value)'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 205, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateABCTable(abcCategories) {
+            const container = document.getElementById('abcTable');
+            if (!container) return;
+
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Inventory Value</th>
+                                <th>Turnover</th>
+                                <th>Turnover Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            ['A', 'B', 'C'].forEach(category => {
+                const products = abcCategories[category] || [];
+                products.forEach(product => {
+                    html += `
+                        <tr>
+                            <td><span class="badge bg-${category === 'A' ? 'danger' : category === 'B' ? 'warning' : 'success'}">${category}</span></td>
+                            <td><strong>${product.name}</strong></td>
+                            <td>${product.sku || 'N/A'}</td>
+                            <td>${formatCurrency(product.inventory_value)}</td>
+                            <td>${product.turnover}</td>
+                            <td>${formatCurrency(product.turnover_value)}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function initiateReorder(productId) {
+            // TODO: Implement reorder functionality
+            alert(`Reorder functionality for product ${productId} will be implemented`);
+        }
+
+        function exportReport() {
+            alert('Export functionality will be implemented');
+        }
+
+        function printReport() {
+            window.print();
+        }
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <!-- Navbar -->
+    <script src="js/navbar.js?v=20250121001"></script>
+</body>
+
+
+</html>

@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package cnperp.inventory;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+
+// Inventory Service for high-frequency stock operations
+service InventoryService {
+  // Product management
+  rpc GetProduct(GetProductRequest) returns (ProductResponse);
+  rpc GetProducts(GetProductsRequest) returns (ProductsResponse);
+  rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
+  rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
+  
+  // Real-time inventory operations
+  rpc UpdateStock(UpdateStockRequest) returns (StockResponse);
+  rpc GetStockLevel(GetStockRequest) returns (StockResponse);
+  rpc BulkUpdateStock(BulkUpdateStockRequest) returns (BulkStockResponse);
+  
+  // Real-time streaming
+  rpc WatchInventory(WatchInventoryRequest) returns (stream InventoryUpdate);
+  rpc StreamStockLevels(google.protobuf.Empty) returns (stream StockUpdate);
+}
+
+// Product messages
+message Product {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string category = 4;
+  string sku = 5;
+  string barcode = 6;
+  cnperp.common.MoneyAmount unit_price = 7;
+  string unit_of_measure = 8;
+  bool is_inventory = 9;
+  double current_stock = 10;
+  double minimum_stock = 11;
+  double maximum_stock = 12;
+  cnperp.common.AuditInfo audit = 13;
+}
+
+message GetProductRequest {
+  string id = 1;
+}
+
+message GetProductsRequest {
+  cnperp.common.PaginationRequest pagination = 1;
+  string search = 2;
+  string category = 3;
+  bool inventory_only = 4;
+}
+
+message CreateProductRequest {
+  string name = 1;
+  string description = 2;
+  string category = 3;
+  string sku = 4;
+  string barcode = 5;
+  cnperp.common.MoneyAmount unit_price = 6;
+  string unit_of_measure = 7;
+  bool is_inventory = 8;
+  double minimum_stock = 9;
+  double maximum_stock = 10;
+}
+
+message UpdateProductRequest {
+  string id = 1;
+  CreateProductRequest updates = 2;
+}
+
+message ProductResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  Product product = 2;
+}
+
+message ProductsResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  repeated Product products = 2;
+  cnperp.common.PaginationMeta pagination = 3;
+}
+
+// Stock management messages
+message StockMovement {
+  string id = 1;
+  string product_id = 2;
+  double quantity = 3;
+  string movement_type = 4;  // "IN", "OUT", "ADJUSTMENT"
+  string reference = 5;
+  string notes = 6;
+  google.protobuf.Timestamp timestamp = 7;
+  string user_id = 8;
+}
+
+message UpdateStockRequest {
+  string product_id = 1;
+  double quantity = 2;
+  string movement_type = 3;
+  string reference = 4;
+  string notes = 5;
+  string user_id = 6;
+}
+
+message GetStockRequest {
+  string product_id = 1;
+}
+
+message StockResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  double current_stock = 2;
+  repeated StockMovement recent_movements = 3;
+}
+
+message BulkUpdateStockRequest {
+  repeated UpdateStockRequest updates = 1;
+  string batch_reference = 2;
+}
+
+message BulkStockResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  repeated StockResponse results = 2;
+  int32 processed = 3;
+  int32 failed = 4;
+}
+
+// Real-time streaming messages
+message WatchInventoryRequest {
+  repeated string product_ids = 1;  // Empty = watch all
+  bool include_movements = 2;
+}
+
+message InventoryUpdate {
+  string product_id = 1;
+  string product_name = 2;
+  double old_stock = 3;
+  double new_stock = 4;
+  StockMovement movement = 5;
+  google.protobuf.Timestamp timestamp = 6;
+}
+
+message StockUpdate {
+  string product_id = 1;
+  string product_name = 2;
+  double current_stock = 3;
+  double minimum_stock = 4;
+  bool is_below_minimum = 5;
+  google.protobuf.Timestamp last_updated = 6;
+}

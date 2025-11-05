@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Health Dashboard - CNPERP</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --status-healthy: #198754;
+            --status-warning: #ffc107;
+            --status-error: #dc3545;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #0d6efd, #0056b3);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.healthy {
+            border-left: 4px solid var(--status-healthy);
+        }
+        
+        .stat-card.warning {
+            border-left: 4px solid var(--status-warning);
+        }
+        
+        .stat-card.error {
+            border-left: 4px solid var(--status-error);
+        }
+        
+        .error-item {
+            border-left: 3px solid #dee2e6;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        
+        .error-item.critical { border-left-color: #dc3545; }
+        .error-item.error { border-left-color: #fd7e14; }
+        .error-item.warning { border-left-color: #ffc107; }
+        .error-item.info { border-left-color: #0dcaf0; }
+        
+        .fix-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 4px 8px;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1><i class="bi bi-heart-pulse me-2"></i>System Health Dashboard</h1>
+            <p class="mb-0">Monitor, diagnose, and fix system issues</p>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card" id="overallHealthCard">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Overall Status</small>
+                            <h3 class="mb-0" id="overallStatus">Loading...</h3>
+                        </div>
+                        <i class="bi bi-heart fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card error">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Unresolved Errors</small>
+                            <h3 class="mb-0" id="unresolvedErrors">-</h3>
+                        </div>
+                        <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card warning">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Total Errors (7d)</small>
+                            <h3 class="mb-0" id="totalErrors">-</h3>
+                        </div>
+                        <i class="bi bi-bug fs-1 text-warning"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card healthy">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Last Check</small>
+                            <h6 class="mb-0" id="lastCheck">-</h6>
+                        </div>
+                        <i class="bi bi-clock-history fs-1 text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Tabs -->
+        <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button">
+                    <i class="bi bi-heart-pulse me-2"></i>Health Check
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="errors-tab" data-bs-toggle="tab" data-bs-target="#errors" type="button">
+                    <i class="bi bi-bug me-2"></i>Errors
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="fixes-tab" data-bs-toggle="tab" data-bs-target="#fixes" type="button">
+                    <i class="bi bi-tools me-2"></i>Automated Fixes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="diagnostics-tab" data-bs-toggle="tab" data-bs-target="#diagnostics" type="button">
+                    <i class="bi bi-clipboard-data me-2"></i>Diagnostics
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="mainTabContent">
+            <!-- Health Check Tab -->
+            <div class="tab-pane fade show active" id="health" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">System Health Check</h5>
+                        <button class="btn btn-primary btn-sm" onclick="runHealthCheck()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Run Check
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="healthCheckResults">
+                            <p class="text-muted">Click "Run Check" to perform a system health check</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Errors Tab -->
+            <div class="tab-pane fade" id="errors" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Errors</h5>
+                        <div>
+                            <select class="form-select form-select-sm d-inline-block w-auto me-2" id="errorSeverityFilter" onchange="loadErrors()">
+                                <option value="">All Severities</option>
+                                <option value="critical">Critical</option>
+                                <option value="error">Error</option>
+                                <option value="warning">Warning</option>
+                                <option value="info">Info</option>
+                            </select>
+                            <select class="form-select form-select-sm d-inline-block w-auto" id="errorStatusFilter" onchange="loadErrors()">
+                                <option value="">All Status</option>
+                                <option value="false">Unresolved</option>
+                                <option value="true">Resolved</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="errorsList">
+                            <div class="loading-spinner">
+                                <div class="spinner-border text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fixes Tab -->
+            <div class="tab-pane fade" id="fixes" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Automated Fixes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="availableFixesList"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Diagnostics Tab -->
+            <div class="tab-pane fade" id="diagnostics" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">System Diagnostics</h5>
+                        <button class="btn btn-primary btn-sm" onclick="runDiagnostics()">
+                            <i class="bi bi-play-fill me-1"></i>Run Diagnostics
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="diagnosticsResults">
+                            <p class="text-muted">Click "Run Diagnostics" to analyze system modules</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const API_BASE = '/api/v1/system-health';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadErrors();
+            loadAvailableFixes();
+        });
+        
+        // Load overall statistics
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    document.getElementById('unresolvedErrors').textContent = stats.unresolved_errors;
+                    document.getElementById('totalErrors').textContent = stats.total_errors;
+                    
+                    if (stats.latest_health_check) {
+                        const status = stats.latest_health_check.status;
+                        document.getElementById('overallStatus').textContent = status.toUpperCase();
+                        
+                        const card = document.getElementById('overallHealthCard');
+                        card.className = 'stat-card ' + status;
+                        
+                        if (stats.latest_health_check.checked_at) {
+                            const date = new Date(stats.latest_health_check.checked_at);
+                            document.getElementById('lastCheck').textContent = date.toLocaleString();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // Run health check
+        async function runHealthCheck() {
+            const resultsDiv = document.getElementById('healthCheckResults');
+            resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner-border text-primary"></div><p>Running health check...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/health?check_type=full`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const health = data.health;
+                    let html = `<div class="alert alert-${getStatusClass(health.overall_status)}">
+                        <h5><i class="bi bi-${getStatusIcon(health.overall_status)} me-2"></i>Overall Status: ${health.overall_status.toUpperCase()}</h5>
+                        <small>Checked at: ${new Date(health.timestamp).toLocaleString()}</small>
+                    </div>`;
+                    
+                    html += '<div class="row">';
+                    for (const [name, check] of Object.entries(health.checks)) {
+                        html += `
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-header bg-${getStatusClass(check.status)}">
+                                        <strong>${name.replace('_', ' ').toUpperCase()}</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-2">${check.message}</p>
+                                        ${check.details ? `<pre class="mb-0 small">${JSON.stringify(check.details, null, 2)}</pre>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                    
+                    resultsDiv.innerHTML = html;
+                    loadStats(); // Refresh stats
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error running health check: ${error.message}</div>`;
+            }
+        }
+        
+        // Load errors
+        async function loadErrors() {
+            const severity = document.getElementById('errorSeverityFilter')?.value || '';
+            const resolved = document.getElementById('errorStatusFilter')?.value || '';
+            
+            const errorsList = document.getElementById('errorsList');
+            errorsList.innerHTML = '<div class="loading-spinner"><div class="spinner-border text-primary"></div></div>';
+            
+            try {
+                let url = `${API_BASE}/errors?days=7`;
+                if (severity) url += `&severity=${severity}`;
+                if (resolved) url += `&resolved=${resolved}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.errors.length > 0) {
+                    let html = '';
+                    data.errors.forEach(error => {
+                        html += `
+                            <div class="error-item ${error.severity}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-${getSeverityColor(error.severity)} me-2">${error.severity}</span>
+                                            <strong>${error.error_type}</strong>
+                                            ${error.module ? `<span class="badge bg-secondary ms-2">${error.module}</span>` : ''}
+                                        </div>
+                                        <p class="mb-2">${error.message}</p>
+                                        <small class="text-muted">
+                                            ${new Date(error.created_at).toLocaleString()}
+                                            ${error.resolved ? `<span class="badge bg-success ms-2">Resolved</span>` : ''}
+                                        </small>
+                                    </div>
+                                    ${!error.resolved ? `
+                                        <button class="btn btn-sm btn-outline-primary" onclick="resolveError('${error.id}')">
+                                            <i class="bi bi-check2"></i> Resolve
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    errorsList.innerHTML = html;
+                } else {
+                    errorsList.innerHTML = '<p class="text-muted text-center py-4">No errors found</p>';
+                }
+            } catch (error) {
+                errorsList.innerHTML = `<div class="alert alert-danger">Error loading errors: ${error.message}</div>`;
+            }
+        }
+        
+        // Resolve error
+        async function resolveError(errorId) {
+            const resolution = prompt('Enter resolution notes:');
+            if (!resolution) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/errors/${errorId}/resolve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resolution })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('Error resolved successfully');
+                    loadErrors();
+                    loadStats();
+                }
+            } catch (error) {
+                alert('Error resolving: ' + error.message);
+            }
+        }
+        
+        // Load available fixes
+        async function loadAvailableFixes() {
+            try {
+                const response = await fetch(`${API_BASE}/fixes/available`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = '';
+                    data.fixes.forEach(fix => {
+                        html += `
+                            <div class="fix-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6>${fix.name}</h6>
+                                        <p class="text-muted mb-2">${fix.description}</p>
+                                        <span class="badge bg-${fix.severity === 'high' ? 'danger' : fix.severity === 'medium' ? 'warning' : 'info'}">
+                                            ${fix.severity} priority
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="applyFix('${fix.type}', true)">
+                                            <i class="bi bi-eye me-1"></i>Preview
+                                        </button>
+                                        <button class="btn btn-primary btn-sm" onclick="applyFix('${fix.type}', false)">
+                                            <i class="bi bi-play-fill me-1"></i>Apply
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('availableFixesList').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading fixes:', error);
+            }
+        }
+        
+        // Apply fix
+        async function applyFix(fixType, dryRun) {
+            if (!dryRun && !confirm('Are you sure you want to apply this fix? This will modify your data.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/fixes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fix_type: fixType, dry_run: dryRun })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const result = data.result;
+                    alert(`${dryRun ? 'Preview' : 'Fix Applied'}:\n${result.message || JSON.stringify(result, null, 2)}`);
+                    if (!dryRun) {
+                        loadStats();
+                    }
+                }
+            } catch (error) {
+                alert('Error applying fix: ' + error.message);
+            }
+        }
+        
+        // Run diagnostics
+        async function runDiagnostics() {
+            const resultsDiv = document.getElementById('diagnosticsResults');
+            resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner-border text-primary"></div><p>Running diagnostics...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/diagnostics`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const diagnostics = data.diagnostics;
+                    let html = `<p class="text-muted mb-3">Diagnostics run at: ${new Date(diagnostics.timestamp).toLocaleString()}</p>`;
+                    
+                    html += '<div class="row">';
+                    for (const [moduleName, moduleData] of Object.entries(diagnostics.modules)) {
+                        html += `
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <strong>${moduleName.toUpperCase()}</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <pre class="mb-0 small">${JSON.stringify(moduleData, null, 2)}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                    
+                    resultsDiv.innerHTML = html;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="alert alert-danger">Error running diagnostics: ${error.message}</div>`;
+            }
+        }
+        
+        // Helper functions
+        function getStatusClass(status) {
+            const map = { 'healthy': 'success', 'warning': 'warning', 'error': 'danger' };
+            return map[status] || 'secondary';
+        }
+        
+        function getStatusIcon(status) {
+            const map = { 'healthy': 'check-circle-fill', 'warning': 'exclamation-triangle-fill', 'error': 'x-circle-fill' };
+            return map[status] || 'question-circle';
+        }
+        
+        function getSeverityColor(severity) {
+            const map = { 'critical': 'danger', 'error': 'warning', 'warning': 'warning', 'info': 'info' };
+            return map[severity] || 'secondary';
+        }
+    </script>
+</body>
+</html>

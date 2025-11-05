@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Accounting Codes</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        .dark-mode {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        .parent-account {
+            background-color: rgba(13, 110, 253, 0.1) !important;
+            border-left: 4px solid var(--primary-color) !important;
+            font-weight: 600;
+        }
+
+        .sub-account {
+            background-color: rgba(25, 135, 84, 0.05) !important;
+            border-left: 4px solid var(--success-color) !important;
+            font-size: 0.95em;
+        }
+
+        .sub-account td {
+            border-top: 1px solid rgba(25, 135, 84, 0.2) !important;
+        }
+
+        .parent-account td {
+            border-top: 2px solid rgba(13, 110, 253, 0.3) !important;
+        }
+
+        .hierarchy-indicator {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .parent-balance {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .account-type-badge {
+            font-size: 0.75rem;
+        }
+
+        .balance-positive {
+            color: var(--success-color);
+        }
+
+        .balance-negative {
+            color: var(--danger-color);
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        #addSubAccountBtn {
+            transition: all 0.3s ease;
+        }
+
+        #addSubAccountBtn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <!-- Include Standardized Navbar -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+    
+
+    <!-- Main Content -->
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="text-primary">
+                <i class="bi bi-calculator me-2"></i>Accounting Codes
+            </h1>
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newParentAccountModal">
+                    <i class="bi bi-plus-circle me-2"></i>New Parent Account
+                </button>
+                <button class="btn btn-secondary ms-2" data-bs-toggle="modal" data-bs-target="#newSubAccountModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add Sub-Account
+                </button>
+                <button class="btn btn-info ms-2">
+                    <i class="bi bi-file-earmark-text me-2"></i>IFRS Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Help Information -->
+        <div class="alert alert-info mb-4">
+            <h6><i class="bi bi-info-circle me-2"></i>Adding Sub-Accounts</h6>
+            <p class="mb-2">Parent accounts (marked with <span class="badge bg-primary">Parent</span> badge) can have sub-accounts. You can:</p>
+            <ul class="mb-0">
+                <li>Click the "Add Sub-Account" button in the Actions column for any parent account</li>
+                <li>Use the "Add Sub-Account" button at the top to create a new sub-account</li>
+                <li>Parent accounts are automatically detected based on their configuration</li>
+            </ul>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary" id="total-accounts">0</h5>
+                        <p class="card-text">Total Accounts</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success" id="parent-accounts">0</h5>
+                        <p class="card-text">Parent Accounts</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-info" id="sub-accounts">0</h5>
+                        <p class="card-text">Sub Accounts</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning" id="accounts-with-subs">0</h5>
+                        <p class="card-text">Accounts with Sub-Accounts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="accountTypeFilter" class="form-label">Account Type</label>
+                        <select class="form-select" id="accountTypeFilter">
+                            <option value="">All Types</option>
+                            <option value="Asset">Asset</option>
+                            <option value="Liability">Liability</option>
+                            <option value="Equity">Equity</option>
+                            <option value="Revenue">Revenue</option>
+                            <option value="Expense">Expense</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="categoryFilter" class="form-label">Category</label>
+                        <select class="form-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="Current Assets">Current Assets</option>
+                            <option value="Fixed Assets">Fixed Assets</option>
+                            <option value="Current Liabilities">Current Liabilities</option>
+                            <option value="Long-term Liabilities">Long-term Liabilities</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="searchFilter" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="searchFilter" placeholder="Search accounts...">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                            <i class="bi bi-x-circle me-2"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Reports Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-printer me-2"></i>Print Reports</h5>
+                <small class="text-muted">Generate PDF reports for accounting codes and transaction history.</small>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <button class="btn btn-primary" onclick="printCashEquivalentsReport()">
+                                <i class="bi bi-file-earmark-pdf me-2"></i>Cash & Cash Equivalents Report
+                            </button>
+                            <small class="text-muted mt-1">Transaction history for all Cash and Cash Equivalents accounts (1110)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="reportStartDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="reportStartDate">
+                            </div>
+                            <div class="col-6">
+                                <label for="reportEndDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="reportEndDate">
+                            </div>
+                        </div>
+                        <small class="text-muted">Leave dates empty for all-time report</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounting Codes Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-table me-2"></i>Chart of Accounts</h5>
+                <small class="text-muted">Parent accounts show aggregated balances from sub-accounts. Sub-accounts are indented and show individual balances.</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="accountingCodesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Account Type</th>
+                                <th>Category</th>
+                                <th class="text-end">Debits</th>
+                                <th class="text-end">Credits</th>
+                                <th class="text-end">Balance</th>
+                                <th class="text-end">Sub-Accounts</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountingCodesBody">
+                            <!-- Accounting codes will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Parent Account Modal -->
+    <div class="modal fade" id="newParentAccountModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Parent Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newParentAccountForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="accountCode" class="form-label">Account Code *</label>
+                                    <input type="text" class="form-control" id="accountCode" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="accountName" class="form-label">Account Name *</label>
+                                    <input type="text" class="form-control" id="accountName" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="accountType" class="form-label">Account Type *</label>
+                                    <select class="form-select" id="accountType" required>
+                                        <option value="">Select Account Type</option>
+                                        <option value="Asset">Asset</option>
+                                        <option value="Liability">Liability</option>
+                                        <option value="Equity">Equity</option>
+                                        <option value="Revenue">Revenue</option>
+                                        <option value="Expense">Expense</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="accountCategory" class="form-label">Category</label>
+                                    <select class="form-select" id="accountCategory">
+                                        <option value="">Select Category</option>
+                                        <option value="Current Assets">Current Assets</option>
+                                        <option value="Fixed Assets">Fixed Assets</option>
+                                        <option value="Current Liabilities">Current Liabilities</option>
+                                        <option value="Long-term Liabilities">Long-term Liabilities</option>
+                                        <option value="Owner's Equity">Owner's Equity</option>
+                                        <option value="Operating Revenue">Operating Revenue</option>
+                                        <option value="Operating Expenses">Operating Expenses</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Currency</label>
+                                    <input type="text" class="form-control" value="BWP (Botswana Pula)" readonly>
+                                    <small class="form-text text-muted">Currency is automatically set from application settings</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Reporting Tag</label>
+                                    <input type="text" class="form-control" value="Auto-generated" readonly>
+                                    <small class="form-text text-muted">Reporting tag is automatically generated based on account type and category</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isParent" checked>
+                                <label class="form-check-label" for="isParent">
+                                    This is a parent account (can have sub-accounts)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveParentAccount()">Save Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Sub Account Modal -->
+    <div class="modal fade" id="newSubAccountModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Sub-Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newSubAccountForm">
+                        <div class="mb-3">
+                            <label for="parentAccount" class="form-label">Parent Account *</label>
+                            <select class="form-select" id="parentAccount" required>
+                                <option value="">Select Parent Account</option>
+                                <!-- Parent accounts will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subAccountCode" class="form-label">Sub-Account Code *</label>
+                            <input type="text" class="form-control" id="subAccountCode" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subAccountName" class="form-label">Sub-Account Name *</label>
+                            <input type="text" class="form-control" id="subAccountName" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="subAccountType" class="form-label">Account Type *</label>
+                                    <select class="form-select" id="subAccountType" required>
+                                        <option value="">Select Account Type</option>
+                                        <option value="Asset">Asset</option>
+                                        <option value="Liability">Liability</option>
+                                        <option value="Equity">Equity</option>
+                                        <option value="Revenue">Revenue</option>
+                                        <option value="Expense">Expense</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="subAccountCategory" class="form-label">Category</label>
+                                    <select class="form-select" id="subAccountCategory">
+                                        <option value="">Select Category</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Currency</label>
+                            <input type="text" class="form-control" value="BWP (Botswana Pula)" readonly>
+                            <small class="form-text text-muted">Currency is automatically set from application settings</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSubAccount()">Save Sub-Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Account Modal -->
+    <div class="modal fade" id="viewAccountModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Account Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Account Code</label>
+                                <p id="viewAccountCode" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Account Name</label>
+                                <p id="viewAccountName" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Account Type</label>
+                                <p id="viewAccountType" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Category</label>
+                                <p id="viewAccountCategory" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Currency</label>
+                                <p id="viewAccountCurrency" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Reporting Tag</label>
+                                <p id="viewAccountReportingTag" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-danger">Total Debits</label>
+                                <p id="viewAccountDebits" class="form-control-plaintext text-danger"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-success">Total Credits</label>
+                                <p id="viewAccountCredits" class="form-control-plaintext text-success"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Current Balance</label>
+                                <p id="viewAccountBalance" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Parent Account</label>
+                                <p id="viewAccountParent" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Account Type</label>
+                                <p id="viewAccountIsParent" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sub-Accounts Section -->
+                    <div class="col-md-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Sub-Accounts</h5>
+                            <button type="button" class="btn btn-sm btn-primary" id="addSubAccountBtn" style="display: none;" 
+                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Add a new sub-account to this parent account">
+                                <i class="bi bi-plus-circle me-1"></i> Add Sub-Account
+                            </button>
+                        </div>
+                        <hr class="mt-2 mb-3">
+                        <div id="subAccountsContainer">
+                            <div class="text-center text-muted py-3" id="noSubAccountsMessage">
+                                No sub-accounts found. Click 'Add Sub-Account' to create one.
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" id="subAccountsTable" style="display: none;">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th class="text-end">Balance</th>
+                                            <th>Type</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="subAccountsList">
+                                        <!-- Sub-accounts will be loaded here -->
+                                    </tbody>
+                                    <tfoot id="subAccountsTotal" style="display: none;">
+                                        <tr class="table-active">
+                                            <td colspan="2" class="text-end fw-bold">Total:</td>
+                                            <td class="text-end fw-bold" id="subAccountsTotalBalance">0.00</td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="editCurrentAccount()">Edit Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Account Modal -->
+    <div class="modal fade" id="editAccountModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAccountForm">
+                        <input type="hidden" id="editAccountId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editAccountCode" class="form-label">Account Code *</label>
+                                    <input type="text" class="form-control" id="editAccountCode" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editAccountName" class="form-label">Account Name *</label>
+                                    <input type="text" class="form-control" id="editAccountName" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editAccountType" class="form-label">Account Type *</label>
+                                    <select class="form-select" id="editAccountType" required>
+                                        <option value="">Select Account Type</option>
+                                        <option value="Asset">Asset</option>
+                                        <option value="Liability">Liability</option>
+                                        <option value="Equity">Equity</option>
+                                        <option value="Revenue">Revenue</option>
+                                        <option value="Expense">Expense</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editAccountCategory" class="form-label">Category</label>
+                                    <input type="text" class="form-control" id="editAccountCategory">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Currency</label>
+                                    <input type="text" class="form-control" value="BWP (Botswana Pula)" readonly>
+                                    <small class="form-text text-muted">Currency is automatically set from application settings</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Reporting Tag</label>
+                                    <input type="text" class="form-control" value="Auto-generated" readonly>
+                                    <small class="form-text text-muted">Reporting tag is automatically generated based on account type and category</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editAccountIsParent">
+                                <label class="form-check-label" for="editAccountIsParent">
+                                    This is a parent account (can have sub-accounts)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedAccount()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" data-account-id="" data-has-children="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the account <strong id="deleteAccountName"></strong>?</p>
+                    <div id="deleteDescendantsInfo" class="mb-3" style="display:none;">
+                        <div class="alert alert-warning mb-2">
+                            <i class="bi bi-diagram-3-fill me-2"></i>
+                            <span id="descendantCountText"></span>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmCascadeCheckbox">
+                            <label class="form-check-label" for="confirmCascadeCheckbox">
+                                Also delete all descendant sub-accounts (cascade)
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1">You must check this box to proceed when sub-accounts exist.</small>
+                    </div>
+                    <div class="alert alert-danger d-flex align-items-start" id="deleteFinalWarning" style="display:none;">
+                        <i class="bi bi-exclamation-octagon me-2 mt-1"></i>
+                        <div>
+                            <strong>Irreversible:</strong> This deletion cannot be undone.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="deleteAccountBtn" disabled onclick="confirmDeleteAccount()">
+                        <i class="bi bi-trash me-2"></i><span id="deleteBtnLabel">Delete Account</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Auth Bootstrap (load first) -->
+    <script src="js/auth-bootstrap.js"></script>
+    <!-- Navbar Scripts -->
+    <script src="js/navbar.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/auth-fetch.js"></script>
+    <script src="js/navbar-loader.js"></script>
+    <script src="js/branch-switcher.js"></script>
+    <script>document.addEventListener('DOMContentLoaded',()=>{ if(window.auth){ auth.requireAuth(); } });</script>
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    
+    <script>
+        // Accounting codes are now fetched from the API
+
+        function loadAccountingCodes() {
+            const tbody = document.getElementById('accountingCodesBody');
+            tbody.innerHTML = '';
+
+            // Fetch accounting codes from API
+            fetch('/api/v1/accounting-codes/accounting-codes')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch accounting codes');
+                    }
+                    return response.json();
+                })
+                .then(accounts => {
+                    // Store all accounts in global variable for filtering
+                    allAccountingCodes = accounts;
+                    
+                    // Apply current filters or show all accounts
+                    filterAccountingCodes();
+                })
+                .catch(error => {
+                    console.error('Error loading accounting codes:', error);
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading accounting codes</td></tr>';
+                });
+        }
+
+        function getAccountTypeColor(type) {
+            switch(type) {
+                case 'Asset': return 'success';
+                case 'Liability': return 'danger';
+                case 'Equity': return 'warning';
+                case 'Revenue': return 'info';
+                case 'Expense': return 'secondary';
+                default: return 'secondary';
+            }
+        }
+
+        function updateStatistics() {
+            // Use the global filtered data for statistics
+            const accounts = allAccountingCodes || [];
+            const totalAccounts = accounts.length;
+            const parentAccounts = accounts.filter(acc => acc.is_parent || !acc.parent_id).length;
+            const subAccounts = accounts.filter(acc => acc.parent_id && !acc.is_parent).length;
+            const accountsWithSubs = accounts.filter(acc => {
+                const hasChildren = accounts.some(sub => sub.parent_id === acc.id);
+                return (acc.is_parent || !acc.parent_id) && hasChildren;
+            }).length;
+
+            // Calculate total balances
+            let totalBalance = 0;
+            let totalDebits = 0;
+            let totalCredits = 0;
+            
+            accounts.forEach(account => {
+                totalDebits += account.total_debits || 0;
+                totalCredits += account.total_credits || 0;
+                totalBalance += account.balance || 0;
+            });
+
+            document.getElementById('total-accounts').textContent = totalAccounts;
+            document.getElementById('parent-accounts').textContent = parentAccounts;
+            document.getElementById('sub-accounts').textContent = subAccounts;
+            document.getElementById('accounts-with-subs').textContent = accountsWithSubs;
+        }
+
+        // Global variable to store all accounting codes for filtering
+        let allAccountingCodes = [];
+
+        function filterAccountingCodes() {
+            const accountTypeFilter = document.getElementById('accountTypeFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+            
+            const tbody = document.getElementById('accountingCodesBody');
+            tbody.innerHTML = '';
+            
+            if (!allAccountingCodes || allAccountingCodes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No data available</td></tr>';
+                return;
+            }
+            
+            // Filter the data
+            let filteredAccounts = allAccountingCodes.filter(account => {
+                // Account type filter
+                if (accountTypeFilter && account.account_type !== accountTypeFilter) {
+                    return false;
+                }
+                
+                // Category filter
+                if (categoryFilter && account.category !== categoryFilter) {
+                    return false;
+                }
+                
+                // Search filter (search in code, name, and category)
+                if (searchFilter) {
+                    const searchText = `${account.code} ${account.name} ${account.category || ''}`.toLowerCase();
+                    if (!searchText.includes(searchFilter)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Organize filtered accounts hierarchically
+            const parentAccounts = filteredAccounts.filter(acc => acc.is_parent || !acc.parent_id);
+            const subAccounts = filteredAccounts.filter(acc => acc.parent_id && !acc.is_parent);
+            
+            // Create a map of parent accounts with their sub-accounts
+            const accountHierarchy = {};
+            parentAccounts.forEach(parent => {
+                accountHierarchy[parent.id] = {
+                    ...parent,
+                    children: subAccounts.filter(sub => sub.parent_id === parent.id)
+                };
+            });
+            
+            // Render filtered accounts hierarchically
+            Object.values(accountHierarchy).forEach(parentAccount => {
+                // Render parent account
+                const parentRow = document.createElement('tr');
+                parentRow.className = 'parent-account';
+                
+                const parentBalanceClass = parentAccount.balance >= 0 ? 'balance-positive' : 'balance-negative';
+                const parentBalanceText = `${parentAccount.currency} ${Math.abs(parentAccount.balance || 0).toLocaleString()}`;
+                
+                // Calculate total balance from children if parent has children
+                let totalChildBalance = 0;
+                let totalChildDebits = 0;
+                let totalChildCredits = 0;
+                
+                if (parentAccount.children && parentAccount.children.length > 0) {
+                    parentAccount.children.forEach(child => {
+                        totalChildBalance += child.balance || 0;
+                        totalChildDebits += child.total_debits || 0;
+                        totalChildCredits += child.total_credits || 0;
+                    });
+                }
+                
+                const displayBalance = parentAccount.children && parentAccount.children.length > 0 ? totalChildBalance : parentAccount.balance || 0;
+                const displayDebits = parentAccount.children && parentAccount.children.length > 0 ? totalChildDebits : (parentAccount.total_debits || 0);
+                const displayCredits = parentAccount.children && parentAccount.children.length > 0 ? totalChildCredits : (parentAccount.total_credits || 0);
+                
+                parentRow.innerHTML = `
+                    <td>
+                        <strong>${parentAccount.code}</strong>
+                        <span class="badge bg-primary ms-1">Parent</span>
+                        <i class="bi bi-plus-circle text-success ms-1" title="Can add sub-accounts"></i>
+                    </td>
+                    <td>
+                        <strong>${parentAccount.name}</strong>
+                        ${parentAccount.children && parentAccount.children.length > 0 ? 
+                            `<br><small class="text-muted">Total from ${parentAccount.children.length} sub-account(s)</small>` : ''}
+                    </td>
+                    <td>
+                        <span class="badge bg-${getAccountTypeColor(parentAccount.account_type)} account-type-badge">
+                            ${parentAccount.account_type}
+                        </span>
+                    </td>
+                    <td>${parentAccount.category || '-'}</td>
+                    <td class="text-end text-danger">${parentAccount.currency} ${displayDebits.toLocaleString()}</td>
+                    <td class="text-end text-success">${parentAccount.currency} ${displayCredits.toLocaleString()}</td>
+                    <td class="text-end ${displayBalance >= 0 ? 'balance-positive' : 'balance-negative'}">
+                        <strong>${parentAccount.currency} ${Math.abs(displayBalance).toLocaleString()}</strong>
+                    </td>
+                    <td class="text-end">${parentAccount.children ? parentAccount.children.length : 0}</td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="viewAccount('${parentAccount.id}')" title="View">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="editAccount('${parentAccount.id}')" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteAccount('${parentAccount.id}', '${parentAccount.name}')" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button class="btn btn-outline-success" onclick="addSubAccount('${parentAccount.id}')" title="Add Sub-Account">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(parentRow);
+                
+                // Render sub-accounts under parent
+                if (parentAccount.children && parentAccount.children.length > 0) {
+                    parentAccount.children.forEach(child => {
+                        const childRow = document.createElement('tr');
+                        childRow.className = 'sub-account';
+                        
+                        const childBalanceClass = child.balance >= 0 ? 'balance-positive' : 'balance-negative';
+                        const childBalanceText = `${child.currency} ${Math.abs(child.balance || 0).toLocaleString()}`;
+                        
+                        childRow.innerHTML = `
+                            <td>
+                                <span class="ms-4 text-muted">└─ ${child.code}</span>
+                            </td>
+                            <td>
+                                <span class="ms-4 text-muted">${child.name}</span>
+                                <br><small class="text-muted ms-4">Contributes to parent balance</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-${getAccountTypeColor(child.account_type)} account-type-badge ms-4">
+                                    ${child.account_type}
+                                </span>
+                            </td>
+                            <td class="ms-4">${child.category || '-'}</td>
+                            <td class="text-end text-danger">${child.currency} ${(child.total_debits || 0).toLocaleString()}</td>
+                            <td class="text-end text-success">${child.currency} ${(child.total_credits || 0).toLocaleString()}</td>
+                            <td class="text-end ${childBalanceClass}">${childBalanceText}</td>
+                            <td class="text-end">-</td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="viewAccount('${child.id}')" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="editAccount('${child.id}')" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteAccount('${child.id}', '${child.name}')" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(childRow);
+                    });
+                }
+            });
+            
+            // Show message if no results
+            if (Object.keys(accountHierarchy).length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No accounts match the current filters</td></tr>';
+            }
+            
+            updateStatistics();
+        }
+
+        function clearFilters() {
+            document.getElementById('accountTypeFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            loadAccountingCodes();
+        }
+
+        // Function to load account types from the backend
+        async function loadAccountTypes(targetSelectId, selectedType = '') {
+            try {
+                const select = document.getElementById(targetSelectId);
+                if (!select) return;
+                
+                // Clear existing options except the first one
+                const firstOption = select.options[0] ? select.options[0] : document.createElement('option');
+                firstOption.value = '';
+                firstOption.textContent = 'Select Account Type';
+                select.innerHTML = '';
+                select.appendChild(firstOption);
+                
+                // Get account types from the backend or use our constants
+                const accountTypes = [
+                    'Asset', 'Liability', 'Equity', 'Revenue', 'Expense'
+                ];
+                
+                // Add account types to select
+                accountTypes.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    if (type === selectedType) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+                
+                // If a type is selected, also load its categories
+                if (selectedType) {
+                    await loadCategoriesByAccountType(selectedType, targetSelectId.replace('Type', 'Category'));
+                }
+            } catch (error) {
+                console.error('Error loading account types:', error);
+            }
+        }
+        
+        // Function to load categories based on selected account type
+        async function loadCategoriesByAccountType(accountType, targetSelectId) {
+            try {
+                const select = document.getElementById(targetSelectId);
+                if (!select) {
+                    console.warn('Select element not found:', targetSelectId);
+                    return;
+                }
+                
+                // Clear existing options except the first one
+                const firstOption = (select.options && select.options.length > 0) ? select.options[0] : document.createElement('option');
+                firstOption.value = '';
+                firstOption.textContent = 'Select Category';
+                select.innerHTML = '';
+                select.appendChild(firstOption);
+                
+                // If no account type selected, return
+                if (!accountType) return;
+                
+                // Get categories from the backend or use our constants
+                const categories = {
+                    'Asset': ['Current Asset', 'Fixed Asset', 'Inventory', 'Trade Receivables', 'Cash', 'Bank', 'Prepaid Expenses', 'Investments'],
+                    'Liability': ['Current Liability', 'Long-Term Liability', 'Trade Payables', 'Accrued Liabilities', 'VAT Payable', 'Tax Payable', 'Loans Payable'],
+                    'Equity': ['Equity Capital', 'Retained Earnings', 'Opening Balance Equity', 'Owner Equity', 'Common Stock', 'Preferred Stock', 'Treasury Stock', 'Dividends', 'Drawings'],
+                    'Revenue': ['Sales Revenue', 'Service Revenue', 'Other Revenue', 'Operating Revenue', 'Interest Income', 'Rental Income', 'Dividend Income', 'Gain on Sale of Assets'],
+                    'Expense': ['Operating Expense', 'Depreciation', 'Cost of Sales', 'Tax Expense', 'Salaries and Wages', 'Rent Expense', 'Utilities', 'Insurance', 'Office Supplies', 'Marketing', 'Professional Fees', 'Interest Expense', 'Repairs and Maintenance', 'Travel Expense', 'Bad Debts']
+                };
+                
+                // Add categories to select
+                const accountCategories = categories[accountType] || [];
+                accountCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    select.appendChild(option);
+                });
+                
+                // Enable the select if there are options
+                select.disabled = accountCategories.length === 0;
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function saveParentAccount() {
+            try {
+                // Get form data
+                const accountCode = document.getElementById('accountCode').value.trim();
+                const accountName = document.getElementById('accountName').value.trim();
+                const accountType = document.getElementById('accountType').value;
+                const accountCategory = document.getElementById('accountCategory').value;
+                const isParent = document.getElementById('isParent').checked;
+                const currency = document.getElementById('currency')?.value || 'BWP';
+                const reportingTag = document.getElementById('reportingTag')?.value || '';
+                
+                // Validate required fields
+                if (!accountCode || !accountName || !accountType || !accountCategory) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                // Validate account code format (4 digits for parent accounts)
+                if (!/^\d{4}$/.test(accountCode)) {
+                    alert('Account code must be a 4-digit number for parent accounts');
+                    return;
+                }
+                
+                // Prepare data for API call
+                const accountData = {
+                    code: accountCode,
+                    name: accountName,
+                    account_type: accountType,
+                    category: accountCategory,
+                    is_parent: isParent,
+                    currency: currency,
+                    reporting_tag: reportingTag || null
+                };
+                
+                // Show loading state
+                const saveBtn = document.querySelector('#newParentAccountModal .btn-primary');
+                const originalBtnText = saveBtn.innerHTML;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                
+                // Call API to create accounting code
+                const response = await fetch('/api/v1/accounting-codes/accounting-codes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(accountData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Failed to create accounting code');
+                }
+                
+                const data = await response.json();
+                
+                // Show success message
+                alert('Parent account saved successfully!');
+                
+                // Reset form and close modal
+                document.getElementById('newParentAccountForm').reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newParentAccountModal'));
+                modal.hide();
+                
+                // Reload accounting codes
+                loadAccountingCodes();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error saving parent account: ' + (error.message || 'Please check the form and try again'));
+            } finally {
+                // Reset button state
+                const saveBtn = document.querySelector('#newParentAccountModal .btn-primary');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = 'Save Account';
+                }
+            }
+        }
+
+        async function saveSubAccount() {
+            try {
+                // Get form data
+                const parentAccount = document.getElementById('parentAccount').value;
+                const subAccountCode = document.getElementById('subAccountCode').value.trim();
+                const subAccountName = document.getElementById('subAccountName').value.trim();
+                const subAccountType = document.getElementById('subAccountType').value;
+                const subAccountCategory = document.getElementById('subAccountCategory').value;
+                const currency = document.getElementById('subAccountCurrency')?.value || 'BWP';
+                const reportingTag = document.getElementById('subAccountReportingTag')?.value || '';
+                
+                // Validate required fields
+                if (!parentAccount || !subAccountCode || !subAccountName || !subAccountType || !subAccountCategory) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                // Validate sub-account code format (parent code + dash + 2 digits)
+                if (!/^\d{4}-\d{2}$/.test(subAccountCode)) {
+                    alert('Sub-account code must be in the format XXXX-YY where XXXX is the parent code and YY is a 2-digit number');
+                    return;
+                }
+                
+                // Verify parent code matches
+                const parentCode = subAccountCode.split('-')[0];
+                const parentSelect = document.getElementById('parentAccount');
+                const selectedParent = parentSelect.options[parentSelect.selectedIndex];
+                const selectedParentCode = selectedParent ? selectedParent.getAttribute('data-code') : null;
+                
+                if (!selectedParentCode) {
+                    // Fallback: get parent code from the option text
+                    const optionText = selectedParent ? selectedParent.textContent : '';
+                    const codeMatch = optionText.match(/^(\d{4})/);
+                    const fallbackParentCode = codeMatch ? codeMatch[1] : null;
+                    
+                    if (!fallbackParentCode) {
+                        alert('Unable to determine parent account code. Please refresh the page and try again.');
+                        return;
+                    }
+                    
+                    if (parentCode !== fallbackParentCode) {
+                        alert(`Sub-account code must start with the parent account code (${fallbackParentCode})`);
+                        return;
+                    }
+                } else {
+                    if (parentCode !== selectedParentCode) {
+                        alert(`Sub-account code must start with the parent account code (${selectedParentCode})`);
+                        return;
+                    }
+                }
+                
+                // Prepare data for API call
+                const subAccountData = {
+                    code: subAccountCode,
+                    name: subAccountName,
+                    account_type: subAccountType,
+                    category: subAccountCategory,
+                    is_parent: false,
+                    parent_id: parentAccount,
+                    currency: currency,
+                    reporting_tag: reportingTag || null
+                };
+                
+                // Show loading state
+                const saveBtn = document.querySelector('#newSubAccountModal .btn-primary');
+                const originalBtnText = saveBtn.innerHTML;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                
+                // Call API to create sub-account
+                const response = await fetch(`/api/v1/accounting-codes/accounting-codes/${parentAccount}/sub-accounts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(subAccountData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Failed to create sub-account');
+                }
+                
+                const data = await response.json();
+                
+                // Show success message
+                alert('Sub-account saved successfully!');
+                
+                // Reset form and close modal
+                document.getElementById('newSubAccountForm').reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newSubAccountModal'));
+                modal.hide();
+                
+                // Reload accounting codes
+                loadAccountingCodes();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error saving sub-account: ' + (error.message || 'Please check the form and try again'));
+            } finally {
+                // Reset button state
+                const saveBtn = document.querySelector('#newSubAccountModal .btn-primary');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = 'Save Sub-account';
+                }
+            }
+        }
+
+        function viewAccount(id) {
+            try {
+                // Reset sub-accounts UI
+                const subAccountsList = document.getElementById('subAccountsList');
+                const subAccountsTable = document.getElementById('subAccountsTable');
+                const noSubAccountsMessage = document.getElementById('noSubAccountsMessage');
+                const subAccountsTotal = document.getElementById('subAccountsTotal');
+                
+                // Only proceed if required elements exist
+                if (!subAccountsList || !subAccountsTable || !noSubAccountsMessage || !subAccountsTotal) {
+                    throw new Error('Required DOM elements not found');
+                }
+                
+                subAccountsList.innerHTML = '';
+                subAccountsTable.style.display = 'none';
+                noSubAccountsMessage.style.display = 'block';
+                subAccountsTotal.style.display = 'none';
+                
+                // Show loading state
+                const loadingRow = document.createElement('tr');
+                loadingRow.id = 'loadingSubAccounts';
+                loadingRow.innerHTML = '<td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading sub-accounts...</td>';
+                subAccountsList.appendChild(loadingRow);
+                
+                // Fetch account details from API
+                fetch(`/api/v1/accounting-codes/accounting-codes/${id}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch account details');
+                        }
+                        return response.json();
+                    })
+                    .then(account => {
+                        // Helper function to safely set text content
+                        const setTextContent = (elementId, text) => {
+                            const element = document.getElementById(elementId);
+                            if (element) element.textContent = text || '-';
+                        };
+                        
+                        // Populate the view modal with null checks
+                        setTextContent('viewAccountCode', account.code);
+                        setTextContent('viewAccountName', account.name);
+                        setTextContent('viewAccountType', account.account_type);
+                        setTextContent('viewAccountCategory', account.category);
+                        setTextContent('viewAccountCurrency', account.currency || 'BWP');
+                        setTextContent('viewAccountReportingTag', account.reporting_tag);
+                        
+                        // Format numbers safely
+                        const formatNumber = (num) => (num || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        const currency = account.currency || 'BWP';
+                        
+                        setTextContent('viewAccountDebits', `${currency} ${formatNumber(account.total_debits)}`);
+                        setTextContent('viewAccountCredits', `${currency} ${formatNumber(account.total_credits)}`);
+                        setTextContent('viewAccountBalance', `${currency} ${formatNumber(account.balance)}`);
+                        
+                        // Handle parent account display
+                        const parentText = account.parent ? 
+                            `${account.parent.code || ''} - ${account.parent.name || ''}`.trim() : 'None';
+                        setTextContent('viewAccountParent', parentText);
+                        
+                        const accountTypeElement = document.getElementById('viewAccountIsParent');
+                        if (accountTypeElement) {
+                            accountTypeElement.textContent = account.is_parent ? 'Parent Account' : 'Sub Account';
+                        }
+                        
+                        // Store the account ID for editing
+                        const editIdElement = document.getElementById('editAccountId');
+                        if (editIdElement) {
+                            editIdElement.value = account.id;
+                        }
+                        
+                        // Handle Add Sub-Account button
+                        const addSubAccountBtn = document.getElementById('addSubAccountBtn');
+                        if (addSubAccountBtn) {
+                            if (account.is_parent) {
+                                addSubAccountBtn.style.display = 'block';
+                                addSubAccountBtn.setAttribute('data-account-id', account.id);
+                                addSubAccountBtn.onclick = function() { 
+                                    // Close view modal
+                                    const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewAccountModal'));
+                                    if (viewModal) viewModal.hide();
+                                    
+                                    // Set the parent account in the sub-account modal
+                                    document.getElementById('parentAccount').value = account.id;
+                                    
+                                    // Open the sub-account modal
+                                    const subAccountModal = new bootstrap.Modal(document.getElementById('newSubAccountModal'));
+                                    subAccountModal.show();
+                                    
+                                    // Load parent accounts to populate dropdown
+                                    setTimeout(() => {
+                                        loadParentAccounts();
+                                    }, 200);
+                                };
+                                loadSubAccounts(account.id);
+                            } else {
+                                addSubAccountBtn.style.display = 'none';
+                                const loadingElement = document.getElementById('loadingSubAccounts');
+                                if (loadingElement) loadingElement.remove();
+                            }
+                        }
+                        
+                        // Show the modal
+                        const modalElement = document.getElementById('viewAccountModal');
+                        if (modalElement) {
+                            const modal = new bootstrap.Modal(modalElement);
+                            modal.show();
+                            
+                            // Initialize tooltips after modal is shown
+                            modalElement.addEventListener('shown.bs.modal', function() {
+                                const tooltipTriggerList = [].slice.call(modalElement.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                                });
+                            });
+                        } else {
+                            console.error('Modal element not found');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error fetching account details: ' + error.message);
+                    });
+                    
+            } catch (error) {
+                console.error('Error in viewAccount:', error);
+                alert('Error loading account: ' + error.message);
+            }
+        }
+        
+        function loadSubAccounts(parentId) {
+            // Clear any existing loading message
+            const loadingRow = document.getElementById('loadingSubAccounts');
+            if (loadingRow) loadingRow.remove();
+            
+            // Show loading state
+            const loadingRowNew = document.createElement('tr');
+            loadingRowNew.id = 'loadingSubAccounts';
+            loadingRowNew.innerHTML = '<td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Loading sub-accounts...</td>';
+            document.getElementById('subAccountsList').appendChild(loadingRowNew);
+            
+            // Fetch sub-accounts from API
+            fetch(`/api/v1/accounting-codes/accounting-codes/${parentId}/sub-accounts`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch sub-accounts');
+                    }
+                    return response.json();
+                })
+                .then(subAccounts => {
+                    const subAccountsList = document.getElementById('subAccountsList');
+                    const noSubAccountsMessage = document.getElementById('noSubAccountsMessage');
+                    const subAccountsTable = document.getElementById('subAccountsTable');
+                    const subAccountsTotal = document.getElementById('subAccountsTotal');
+                    
+                    // Clear loading state
+                    const loadingRow = document.getElementById('loadingSubAccounts');
+                    if (loadingRow) loadingRow.remove();
+                    
+                    if (subAccounts && subAccounts.length > 0) {
+                        let totalBalance = 0;
+                        
+                        // Clear existing rows
+                        subAccountsList.innerHTML = '';
+                        
+                        // Add each sub-account to the table
+                        subAccounts.forEach(subAccount => {
+                            const row = document.createElement('tr');
+                            const balance = parseFloat(subAccount.balance || 0);
+                            totalBalance += balance;
+                            
+                            row.innerHTML = `
+                                <td>${subAccount.code}</td>
+                                <td>${subAccount.name}</td>
+                                <td class="text-end">${subAccount.currency} ${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                <td>${subAccount.account_type}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewAccount('${subAccount.id}')">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteAccount('${subAccount.id}', '${subAccount.name?.replace(/'/g, "\\'") || ''}')" data-bs-toggle="tooltip" title="Delete this sub-account">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            subAccountsList.appendChild(row);
+                        });
+                        
+                        // Update total
+                        document.getElementById('subAccountsTotalBalance').textContent = 
+                            `${subAccounts[0]?.currency || 'BWP'} ${totalBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        
+                        // Show table and total, hide "no sub-accounts" message
+                        noSubAccountsMessage.style.display = 'none';
+                        subAccountsTable.style.display = 'table';
+                        subAccountsTotal.style.display = 'table-row-group';
+                    } else {
+                        // No sub-accounts
+                        noSubAccountsMessage.style.display = 'block';
+                        subAccountsTable.style.display = 'none';
+                        subAccountsTotal.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading sub-accounts:', error);
+                    const loadingRow = document.getElementById('loadingSubAccounts');
+                    if (loadingRow) loadingRow.remove();
+                    
+                    // Show error message
+                    const errorRow = document.createElement('tr');
+                    errorRow.innerHTML = '<td colspan="5" class="text-center text-danger py-3">Error loading sub-accounts. Please try again.</td>';
+                    document.getElementById('subAccountsList').appendChild(errorRow);
+                });
+        }
+
+        async function editAccount(id) {
+            try {
+                // Show loading state
+                const editForm = document.getElementById('editAccountForm');
+                if (!editForm) throw new Error('Edit form not found');
+                
+                // Get the submit button safely
+                const submitBtn = editForm.querySelector('button[type="submit"]');
+                let originalBtnText = '';
+                
+                // If submit button exists, update its state
+                if (submitBtn) {
+                    originalBtnText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+                }
+                
+                // Fetch account details
+                const response = await fetch(`/api/v1/accounting-codes/accounting-codes/${id}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch account details');
+                }
+                
+                const account = await response.json();
+                
+                // Store the original account code for validation
+                window.currentEditingAccount = account;
+                
+                // Populate form fields
+                document.getElementById('editAccountId').value = account.id;
+                document.getElementById('editAccountCode').value = account.code;
+                document.getElementById('editAccountName').value = account.name;
+                
+                // Load account types and set the selected one
+                await loadAccountTypes('editAccountType', account.account_type);
+                
+                // Set category after a small delay to ensure the account type is set
+                setTimeout(() => {
+                    const categorySelect = document.getElementById('editAccountCategory');
+                    if (categorySelect) {
+                        // Since editAccountCategory is an input field, not a select, just set the value directly
+                        if (account.category) {
+                            categorySelect.value = account.category;
+                        }
+                    }
+                }, 100);
+                
+                // Set other fields
+                document.getElementById('editAccountIsParent').checked = account.is_parent || false;
+                
+                // Note: Currency and reporting tag are readonly fields in this form
+                // They don't need to be set programmatically
+                
+                // Set reporting tag if it exists
+                if (document.getElementById('editReportingTag')) {
+                    document.getElementById('editReportingTag').value = account.reporting_tag || '';
+                }
+                
+                // Show the modal
+                const editModal = new bootstrap.Modal(document.getElementById('editAccountModal'));
+                editModal.show();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error loading account details: ' + (error.message || 'Please try again'));
+            } finally {
+                // Reset button state
+                const submitBtn = document.querySelector('#editAccountForm button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Save Changes';
+                }
+            }
+        }
+
+        async function saveEditedAccount() {
+            try {
+                // Get form data
+                const accountId = document.getElementById('editAccountId').value;
+                const accountCode = document.getElementById('editAccountCode').value.trim();
+                const accountName = document.getElementById('editAccountName').value.trim();
+                const accountType = document.getElementById('editAccountType').value;
+                const accountCategory = document.getElementById('editAccountCategory').value;
+                const isParent = document.getElementById('editAccountIsParent').checked;
+                // Note: Currency and reporting tag are not editable in this form
+                const currency = 'BWP'; // Fixed currency
+                const reportingTag = ''; // Auto-generated
+                
+                // Validate required fields
+                if (!accountId || !accountCode || !accountName || !accountType || !accountCategory) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                // Get the original account data
+                const originalAccount = window.currentEditingAccount;
+                if (!originalAccount) {
+                    throw new Error('Cannot find original account data');
+                }
+                
+                // Validate account code format based on whether it's a parent or sub-account
+                if (originalAccount.is_parent) {
+                    // Parent account code must be 4 digits
+                    if (!/^\d{4}$/.test(accountCode)) {
+                        alert('Parent account code must be a 4-digit number');
+                        return;
+                    }
+                } else {
+                    // Sub-account code must be in format XXXX-YY
+                    if (!/^\d{4}-\d{2}$/.test(accountCode)) {
+                        alert('Sub-account code must be in the format XXXX-YY where XXXX is the parent code and YY is a 2-digit number');
+                        return;
+                    }
+                    
+                    // Verify parent code matches for sub-accounts
+                    if (originalAccount.parent_id) {
+                        const parentCode = accountCode.split('-')[0];
+                        // Get parent code from the original account data
+                        const originalParentCode = originalAccount.parent ? originalAccount.parent.code : null;
+                        
+                        if (!originalParentCode) {
+                            alert('Unable to determine parent account code. Please refresh the page and try again.');
+                            return;
+                        }
+                        
+                        if (parentCode !== originalParentCode) {
+                            alert(`Sub-account code must start with the parent account code (${originalParentCode})`);
+                            return;
+                        }
+                    }
+                }
+                
+                // Prepare data for API call
+                const accountData = {
+                    code: accountCode,
+                    name: accountName,
+                    account_type: accountType,
+                    category: accountCategory,
+                    is_parent: isParent,
+                    currency: currency,
+                    reporting_tag: reportingTag || null
+                };
+                
+                // Show loading state
+                const saveBtn = document.querySelector('#editAccountModal .btn-primary');
+                const originalBtnText = saveBtn.innerHTML;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                
+                // Call API to update accounting code
+                const response = await fetch(`/api/v1/accounting-codes/accounting-codes/${accountId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(accountData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || 'Failed to update accounting code');
+                }
+                
+                const data = await response.json();
+                
+                // Show success message
+                alert('Account updated successfully!');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editAccountModal'));
+                modal.hide();
+                
+                // Reload accounting codes
+                loadAccountingCodes();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating account: ' + (error.message || 'Please check the form and try again'));
+            } finally {
+                // Reset button state
+                const saveBtn = document.querySelector('#editAccountModal .btn-primary');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = 'Save Changes';
+                }
+            }
+        }
+
+        function addSubAccount(parentId) {
+            console.log('addSubAccount called with parentId:', parentId);
+            
+            // Set the parent account in the dropdown
+            const parentSelect = document.getElementById('parentAccount');
+            if (parentSelect) {
+                parentSelect.value = parentId;
+            }
+            
+            // Open the modal
+            const modal = new bootstrap.Modal(document.getElementById('newSubAccountModal'));
+            modal.show();
+            
+            // Load parent accounts to populate dropdown
+            setTimeout(() => {
+                console.log('Loading parent accounts from addSubAccount...');
+                loadParentAccounts();
+            }, 200);
+        }
+        
+        function loadParentAccounts() {
+            console.log('Loading parent accounts...');
+            // Load parent accounts for the dropdown
+            fetch('/api/v1/accounting-codes/accounting-codes')
+                .then(response => {
+                    console.log('API response status:', response.status);
+                    return response.json();
+                })
+                .then(accounts => {
+                    console.log('Total accounts received:', accounts.length);
+                    const parentSelect = document.getElementById('parentAccount');
+                    console.log('Parent select element:', parentSelect);
+                    
+                    if (!parentSelect) {
+                        console.error('Parent select element not found!');
+                        return;
+                    }
+                    
+                    // Store the currently selected value
+                    const currentValue = parentSelect.value;
+                    
+                    parentSelect.innerHTML = '<option value="">Select Parent Account</option>';
+                    
+                    // Filter only parent accounts
+                    const parentAccounts = accounts.filter(acc => acc.is_parent);
+                    console.log('Parent accounts found:', parentAccounts.length);
+                    console.log('Parent accounts:', parentAccounts);
+                    
+                    parentAccounts.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.id;
+                        option.setAttribute('data-code', account.code);
+                        option.textContent = `${account.code} - ${account.name}`;
+                        parentSelect.appendChild(option);
+                        console.log('Added option:', option.textContent);
+                    });
+                    
+                    // Restore the selected value if it was set
+                    if (currentValue) {
+                        parentSelect.value = currentValue;
+                        console.log('Restored selected value:', currentValue);
+                    }
+                    
+                    console.log('Final dropdown options:', parentSelect.options.length);
+                })
+                .catch(error => {
+                    console.error('Error loading parent accounts:', error);
+                });
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Initial DOMContentLoaded event fired');
+            
+            try {
+                // Load initial data
+                await Promise.all([
+                    loadAccountingCodes(),
+                    loadParentAccounts()
+                ]);
+                
+                // Set up event listeners for account type changes
+                const accountTypeFilter = document.getElementById('accountTypeFilter');
+                if (accountTypeFilter) {
+                    accountTypeFilter.addEventListener('change', function() {
+                        // Load categories based on selected account type
+                        loadCategoriesByAccountType(this.value, 'categoryFilter');
+                        // Apply filters
+                        filterAccountingCodes();
+                    });
+                }
+
+                const categoryFilter = document.getElementById('categoryFilter');
+                if (categoryFilter) {
+                    categoryFilter.addEventListener('change', function() {
+                        filterAccountingCodes();
+                    });
+                }
+
+                const searchFilter = document.getElementById('searchFilter');
+                if (searchFilter) {
+                    searchFilter.addEventListener('input', function() {
+                        filterAccountingCodes();
+                    });
+                }
+                
+                const newParentForm = document.getElementById('newParentAccountForm');
+                if (newParentForm) {
+                    newParentForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        saveParentAccount();
+                    });
+                }
+                
+                const newSubAccountForm = document.getElementById('newSubAccountForm');
+                if (newSubAccountForm) {
+                    newSubAccountForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        saveSubAccount();
+                    });
+                }
+
+                // Keep sub-account category dropdown in sync with type selection
+                const subAccountTypeEl = document.getElementById('subAccountType');
+                if (subAccountTypeEl) {
+                    subAccountTypeEl.addEventListener('change', function() {
+                        loadCategoriesByAccountType(this.value, 'subAccountCategory');
+                    });
+                }
+                
+                const editAccountForm = document.getElementById('editAccountForm');
+                if (editAccountForm) {
+                    editAccountForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        saveEditedAccount();
+                    });
+                }
+                
+                // Initialize tooltips
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+                
+                // Add click handler for the "Add Sub-Account" button in the view modal
+                const viewModal = document.getElementById('viewAccountModal');
+                if (viewModal) {
+                    viewModal.addEventListener('shown.bs.modal', function() {
+                        const addSubAccountBtn = document.getElementById('addSubAccountBtn');
+                        if (addSubAccountBtn) {
+                            addSubAccountBtn.addEventListener('click', function() {
+                                const accountId = this.getAttribute('data-account-id');
+                                if (accountId) {
+                                    // Close view modal
+                                    const modal = bootstrap.Modal.getInstance(viewModal);
+                                    if (modal) modal.hide();
+                                    
+                                    // Open new sub-account modal after a small delay
+                                    setTimeout(() => {
+                                        console.log('Loading parent accounts from button click...');
+                                        loadParentAccounts();
+                                    }, 300);
+                                }
+                            });
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                alert('Error initializing page: ' + (error.message || 'Please refresh the page and try again'));
+            }
+
+            // Load parent accounts when sub-account modal is opened
+            const subAccountModal = document.getElementById('newSubAccountModal');
+            console.log('Sub account modal element:', subAccountModal);
+            if (subAccountModal) {
+                subAccountModal.addEventListener('show.bs.modal', async function() {
+                    console.log('Modal show event triggered');
+                    // Add a small delay to ensure modal is fully rendered
+                    await setTimeout(async () => {
+                        console.log('Loading parent accounts after modal show...');
+                        await loadParentAccounts();
+                        // Populate categories for current selected sub-account type
+                        const currentType = document.getElementById('subAccountType')?.value || '';
+                        await loadCategoriesByAccountType(currentType, 'subAccountCategory');
+                    }, 100);
+                });
+            } else {
+                console.error('Sub account modal not found!');
+            }
+            
+            // Also add event listener for the "Add Sub-Account" button at the top
+            const addSubAccountBtn = document.querySelector('button[data-bs-target="#newSubAccountModal"]');
+            console.log('Add Sub-Account button:', addSubAccountBtn);
+            if (addSubAccountBtn) {
+                addSubAccountBtn.addEventListener('click', async function() {
+                    console.log('Add Sub-Account button clicked');
+                    await setTimeout(async () => {
+                        console.log('Loading parent accounts from button click...');
+                        await loadParentAccounts();
+                        const currentType = document.getElementById('subAccountType')?.value || '';
+                        await loadCategoriesByAccountType(currentType, 'subAccountCategory');
+                    }, 300);
+                });
+            }
+        });
+
+        // Improved alert system
+        function showAlert(message, type = 'info', duration = 5000) {
+            // Remove any existing alerts
+            const existingAlert = document.querySelector('.custom-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // Create alert element
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show custom-alert`;
+            alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px;';
+            alertDiv.innerHTML = `
+                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto-remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (alertDiv && alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, duration);
+            }
+        }
+
+        // Show delete error dialog with option to cascade delete
+        function showDeleteErrorDialog(accountName, errorDetail, accountId) {
+            // Create modal HTML
+            const modalHtml = `
+                <div class="modal fade" id="deleteErrorModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                    Cannot Delete Account
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p><strong>${accountName}</strong> cannot be deleted because it has sub-accounts.</p>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Details:</strong> ${errorDetail}
+                                </div>
+                                <p>You have these options:</p>
+                                <ul>
+                                    <li><strong>Delete sub-accounts first:</strong> Manually delete all sub-accounts, then delete this account</li>
+                                    <li><strong>Cascade delete:</strong> Delete this account and all its sub-accounts at once</li>
+                                </ul>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" onclick="cascadeDeleteAccount('${accountId}', '${accountName.replace(/'/g, "\\'")}')">
+                                    <i class="bi bi-trash me-2"></i>Cascade Delete All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove any existing error modal
+            const existingModal = document.getElementById('deleteErrorModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to page and show it
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('deleteErrorModal'));
+            modal.show();
+            
+            // Clean up when modal is hidden
+            document.getElementById('deleteErrorModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        // Cascade delete function
+        function cascadeDeleteAccount(accountId, accountName) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteErrorModal'));
+            modal.hide();
+            
+            if (!confirm(`Are you sure you want to delete "${accountName}" and ALL its sub-accounts?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            const url = `/api/v1/accounting-codes/accounting-codes/${accountId}?cascade=true`;
+            
+            showAlert('Deleting account and sub-accounts...', 'info', 0);
+            
+            fetch(url, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }})
+              .then(async response => {
+                  if (!response.ok) {
+                      let detail = 'Failed to delete accounting code';
+                      try {
+                          const data = await response.json();
+                          if (data && data.detail) detail = data.detail;
+                      } catch(e) {}
+                      throw new Error(detail + ` (HTTP ${response.status})`);
+                  }
+                  showAlert('Account and all sub-accounts deleted successfully', 'success');
+                  loadAccountingCodes();
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  showAlert('Error during cascade delete: ' + error.message, 'danger');
+              });
+        }
+
+        // Delete account functionality
+        let accountToDelete = null;
+
+        async function deleteAccount(id, name) {
+            accountToDelete = id;
+            const modalEl = document.getElementById('deleteAccountModal');
+            const nameEl = document.getElementById('deleteAccountName');
+            const descendantsInfo = document.getElementById('deleteDescendantsInfo');
+            const descendantCountText = document.getElementById('descendantCountText');
+            const cascadeCheckbox = document.getElementById('confirmCascadeCheckbox');
+            const deleteBtn = document.getElementById('deleteAccountBtn');
+            const deleteBtnLabel = document.getElementById('deleteBtnLabel');
+            const finalWarning = document.getElementById('deleteFinalWarning');
+
+            nameEl.textContent = name;
+            descendantsInfo.style.display = 'none';
+            finalWarning.style.display = 'none';
+            cascadeCheckbox.checked = false;
+            deleteBtn.disabled = true; // enable after checks
+            deleteBtnLabel.textContent = 'Delete Account';
+
+            // Determine descendant count using already loaded accounts (if available)
+            let descendantCount = 0;
+            let hasChildren = false;
+            if (window.allAccountingCodes && Array.isArray(window.allAccountingCodes)) {
+                const target = window.allAccountingCodes.find(a => a.id === id);
+                if (target && target.sub_accounts && target.sub_accounts.length) {
+                    const stack = [...target.sub_accounts];
+                    while (stack.length) {
+                        const node = stack.pop();
+                        descendantCount++;
+                        if (node.sub_accounts && node.sub_accounts.length) {
+                            stack.push(...node.sub_accounts);
+                        }
+                    }
+                    hasChildren = descendantCount > 0;
+                }
+            }
+
+            if (hasChildren) {
+                descendantsInfo.style.display = '';
+                finalWarning.style.display = '';
+                descendantCountText.textContent = `This account has ${descendantCount} descendant sub-account${descendantCount!==1?'s':''}.`;
+                deleteBtnLabel.textContent = 'Cascade Delete';
+                // Require checkbox confirmation
+                cascadeCheckbox.addEventListener('change', () => {
+                    deleteBtn.disabled = !cascadeCheckbox.checked;
+                }, { once: true });
+            } else {
+                // No children: simple delete
+                deleteBtn.disabled = false;
+                finalWarning.style.display = '';
+            }
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function confirmDeleteAccount() {
+            if (!accountToDelete) {
+                showAlert('No account selected for deletion', 'warning');
+                return;
+            }
+            const cascadeCheckbox = document.getElementById('confirmCascadeCheckbox');
+            const target = window.allAccountingCodes?.find(a => a.id === accountToDelete);
+            const hasChildren = target && target.sub_accounts && target.sub_accounts.length > 0;
+            const cascade = hasChildren && cascadeCheckbox && cascadeCheckbox.checked;
+            const url = `/api/v1/accounting-codes/accounting-codes/${accountToDelete}` + (cascade ? '?cascade=true' : '');
+            
+            // Disable the delete button during request
+            const deleteBtn = document.getElementById('deleteAccountBtn');
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Deleting...';
+            
+            fetch(url, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }})
+              .then(async response => {
+                  if (!response.ok) {
+                      let detail = 'Failed to delete accounting code';
+                      try {
+                          const data = await response.json();
+                          if (data && data.detail) detail = data.detail;
+                      } catch(e) {}
+                      
+                      // Check if this is a sub-accounts error
+                      if (detail.includes('sub-accounts') && detail.includes('cascade=true')) {
+                          // Close the modal first
+                          const modal = bootstrap.Modal.getInstance(document.getElementById('deleteAccountModal'));
+                          modal.hide();
+                          
+                          // Show a more user-friendly error with option to try cascade delete
+                          const accountName = target ? target.name : 'this account';
+                          showDeleteErrorDialog(accountName, detail, accountToDelete);
+                          return;
+                      }
+                      
+                      throw new Error(detail + ` (HTTP ${response.status})`);
+                  }
+                  showAlert('Account deleted successfully', 'success');
+                  const modal = bootstrap.Modal.getInstance(document.getElementById('deleteAccountModal'));
+                  modal.hide();
+                  accountToDelete = null;
+                  loadAccountingCodes();
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  showAlert('Error deleting account: ' + error.message, 'danger');
+              })
+              .finally(() => {
+                  // Re-enable the delete button
+                  deleteBtn.disabled = false;
+                  deleteBtn.innerHTML = '<i class="bi bi-trash me-2"></i><span id="deleteBtnLabel">Delete Account</span>';
+              });
+        }
+
+        // Function to print Cash & Cash Equivalents PDF report
+        function printCashEquivalentsReport() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            
+            let url = '/api/reports/cash-equivalents/pdf';
+            const params = new URLSearchParams();
+            
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+            
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+            
+            // Show loading state
+            const button = event.target;
+            const originalContent = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Generating PDF...';
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    // Create a temporary URL for the blob
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    
+                    // Create a temporary link to download the file
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    
+                    // Generate filename with date range
+                    let filename = 'Cash_and_Cash_Equivalents_Report';
+                    if (startDate && endDate) {
+                        filename += `_${startDate}_to_${endDate}`;
+                    } else if (startDate) {
+                        filename += `_from_${startDate}`;
+                    } else if (endDate) {
+                        filename += `_until_${endDate}`;
+                    } else {
+                        filename += '_All_Time';
+                    }
+                    filename += '.pdf';
+                    
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    // Clean up the blob URL
+                    window.URL.revokeObjectURL(blobUrl);
+                    
+                    showAlert('PDF report generated successfully!', 'success');
+                })
+                .catch(error => {
+                    console.error('Error generating PDF:', error);
+                    showAlert('Error generating PDF report: ' + error.message, 'danger');
+                })
+                .finally(() => {
+                    // Restore button state
+                    button.disabled = false;
+                    button.innerHTML = originalContent;
+                });
+        }
+    </script>
+</body>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/navbar-loader.js"></script>
+</html> 

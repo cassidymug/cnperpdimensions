@@ -1,0 +1,12 @@
+{
+  "backup_type": "absolute",
+  "file_path": "C:\\dev\\backup/absolute/backup_absolute_MBUDZI_BACKUP_20251015_181203_16fd839a-7279-40b8-a9aa-3250b06b4341.sql",
+  "file_size": 159,
+  "file_hash": "7b9c890bf7a72f26d025e2d9f6d5de837bdbc626447f153720a87035ba73891f",
+  "created_at": "2025-10-15T18:12:04.821490",
+  "description": "MBUDZI BACKUP",
+  "version": "1.0",
+  "database_name": "cnperp",
+  "database_host": "localhost",
+  "files_backup_path": "C:\\dev\\backup/absolute/files_absolute_20251015_181203_16fd839a-7279-40b8-a9aa-3250b06b4341.zip"
+}

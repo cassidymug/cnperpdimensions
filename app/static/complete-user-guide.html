@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete User Guide - CNPERP ERP System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* Navbar Styling */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        body {
+            padding-top: 180px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            top: 180px;
+            left: 0;
+            bottom: 0;
+            width: 280px;
+            background: #f8f9fa;
+            overflow-y: auto;
+            border-right: 1px solid #dee2e6;
+            z-index: 1000;
+        }
+        
+        .sidebar * {
+            color: #333 !important;
+        }
+        
+        .sidebar .nav-link {
+            color: #333 !important;
+            padding: 0.5rem 1rem;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover {
+            background: #e9ecef;
+            color: #667eea !important;
+        }
+        
+        .sidebar .nav-link.active {
+            background: #f3e8ff;
+            color: #667eea !important;
+            border-left-color: #764ba2;
+            font-weight: 600;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+            width: 20px;
+            color: #764ba2 !important;
+        }
+        
+        .sidebar .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #333 !important;
+            font-weight: 600;
+            padding: 1rem 1rem 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .sidebar .subsection {
+            font-size: 0.85rem;
+            padding-left: 2.5rem;
+            color: #555 !important;
+        }
+        
+        .sidebar h5 {
+            color: #333 !important;
+        }
+        
+        .sidebar h5 i {
+            color: #764ba2 !important;
+        }
+        
+        /* Content Area */
+        .content {
+            margin-left: 280px;
+            padding: 2rem;
+            max-width: 1200px;
+        }
+        
+        /* Section Styling */
+        .guide-section {
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .guide-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+        
+        .section-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        
+        .section-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .subsection-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-left: 4px solid #667eea;
+            margin: 2rem 0 1rem 0;
+        }
+        
+        .subsection-header h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.5rem;
+        }
+        
+        .subsection-header h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.25rem;
+        }
+        
+        /* Code Blocks */
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #e83e8c;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Tables */
+        .content table {
+            margin: 1rem 0;
+        }
+        
+        /* Info Boxes */
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            line-height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .back-to-top:hover {
+            background: #764ba2;
+        }
+        
+        /* Print Styles */
+        @media print {
+            .sidebar, .back-to-top, #navbar-container {
+                display: none;
+            }
+            .content {
+                margin-left: 0;
+            }
+            body {
+                padding-top: 0;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0;
+            }
+        }
+        
+        .mobile-toggle {
+            position: fixed;
+            top: 90px;
+            left: 10px;
+            z-index: 1001;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-toggle {
+                display: block;
+            }
+        }
+        
+        /* Checklist Styles */
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .checklist li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+        
+        .checklist li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Step Numbers */
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    <div id="navbar-container"></div>
+    
+    <!-- Mobile Sidebar Toggle -->
+    <button class="btn btn-primary mobile-toggle" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+    </button>
+    
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="p-3">
+            <h5 class="mb-3">
+                <i class="bi bi-book-fill me-2"></i>User Guide
+            </h5>
+            
+            <div class="section-title">Getting Started</div>
+            <a class="nav-link" href="#setup"><i class="bi bi-gear-fill"></i>System Setup</a>
+            <a class="nav-link subsection" href="#setup-initial">Initial Setup</a>
+            <a class="nav-link subsection" href="#setup-branches">Branch Management</a>
+            <a class="nav-link subsection" href="#setup-users">User Management</a>
+            
+            <div class="section-title">Accounting</div>
+            <a class="nav-link" href="#accounting"><i class="bi bi-calculator-fill"></i>Accounting Codes</a>
+            <a class="nav-link subsection" href="#accounting-coa">Chart of Accounts</a>
+            <a class="nav-link subsection" href="#accounting-subaccounts">Sub-Accounts</a>
+            <a class="nav-link subsection" href="#accounting-vat">VAT Configuration</a>
+            
+            <a class="nav-link" href="#banking"><i class="bi bi-bank"></i>Banking & Reconciliation</a>
+            <a class="nav-link subsection" href="#banking-accounts">Bank Accounts</a>
+            <a class="nav-link subsection" href="#banking-reconciliation">Reconciliation</a>
+            
+            <div class="section-title">Operations</div>
+            <a class="nav-link" href="#inventory"><i class="bi bi-box-seam-fill"></i>Inventory Management</a>
+            <a class="nav-link subsection" href="#inventory-products">Products</a>
+            <a class="nav-link subsection" href="#inventory-stock">Stock Management</a>
+            <a class="nav-link subsection" href="#inventory-uom">Units of Measure</a>
+            
+            <a class="nav-link" href="#sales"><i class="bi bi-cart-fill"></i>Sales & Invoicing</a>
+            <a class="nav-link subsection" href="#sales-invoicing">Invoicing</a>
+            <a class="nav-link subsection" href="#sales-cash">Cash Sales</a>
+            <a class="nav-link subsection" href="#sales-credit">Credit Notes</a>
+            
+            <a class="nav-link" href="#purchasing"><i class="bi bi-bag-check-fill"></i>Purchasing</a>
+            <a class="nav-link subsection" href="#purchasing-suppliers">Suppliers</a>
+            <a class="nav-link subsection" href="#purchasing-po">Purchase Orders</a>
+            <a class="nav-link subsection" href="#purchasing-grn">Goods Receiving</a>
+            
+            <div class="section-title">Reporting & Settings</div>
+            <a class="nav-link" href="#reports"><i class="bi bi-graph-up"></i>Reports & Analytics</a>
+            <a class="nav-link subsection" href="#reports-financial">Financial Reports</a>
+            <a class="nav-link subsection" href="#reports-sales">Sales Reports</a>
+            <a class="nav-link subsection" href="#reports-bi">Business Intelligence</a>
+            
+            <a class="nav-link" href="#settings"><i class="bi bi-sliders"></i>System Settings</a>
+            <a class="nav-link subsection" href="#settings-company">Company Info</a>
+            <a class="nav-link subsection" href="#settings-currency">Currency & VAT</a>
+            <a class="nav-link subsection" href="#settings-invoice">Invoice Customization</a>
+            
+            <div class="mt-4 p-3 bg-white border rounded">
+                <button class="btn btn-primary w-100 mb-2" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>Print Guide
+                </button>
+                <a href="/static/help-center.html" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Header -->
+        <div class="section-header text-center">
+            <h1><i class="bi bi-book me-3"></i>CNPERP Complete User Guide</h1>
+            <p class="lead">Comprehensive documentation for all system features</p>
+            <p class="mb-0"><small>Last Updated: October 15, 2025</small></p>
+        </div>
+        
+        <!-- Quick Navigation Cards -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-rocket-takeoff text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Getting Started</h5>
+                        <p class="card-text">Setup, configuration, and initial system deployment</p>
+                        <a href="#setup" class="btn btn-primary btn-sm">Start Here</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calculator text-success" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Core Accounting</h5>
+                        <p class="card-text">Accounting codes, banking, and financial management</p>
+                        <a href="#accounting" class="btn btn-success btn-sm">Learn More</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-bar-chart-fill text-warning" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Operations</h5>
+                        <p class="card-text">Sales, purchasing, inventory, and reporting</p>
+                        <a href="#inventory" class="btn btn-warning btn-sm">Explore</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Setup & Configuration -->
+        <div class="guide-section" id="setup">
+            <h1 class="text-primary mb-4">
+                <i class="bi bi-gear-fill me-3"></i>System Setup & Configuration
+            </h1>
+            
+            <div class="info-box">
+                <strong><i class="bi bi-info-circle me-2"></i>Overview:</strong>
+                This section covers initial system setup, branch management, user configuration, and application settings. Complete these steps before using other features.
+            </div>
+            
+            <div id="setup-initial" class="subsection-header">
+                <h2>Initial System Setup</h2>
+            </div>
+            
+            <h4><span class="step-number">1</span>Database Setup</h4>
+            <pre>
+# Create PostgreSQL database
+createdb cnperp_erp
+
+# Set environment variables (Windows PowerShell)
+$env:DATABASE_URL="postgresql://username:password@localhost:5432/cnperp_erp"
+
+# Run migrations
+python -m alembic upgrade head
+
+# Seed initial data
+python scripts/seed_initial_data.py
+            </pre>
+            
+            <h4><span class="step-number">2</span>Create Super Administrator</h4>
+            <pre>
+# Run the create superadmin script
+python create_superadmin.py
+
+# Follow prompts:
+Username: admin
+Full Name: System Administrator
+Email: admin@company.com
+Password: [secure password]
+            </pre>
+            
+            <h4><span class="step-number">3</span>Start the Application</h4>
+            <pre>
+# Activate virtual environment
+.\.venv\Scripts\Activate.ps1
+
+# Start FastAPI server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8010
+
+# Access: http://localhost:8010
+            </pre>
+            
+            <div id="setup-branches" class="subsection-header">
+                <h3>Branch Management</h3>
+            </div>
+            
+            <p>Create and configure branches for multi-location operations:</p>
+            
+            <ol>
+                <li><strong>Navigate to:</strong> Setup → Branches</li>
+                <li><strong>Click:</strong> "Add Branch"</li>
+                <li><strong>Enter Details:</strong>
+                    <ul>
+                        <li>Branch Code: HO</li>
+                        <li>Branch Name: Head Office</li>
+                        <li>Address: Plot 123, Main Road, Gaborone</li>
+                        <li>Phone: +267 123 4567</li>
+                        <li>Manager: Select user</li>
+                    </ul>
+                </li>
+                <li><strong>Configure Settings:</strong>
+                    <ul>
+                        <li>Default Currency: BWP</li>
+                        <li>Allow Sales: ✓ Yes</li>
+                        <li>Has Warehouse: ✓ Yes</li>
+                        <li>Has POS: ✓ Yes</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <div id="setup-users" class="subsection-header">
+                <h3>User Management</h3>
+            </div>
+            
+            <p>Create users and assign roles:</p>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Permissions</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Super Administrator</td>
+                        <td>Full system access</td>
+                        <td>IT/System owner</td>
+                    </tr>
+                    <tr>
+                        <td>Administrator</td>
+                        <td>All except system settings</td>
+                        <td>General management</td>
+                    </tr>
+                    <tr>
+                        <td>Accountant</td>
+                        <td>Financial transactions & reports</td>
+                        <td>Finance team</td>
+                    </tr>
+                    <tr>
+                        <td>Sales Person</td>
+                        <td>Sales, customers, quotations</td>
+                        <td>Sales team</td>
+                    </tr>
+                    <tr>
+                        <td>Cashier</td>
+                        <td>POS & cash sales only</td>
+                        <td>Front desk staff</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Accounting Codes -->
+        <div class="guide-section" id="accounting">
+            <h1 class="text-primary mb-4">
+                <i class="bi bi-calculator-fill me-3"></i>Accounting Codes & Chart of Accounts
+            </h1>
+            
+            <div class="info-box">
+                <strong><i class="bi bi-info-circle me-2"></i>IFRS Compliant:</strong>
+                The accounting system follows International Financial Reporting Standards (IFRS) for proper financial reporting.
+            </div>
+            
+            <div id="accounting-coa" class="subsection-header">
+                <h2>Chart of Accounts Structure</h2>
+            </div>
+            
+            <p>Account code format: <code>XXX-XXX-XX</code></p>
+            
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Range</th>
+                        <th>Type</th>
+                        <th>Examples</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>100-199</td>
+                        <td>Assets</td>
+                        <td>100-001 Cash, 110-001 Receivables, 120-001 Inventory</td>
+                    </tr>
+                    <tr>
+                        <td>200-299</td>
+                        <td>Liabilities</td>
+                        <td>200-001 Payables, 210-001 VAT Payable, 220-001 Loans</td>
+                    </tr>
+                    <tr>
+                        <td>300-399</td>
+                        <td>Equity</td>
+                        <td>300-001 Share Capital, 310-001 Retained Earnings</td>
+                    </tr>
+                    <tr>
+                        <td>400-499</td>
+                        <td>Revenue</td>
+                        <td>400-001 Sales Revenue, 400-050 Interest Income</td>
+                    </tr>
+                    <tr>
+                        <td>500-599</td>
+                        <td>Expenses</td>
+                        <td>500-001 COGS, 500-100 Salaries, 500-200 Rent</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div id="accounting-subaccounts" class="subsection-header">
+                <h3>Sub-Accounts</h3>
+            </div>
+            
+            <p><strong>Customer Sub-Accounts (110-CXXX):</strong></p>
+            <ul>
+                <li>110-C001 = ABC Company Ltd</li>
+                <li>110-C002 = XYZ Enterprises</li>
+                <li>Tracks individual customer balances</li>
+            </ul>
+            
+            <p><strong>Supplier Sub-Accounts (200-SXXX):</strong></p>
+            <ul>
+                <li>200-S001 = ABC Furniture Ltd</li>
+                <li>200-S002 = XYZ Suppliers</li>
+                <li>Tracks individual supplier balances</li>
+            </ul>
+            
+            <div id="accounting-vat" class="subsection-header">
+                <h3>VAT Configuration</h3>
+            </div>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Code</th>
+                        <th>Rate</th>
+                        <th>Usage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>VAT Output</td>
+                        <td>210-001</td>
+                        <td>14%</td>
+                        <td>Sales transactions</td>
+                    </tr>
+                    <tr>
+                        <td>VAT Input</td>
+                        <td>210-002</td>
+                        <td>14%</td>
+                        <td>Purchase transactions</td>
+                    </tr>
+                    <tr>
+                        <td>VAT Payable</td>
+                        <td>210-003</td>
+                        <td>-</td>
+                        <td>Net VAT owed to authorities</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="success-box">
+                <strong><i class="bi bi-check-circle me-2"></i>Monthly VAT Reconciliation:</strong>
+                The system automatically calculates VAT Output - VAT Input = VAT Payable for your monthly returns.
+            </div>
+        </div>
+        
+        <!-- Banking & Reconciliation -->
+        <div class="guide-section" id="banking">
+            <h1 class="text-primary mb-4">
+                <i class="bi bi-bank me-3"></i>Banking & Reconciliation
+            </h1>
+            
+            <div id="banking-accounts" class="subsection-header">
+                <h2>Bank Account Setup</h2>
+            </div>
+            
+            <p><strong>Steps to create a bank account:</strong></p>
+            
+            <ol>
+                <li>Navigate to: Banking → Bank Accounts</li>
+                <li>Click: "Add Bank Account"</li>
+                <li>Enter bank details:
+                    <ul>
+                        <li>Bank Name: Standard Bank Botswana</li>
+                        <li>Account Number: 1234567890</li>
+                        <li>Account Type: Checking</li>
+                        <li>Currency: BWP</li>
+                        <li>GL Account: 100-010 (Bank - Standard Bank)</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <div id="banking-reconciliation" class="subsection-header">
+                <h3>Monthly Bank Reconciliation</h3>
+            </div>
+            
+            <p><strong>Reconciliation Process:</strong></p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Step 1: Prepare</h5>
+                    <ul class="checklist">
+                        <li>Gather bank statement</li>
+                        <li>List outstanding checks</li>
+                        <li>Note deposits in transit</li>
+                        <li>Have previous reconciliation</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Step 2: Match Transactions</h5>
+                    <ul class="checklist">
+                        <li>Open reconciliation screen</li>
+                        <li>Enter statement details</li>
+                        <li>Match system to bank items</li>
+                        <li>Mark matched transactions</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h5>Step 3: Handle Discrepancies</h5>
+                    <ul class="checklist">
+                        <li>Identify unmatched items</li>
+                        <li>Record bank charges</li>
+                        <li>Record interest income</li>
+                        <li>Note outstanding items</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Step 4: Finalize</h5>
+                    <ul class="checklist">
+                        <li>Verify balances match</li>
+                        <li>Post adjustments</li>
+                        <li>Mark as reconciled</li>
+                        <li>Generate report</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inventory Management -->
+        <div class="guide-section" id="inventory">
+            <h1 class="text-primary mb-4">
+                <i class="bi bi-box-seam-fill me-3"></i>Inventory Management
+            </h1>
+            
+            <div id="inventory-products" class="subsection-header">
+                <h2>Product Setup</h2>
+            </div>
+            
+            <p><strong>Creating a Product:</strong></p>
+            
+            <table class="table table-bordered">
+                <tr>
+                    <th>Field</th>
+                    <th>Example</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>Product Code</td>
+                    <td>PROD-001</td>
+                    <td>Unique identifier (auto or manual)</td>
+                </tr>
+                <tr>
+                    <td>Product Name</td>
+                    <td>Office Chair - Executive</td>
+                    <td>Descriptive name</td>
+                </tr>
+                <tr>
+                    <td>Category</td>
+                    <td>Office Furniture</td>
+                    <td>Product classification</td>
+                </tr>
+                <tr>
+                    <td>UOM</td>
+                    <td>Each (EA)</td>
+                    <td>Unit of measure</td>
+                </tr>
+                <tr>
+                    <td>Cost Price</td>
+                    <td>P 450.00</td>
+                    <td>Purchase/production cost</td>
+                </tr>
+                <tr>
+                    <td>Selling Price</td>
+                    <td>P 750.00</td>
+                    <td>Sales price</td>
+                </tr>
+                <tr>
+                    <td>VAT Category</td>
+                    <td>Standard (14%)</td>
+                    <td>Tax classification</td>
+                </tr>
+            </table>
+            
+            <div id="inventory-stock" class="subsection-header">
+                <h3>Stock Management</h3>
+            </div>
+            
+            <p><strong>Stock Transactions:</strong></p>
+            
+            <ul>
+                <li><strong>Stock In (Receiving):</strong> From purchase orders, adjustments, or transfers</li>
+                <li><strong>Stock Out (Issuing):</strong> From sales orders, production, or adjustments</li>
+                <li><strong>Stock Transfer:</strong> Between branches or locations</li>
+                <li><strong>Stock Adjustment:</strong> Physical count variances, damage, or loss</li>
+            </ul>
+            
+            <div class="warning-box">
+                <strong><i class="bi bi-exclamation-triangle me-2"></i>Important:</strong>
+                All stock movements require proper authorization. Stock adjustments reduce/increase inventory value and impact financial statements.
+            </div>
+            
+            <div id="inventory-uom" class="subsection-header">
+                <h3>Units of Measure (UOM)</h3>
+            </div>
+            
+            <p><strong>Common UOM Examples:</strong></p>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <h6>Count Units</h6>
+                    <ul>
+                        <li>Each (EA)</li>
+                        <li>Pair (PR)</li>
+                        <li>Dozen (DZ)</li>
+                        <li>Gross (GR)</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Weight Units</h6>
+                    <ul>
+                        <li>Kilogram (KG)</li>
+                        <li>Gram (G)</li>
+                        <li>Pound (LB)</li>
+                        <li>Ton (TON)</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Volume Units</h6>
+                    <ul>
+                        <li>Liter (L)</li>
+                        <li>Milliliter (ML)</li>
+                        <li>Gallon (GAL)</li>
+                        <li>Cubic Meter (M3)</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Length Units</h6>
+                    <ul>
+                        <li>Meter (M)</li>
+                        <li>Centimeter (CM)</li>
+                        <li>Foot (FT)</li>
+                        <li>Roll (ROLL)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sales & Invoicing -->
+        <div class="guide-section" id="sales">
+            <h1 class="text-primary mb-4">
+                <i class="bi bi-cart-fill me-3"></i>Sales & Invoicing
+            </h1>
+            
+            <div id="sales-invoicing" class="subsection-header">
+                <h2>Creating Invoices</h2>
+            </div>
+            
+            <p><strong>Invoice Workflow:</strong></p>
+            
+            <pre>
+Quotation → Sales Order → Dispatch → Invoice → Receipt → Close
+   (Optional)    (Optional)   (Required)  (Required) (Required)
+            </pre>
+            
+            <p><strong>Invoice Components:</strong></p>
+            
+            <ul>
+                <li><strong>Header:</strong> Customer, date, terms, reference</li>
+                <li><strong>Line Items:</strong> Products, quantities, prices, VAT</li>
+                <li><strong>Totals:</strong> Subtotal, VAT, discounts, total</li>
+                <li><strong>Footer:</strong> Payment terms, bank details, notes</li>
+            </ul>
+            
+            <div id="sales-cash" class="subsection-header">
+                <h3>Cash Sales</h3>
+            </div>
+            
+            <p><strong>Processing a Cash Sale:</strong></p>
+            
+            <table class="table">
+                <tr>
+                    <td width="30%"><strong>1. Select Products</strong></td>
+                    <td>Scan barcode or select from list</td>
+                </tr>
+                <tr>
+                    <td><strong>2. Enter Quantity</strong></td>
+                    <td>Use keypad or quick buttons</td>
+                </tr>
+                <tr>
+                    <td><strong>3. Review Total</strong></td>
+                    <td>System calculates subtotal + VAT</td>
+                </tr>
+                <tr>
+                    <td><strong>4. Amount Tendered</strong></td>
+                    <td>Enter cash received from customer</td>
+                </tr>
+                <tr>
+                    <td><strong>5. Change Calculation</strong></td>
+                    <td>System auto-calculates change due</td>
+                </tr>
+                <tr>
+                    <td><strong>6. Process Payment</strong></td>
+                    <td>Creates invoice, updates stock, prints receipt</td>
+                </tr>
+            </table>
+            
+            <div class="success-box">
+                <strong><i class="bi bi-check-circle me-2"></i>Automatic Receipt:</strong>
+                Cash sales automatically generate and print receipts with amount tendered and change details.
+            </div>
+            
+            <div id="sales-credit" class="subsection-header">
+                <h3>Credit Notes & Returns</h3>
+            </div>
+            
+            <p><strong>When to Use Credit Notes:</strong></p>
+            
+            <ul>
+                <li>Customer returns damaged/faulty goods</li>
+                <li>Product price adjustment</li>
+                <li>Wrong items delivered</li>
+                <li>Quantity discrepancy</li>
+            </ul>
+            
+            <p><strong>Refund Methods:</strong></p>
+            
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>When to Use</th>
+                        <th>Process</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cash Refund</td>
+                        <td>Cash purchases</td>
+                        <td>Immediate cash payment to customer</td>
+                    </tr>
+                    <tr>
+                        <td>Bank Transfer</td>
+                        <td>Card/bank payments</td>
+                        <td>Transfer to customer's account</td>
+                    </tr>
+                    <tr>
+                        <td>Credit to Account</td>
+                        <td>Account customers</td>
+                        <td>Reduces customer balance</td>
+                    </tr>
+                    <tr>
+                        <td>Store Credit</td>
+                        <td>Non-refundable</td>
+                        <td>Credit for future purchases</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Purchasing -->
+        <div class="guide-section" id="purchasing">
+            <h1 class="text-primary mb-4">
+                <i class="bi bi-bag-check-fill me-3"></i>Purchasing & Procurement
+            </h1>
+            
+            <div id="purchasing-suppliers" class="subsection-header">
+                <h2>Supplier Management</h2>
+            </div>
+            
+            <p><strong>Supplier Information Required:</strong></p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Basic Details</h6>
+                    <ul>
+                        <li>Supplier name & code</li>
+                        <li>Contact person</li>
+                        <li>Phone & email</li>
+                        <li>Physical & postal address</li>
+                    </ul>
+                    
+                    <h6>Financial</h6>
+                    <ul>
+                        <li>Tax number & VAT number</li>
+                        <li>Payment terms (e.g., Net 30)</li>
+                        <li>Credit limit</li>
+                        <li>Currency</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Banking</h6>
+                    <ul>
+                        <li>Bank name & branch</li>
+                        <li>Account number</li>
+                        <li>SWIFT code (for international)</li>
+                    </ul>
+                    
+                    <h6>Accounting</h6>
+                    <ul>
+                        <li>GL account (Payables)</li>
+                        <li>Sub-account code</li>
+                        <li>Expense account</li>
+                        <li>VAT account</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="purchasing-po" class="subsection-header">
+                <h3>Purchase Orders</h3>
+            </div>
+            
+            <p><strong>Purchase Order Lifecycle:</strong></p>
+            
+            <pre>
+Draft → Pending Approval → Approved → Sent → Acknowledged
+  ↓           ↓              ↓         ↓         ↓
+Cancelled  Rejected    Partially    Fully    Invoiced → Paid → Closed
+                        Received   Received
+            </pre>
+            
+            <div id="purchasing-grn" class="subsection-header">
+                <h3>Goods Receiving Note (GRN)</h3>
+            </div>
+            
+            <p><strong>Quality Inspection Checklist:</strong></p>
+            
+            <ul class="checklist">
+                <li>Check quantities match PO</li>
+                <li>Inspect physical condition</li>
+                <li>Verify specifications/model</li>
+                <li>Check expiry dates (if applicable)</li>
+                <li>Note any damage or defects</li>
+                <li>Take photos of damaged items</li>
+                <li>Get manager approval for rejections</li>
+                <li>Document all findings in GRN</li>
+            </ul>
+            
+            <div class="warning-box">
+                <strong><i class="bi bi-exclamation-triangle me-2"></i>Three-Way Matching:</strong>
+                System validates: Purchase Order ↔ GRN ↔ Supplier Invoice. Discrepancies are flagged for review.
+            </div>
+        </div>
+        
+        <!-- Reports & Analytics -->
+        <div class="guide-section" id="reports">
+            <h1 class="text-primary mb-4">
+                <i class="bi bi-graph-up me-3"></i>Reports & Analytics
+            </h1>
+            
+            <div id="reports-financial" class="subsection-header">
+                <h2>Financial Reports</h2>
+            </div>
+            
+            <p><strong>IFRS-Compliant Financial Statements:</strong></p>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Report</th>
+                        <th>Standard</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Balance Sheet</td>
+                        <td>IAS 1</td>
+                        <td>Statement of financial position (assets, liabilities, equity)</td>
+                    </tr>
+                    <tr>
+                        <td>Income Statement</td>
+                        <td>IAS 1</td>
+                        <td>Profit & loss (revenue, expenses, net income)</td>
+                    </tr>
+                    <tr>
+                        <td>Cash Flow Statement</td>
+                        <td>IAS 7</td>
+                        <td>Operating, investing, financing cash flows</td>
+                    </tr>
+                    <tr>
+                        <td>Trial Balance</td>
+                        <td>-</td>
+                        <td>Verify debits equal credits</td>
+                    </tr>
+                    <tr>
+                        <td>Aged Receivables</td>
+                        <td>IFRS 9</td>
+                        <td>Customer aging analysis</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div id="reports-sales" class="subsection-header">
+                <h3>Sales Reports</h3>
+            </div>
+            
+            <p><strong>Available Sales Reports:</strong></p>
+            
+            <ul>
+                <li><strong>Sales Summary:</strong> Daily/weekly/monthly revenue analysis</li>
+                <li><strong>Sales by Customer:</strong> Top customers, revenue contribution</li>
+                <li><strong>Sales by Product:</strong> Best sellers, slow-moving items</li>
+                <li><strong>Salesperson Performance:</strong> Individual sales targets vs. achievement</li>
+                <li><strong>Sales Trend Analysis:</strong> Growth patterns, seasonality</li>
+            </ul>
+            
+            <div id="reports-bi" class="subsection-header">
+                <h3>Business Intelligence Dashboard</h3>
+            </div>
+            
+            <p><strong>Key Performance Indicators (KPIs):</strong></p>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card text-center mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">Revenue</h5>
+                            <h3>P 843,000</h3>
+                            <small class="text-success">↑ 12.5%</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">Gross Profit</h5>
+                            <h3>P 313,515</h3>
+                            <small>Margin: 37.2%</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">Cash Balance</h5>
+                            <h3>P 413,500</h3>
+                            <small class="text-success">↑ 8.5%</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">Current Ratio</h5>
+                            <h3>4.50:1</h3>
+                            <small class="text-success">Healthy</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Settings -->
+        <div class="guide-section" id="settings">
+            <h1 class="text-primary mb-4">
+                <i class="bi bi-sliders me-3"></i>System Settings & Configuration
+            </h1>
+            
+            <div id="settings-company" class="subsection-header">
+                <h2>Company Information</h2>
+            </div>
+            
+            <p><strong>Essential Company Details:</strong></p>
+            
+            <table class="table">
+                <tr>
+                    <th width="30%">Company Name</th>
+                    <td>Your Company Name (Pty) Ltd</td>
+                </tr>
+                <tr>
+                    <th>Registration Number</th>
+                    <td>BW-12345678</td>
+                </tr>
+                <tr>
+                    <th>Tax Number</th>
+                    <td>T12345678</td>
+                </tr>
+                <tr>
+                    <th>VAT Number</th>
+                    <td>VAT-12345678</td>
+                </tr>
+                <tr>
+                    <th>Physical Address</th>
+                    <td>Plot 123, Main Road, Gaborone, Botswana</td>
+                </tr>
+                <tr>
+                    <th>Contact</th>
+                    <td>+267 123 4567 | info@company.com</td>
+                </tr>
+            </table>
+            
+            <div id="settings-currency" class="subsection-header">
+                <h3>Currency & VAT Settings</h3>
+            </div>
+            
+            <p><strong>Base Currency Configuration:</strong></p>
+            
+            <ul>
+                <li><strong>Currency Code:</strong> BWP</li>
+                <li><strong>Currency Symbol:</strong> P</li>
+                <li><strong>Symbol Position:</strong> Before amount (P 1,234.56)</li>
+                <li><strong>Decimal Places:</strong> 2</li>
+                <li><strong>Thousand Separator:</strong> Comma (,)</li>
+                <li><strong>Decimal Separator:</strong> Period (.)</li>
+            </ul>
+            
+            <p><strong>VAT Configuration:</strong></p>
+            
+            <ul>
+                <li><strong>VAT Registered:</strong> Yes</li>
+                <li><strong>VAT Number:</strong> VAT-12345678</li>
+                <li><strong>Standard Rate:</strong> 14%</li>
+                <li><strong>Filing Period:</strong> Monthly</li>
+                <li><strong>Calculation Method:</strong> Tax Exclusive</li>
+            </ul>
+            
+            <div id="settings-invoice" class="subsection-header">
+                <h3>Invoice Customization</h3>
+            </div>
+            
+            <p><strong>10 Customization Sections:</strong></p>
+            
+            <ol>
+                <li><strong>General Settings:</strong> Logo, paper size, template style</li>
+                <li><strong>Header Customization:</strong> Colors, borders, fonts</li>
+                <li><strong>Company Information:</strong> What to display, styling</li>
+                <li><strong>Invoice Title:</strong> Text, size, color, alignment</li>
+                <li><strong>Customer Section:</strong> Layout, fields, styling</li>
+                <li><strong>Items Table:</strong> Columns, colors, borders</li>
+                <li><strong>Totals Section:</strong> Position, format, background</li>
+                <li><strong>Footer:</strong> Payment terms, bank details, T&Cs</li>
+                <li><strong>Layout & Spacing:</strong> Margins, padding, line height</li>
+                <li><strong>Color Schemes:</strong> Pre-defined or custom themes</li>
+            </ol>
+            
+            <div class="info-box">
+                <strong><i class="bi bi-info-circle me-2"></i>Live Preview:</strong>
+                Invoice customization includes real-time preview. See changes instantly before saving.
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-5 pt-4 border-top text-center">
+            <p class="text-muted">
+                <strong>CNPERP ERP System - Complete User Guide</strong><br>
+                Version 2.0 | Last Updated: October 15, 2025<br>
+                For support, contact: <a href="mailto:support@cnperp.com">support@cnperp.com</a>
+            </p>
+            <p>
+                <a href="/help-center" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="bi bi-printer me-2"></i>Print This Guide
+                </button>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Back to Top Button -->
+    <div class="back-to-top" id="backToTop" onclick="scrollToTop()">
+        <i class="bi bi-arrow-up"></i>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/navbar.js?v=20251015-HELP"></script>
+    
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    
+                    // Update active state
+                    document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Close mobile sidebar
+                    if (window.innerWidth < 768) {
+                        document.getElementById('sidebar').classList.remove('show');
+                    }
+                }
+            });
+        });
+        
+        // Back to top button
+        window.addEventListener('scroll', function() {
+            const backToTop = document.getElementById('backToTop');
+            if (window.pageYOffset > 300) {
+                backToTop.style.display = 'block';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
+        
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+        
+        // Highlight active section while scrolling
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.guide-section');
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

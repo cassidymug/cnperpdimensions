@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Templates | CNPERP ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/static/js/auth-bootstrap.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <style>
+        :root {
+            --page-bg: #f2f5f9;
+            --card-bg: #ffffff;
+            --border-color: rgba(148, 163, 184, 0.35);
+            --primary: #2563eb;
+            --secondary: #0f172a;
+            --accent: #0ea5e9;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background: var(--page-bg);
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--secondary);
+            min-height: 100vh;
+        }
+
+        .page-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: clamp(1.8rem, 2.2vw, 2.2rem);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .template-card,
+        .upload-card {
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            background: var(--card-bg);
+            box-shadow: 0 18px 40px -32px rgba(15, 23, 42, 0.45);
+        }
+
+        .upload-dropzone {
+            border: 2px dashed rgba(37, 99, 235, 0.35);
+            border-radius: 16px;
+            background: rgba(37, 99, 235, 0.05);
+            padding: 2.5rem;
+            text-align: center;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .upload-dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.12);
+        }
+
+        .upload-dropzone i {
+            font-size: 2.8rem;
+            color: var(--primary);
+        }
+
+        .metadata-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.12);
+            color: var(--primary);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.75rem 1.25rem;
+        }
+
+        .metadata-item {
+            background: rgba(148, 163, 184, 0.12);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+        }
+
+        .metadata-item h6 {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.35rem;
+            color: var(--secondary);
+        }
+
+        .metadata-item span {
+            display: block;
+            font-size: 0.86rem;
+            color: var(--text-muted);
+        }
+
+        .table thead th {
+            border-top: 0;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            background: transparent;
+        }
+
+        .table > :not(caption) > * > * {
+            border-bottom-color: rgba(148, 163, 184, 0.15);
+            vertical-align: middle;
+        }
+
+        .template-name {
+            font-weight: 600;
+        }
+
+        .template-name small {
+            display: block;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .metadata-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .metadata-list li {
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.08);
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+
+        .empty-state {
+            padding: 3.5rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: rgba(148, 163, 184, 0.65);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1080;
+        }
+
+        .avatar-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #ffffff;
+            background: var(--primary);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar-circle.avatar-sm {
+            width: 32px;
+            height: 32px;
+            font-size: 0.75rem;
+        }
+
+        .avatar-circle.avatar-md {
+            width: 42px;
+            height: 42px;
+            font-size: 0.85rem;
+        }
+
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .uploader-meta .badge {
+            font-size: 0.65rem;
+        }
+
+        .uploader-meta .xsmall {
+            font-size: 0.72rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div style="height: 72px"></div>
+
+    <div class="container-lg py-4">
+        <div class="page-header">
+            <div>
+                <h1 class="mb-1">Excel Template Library</h1>
+                <p class="text-muted mb-0">Upload, organize, and reuse spreadsheet layouts for reports, invoices, and more.</p>
+            </div>
+            <button class="btn btn-outline-primary d-flex align-items-center gap-2" id="refreshTemplatesBtn">
+                <i class="bi bi-arrow-clockwise"></i>
+                Refresh
+            </button>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-xl-5">
+                <div class="card upload-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start justify-content-between mb-4">
+                            <div>
+                                <h5 class="mb-1">Add a new template</h5>
+                                <p class="text-muted mb-0">Accepted formats: <span class="fw-semibold">.xlsx</span> or <span class="fw-semibold">.xlsm</span> up to 10&nbsp;MB.</p>
+                            </div>
+                            <span class="metadata-badge"><i class="bi bi-shield-check"></i> Secure storage</span>
+                        </div>
+
+                        <div class="upload-dropzone" id="dropzone">
+                            <i class="bi bi-cloud-arrow-up mb-3"></i>
+                            <h5 class="fw-semibold">Drag & drop your workbook</h5>
+                            <p class="text-muted mb-3">or</p>
+                            <label class="btn btn-primary btn-lg" for="templateFileInput">
+                                <i class="bi bi-upload me-2"></i>Select file
+                            </label>
+                            <input class="d-none" type="file" id="templateFileInput" accept=".xlsx,.xlsm">
+                        </div>
+
+                        <form id="templateForm" class="mt-4">
+                            <div class="mb-3">
+                                <label for="templateName" class="form-label">Template name</label>
+                                <input type="text" class="form-control" id="templateName" placeholder="Invoice layout Q1" required>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label for="templateCategory" class="form-label">Category</label>
+                                    <input type="text" class="form-control" id="templateCategory" placeholder="Invoices">
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="templateVersion" class="form-label">Version</label>
+                                    <input type="text" class="form-control" id="templateVersion" placeholder="Auto from workbook" disabled>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label for="templateDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="templateDescription" rows="3" placeholder="Add guidance or usage notes..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-4 w-100 d-flex align-items-center justify-content-center gap-2" id="uploadBtn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                <span>Upload template</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-7">
+                <div class="card template-card h-100">
+                    <div class="card-body p-0">
+                        <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
+                            <div>
+                                <h5 class="mb-0">Library</h5>
+                                <small class="text-muted" id="librarySummary">No templates uploaded yet.</small>
+                            </div>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="toggleViewBtn" data-view="table">
+                                    <i class="bi bi-list-ul me-1"></i> Table view
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="toggleViewBtnCards" data-view="cards">
+                                    <i class="bi bi-grid-3x3-gap me-1"></i> Card view
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive" id="tableView">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 32%">Template</th>
+                                        <th>Sheets</th>
+                                        <th style="width: 14%">Version</th>
+                                        <th style="width: 16%">Updated</th>
+                                        <th style="width: 18%" class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="templateRows">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">Loading templates...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-4 d-none" id="cardView"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="templateDetailsModal" tabindex="-1" aria-labelledby="templateDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="templateDetailsModalLabel">Template details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="templateDetailsBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/excel-templates.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "overrides": {
+    "3100": { "section": "EQUITY" },
+    "3110": { "section": "EQUITY" },
+    "3200": { "section": "EQUITY" },
+    "3300": { "section": "EQUITY" }
+  },
+  "tag_overrides": {
+    "retained_earnings": { "section": "EQUITY" },
+    "current_loan": { "section": "CURRENT_LIABILITY" },
+    "noncurrent_loan": { "section": "NON_CURRENT_LIABILITY" }
+  }
+}

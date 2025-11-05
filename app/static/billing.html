@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing Management - CN ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        .stat-card {
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card.rentals {
+            border-left-color: #0d6efd;
+        }
+
+        .stat-card.utilities {
+            border-left-color: #198754;
+        }
+
+        .stat-card.subscriptions {
+            border-left-color: #ffc107;
+        }
+
+        .stat-card.usage {
+            border-left-color: #dc3545;
+        }
+
+        .billing-type-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .meter-reading-input {
+            width: 120px;
+        }
+
+        .usage-display {
+            background-color: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+        }
+
+        /* Custom green tab styling */
+        .nav-tabs {
+            border-bottom: 2px solid #198754;
+        }
+
+        .nav-tabs .nav-link {
+            color: #0d6efd !important;
+            background-color: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-bottom: none;
+            margin-right: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background-color: #c8e6c9;
+            color: #0b5ed7 !important;
+            border-color: #a5d6a7;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: #198754;
+            color: #0d6efd !important;
+            border-color: #198754;
+            font-weight: 600;
+        }
+
+        .nav-tabs .nav-link i {
+            color: #0d6efd !important;
+        }
+
+        .nav-tabs .nav-link:hover i {
+            color: #0b5ed7 !important;
+        }
+
+        .nav-tabs .nav-link.active i {
+            color: #0d6efd !important;
+        }
+
+        .tab-content {
+            background-color: #ffffff;
+            border: 1px solid #198754;
+            border-top: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2><i class="bi bi-receipt-cutoff me-2"></i>Billing Management</h2>
+                <p class="text-muted">Manage recurring billing, rentals, utilities, and subscriptions</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newBillingModal">
+                    <i class="bi bi-plus-circle me-1"></i>New Billing Item
+                </button>
+                <button class="btn btn-info" onclick="showCreateCycleQuick()">
+                    <i class="bi bi-calendar-plus me-1"></i>New Billing Cycle
+                </button>
+                <button class="btn btn-success" id="generateInvoicesBtn">
+                    <i class="bi bi-file-earmark-check me-1"></i>Generate Invoices
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card rentals">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Active Rentals</h6>
+                                <h3 class="mb-0" id="activeRentalsCount">0</h3>
+                            </div>
+                            <div class="text-primary">
+                                <i class="bi bi-house-door fs-1"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="rentalsRevenue">P0.00/month</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card utilities">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Utility Meters</h6>
+                                <h3 class="mb-0" id="utilityMetersCount">0</h3>
+                            </div>
+                            <div class="text-success">
+                                <i class="bi bi-lightning-charge fs-1"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="pendingReadings">0 pending readings</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card subscriptions">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Subscriptions</h6>
+                                <h3 class="mb-0" id="subscriptionsCount">0</h3>
+                            </div>
+                            <div class="text-warning">
+                                <i class="bi bi-star fs-1"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="subscriptionsRevenue">P0.00/month</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card usage">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Usage Billing</h6>
+                                <h3 class="mb-0" id="usageItemsCount">0</h3>
+                            </div>
+                            <div class="text-danger">
+                                <i class="bi bi-speedometer2 fs-1"></i>
+                            </div>
+                        </div>
+                        <small class="text-muted" id="usageRevenue">P0.00 this month</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="billingTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="rentals-tab" data-bs-toggle="tab" data-bs-target="#rentals"
+                    type="button" role="tab">
+                    <i class="bi bi-house-door me-1"></i>Rentals
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="utilities-tab" data-bs-toggle="tab" data-bs-target="#utilities"
+                    type="button" role="tab">
+                    <i class="bi bi-lightning-charge me-1"></i>Utilities
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="subscriptions-tab" data-bs-toggle="tab" data-bs-target="#subscriptions"
+                    type="button" role="tab">
+                    <i class="bi bi-star me-1"></i>Subscriptions
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="usage-tab" data-bs-toggle="tab" data-bs-target="#usage" type="button"
+                    role="tab">
+                    <i class="bi bi-speedometer2 me-1"></i>Usage Billing
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cycles-tab" data-bs-toggle="tab" data-bs-target="#cycles" type="button"
+                    role="tab">
+                    <i class="bi bi-arrow-repeat me-1"></i>Billing Cycles
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content p-3 border border-top-0" id="billingTabsContent">
+            <!-- Rentals Tab -->
+            <div class="tab-pane fade show active" id="rentals" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="rentalsTable">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Item/Property</th>
+                                <th>Rental Type</th>
+                                <th>Monthly Rate</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rentalsTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No rental items found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Utilities Tab -->
+            <div class="tab-pane fade" id="utilities" role="tabpanel">
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#meterReadingModal">
+                        <i class="bi bi-speedometer me-1"></i>Record Meter Reading
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="utilitiesTable">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Utility Type</th>
+                                <th>Meter Number</th>
+                                <th>Last Reading</th>
+                                <th>Current Reading</th>
+                                <th>Usage</th>
+                                <th>Rate</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="utilitiesTableBody">
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">No utility meters found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Subscriptions Tab -->
+            <div class="tab-pane fade" id="subscriptions" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="subscriptionsTable">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Service/Product</th>
+                                <th>Subscription Type</th>
+                                <th>Billing Interval</th>
+                                <th>Amount</th>
+                                <th>Next Billing</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subscriptionsTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No subscriptions found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Usage Billing Tab -->
+            <div class="tab-pane fade" id="usage" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="usageTable">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Service</th>
+                                <th>Usage Type</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
+                                <th>Rate</th>
+                                <th>Total</th>
+                                <th>Period</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usageTableBody">
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">No usage records found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Billing Cycles Tab -->
+            <div class="tab-pane fade" id="cycles" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="cyclesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Cycle Name</th>
+                                        <th>Customer</th>
+                                        <th>Type</th>
+                                        <th>Interval</th>
+                                        <th>Items</th>
+                                        <th>Total Value</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cyclesTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">No billing cycles found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Create Billing Cycle</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="newCycleForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Cycle Name</label>
+                                        <input type="text" class="form-control" id="cycleName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Customer</label>
+                                        <select class="form-select" id="cycleCustomer" required>
+                                            <option value="">Select Customer</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Cycle Type</label>
+                                        <select class="form-select" id="cycleType" required>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="quarterly">Quarterly</option>
+                                            <option value="annual">Annual</option>
+                                            <option value="custom">Custom</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" class="form-control" id="cycleStartDate" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Create Cycle</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Billing Item Modal -->
+    <div class="modal fade" id="newBillingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Billing Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newBillingForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Billing Type *</label>
+                                    <select class="form-select" id="billingType" required>
+                                        <option value="">Select Type</option>
+                                        <option value="rental_property">Rental - Property/House</option>
+                                        <option value="rental_vehicle">Rental - Vehicle</option>
+                                        <option value="rental_equipment">Rental - Equipment</option>
+                                        <option value="utility_water">Utility - Water</option>
+                                        <option value="utility_electricity">Utility - Electricity</option>
+                                        <option value="utility_gas">Utility - Gas</option>
+                                        <option value="subscription_service">Subscription - Service</option>
+                                        <option value="subscription_software">Subscription - Software</option>
+                                        <option value="usage_minutes">Usage - Phone Minutes</option>
+                                        <option value="usage_data">Usage - Data/Internet</option>
+                                        <option value="license">License/Permit</option>
+                                        <option value="tax">Tax</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Customer *</label>
+                                    <select class="form-select" id="billingCustomer" required>
+                                        <option value="">Select Customer</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Product/Service *</label>
+                                    <select class="form-select" id="billingProduct" required>
+                                        <option value="">Select Product</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Billing Cycle *</label>
+                                    <select class="form-select" id="billingCycleId" required>
+                                        <option value="">Select Billing Cycle</option>
+                                    </select>
+                                    <div id="noCyclesAlert" class="alert alert-warning mt-2" style="display: none;">
+                                        <small>
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            No billing cycles found.
+                                            <button type="button" class="btn btn-sm btn-warning"
+                                                onclick="showCreateCycleQuick()">
+                                                Create One Now
+                                            </button>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount *</label>
+                                    <input type="number" class="form-control" id="billingAmount" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Date *</label>
+                                    <input type="date" class="form-control" id="billingStartDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="billingEndDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Fields for Rentals -->
+                        <div id="rentalFields" style="display: none;">
+                            <h6 class="border-bottom pb-2 mb-3">Rental Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Property/Item ID</label>
+                                        <input type="text" class="form-control" id="rentalItemId">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Deposit Amount</label>
+                                        <input type="number" class="form-control" id="rentalDeposit" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Fields for Utilities -->
+                        <div id="utilityFields" style="display: none;">
+                            <h6 class="border-bottom pb-2 mb-3">Utility Meter Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Meter Number</label>
+                                        <input type="text" class="form-control" id="meterNumber">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Rate per Unit</label>
+                                        <input type="number" class="form-control" id="utilityRate" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Reading</label>
+                                        <input type="number" class="form-control" id="currentReading" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Fields for Licenses -->
+                        <div id="licenseFields" style="display: none;">
+                            <h6 class="border-bottom pb-2 mb-3">License Details</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">License Number</label>
+                                        <input type="text" class="form-control" id="licenseNumber">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">License Type</label>
+                                        <input type="text" class="form-control" id="licenseType">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Expiry Date</label>
+                                        <input type="date" class="form-control" id="licenseExpiry">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="billingDescription" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveBillingBtn">Save Billing Item</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meter Reading Modal -->
+    <div class="modal fade" id="meterReadingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Record Meter Reading</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="meterReadingForm">
+                        <div class="mb-3">
+                            <label class="form-label">Utility Meter *</label>
+                            <select class="form-select" id="readingMeter" required>
+                                <option value="">Select Meter</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reading Date *</label>
+                            <input type="date" class="form-control" id="readingDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Current Reading *</label>
+                            <input type="number" class="form-control" id="readingValue" step="0.01" required>
+                        </div>
+                        <div class="alert alert-info" id="readingSummary" style="display: none;">
+                            <strong>Previous Reading:</strong> <span id="prevReading">0</span><br>
+                            <strong>Usage:</strong> <span id="calculatedUsage">0</span><br>
+                            <strong>Amount:</strong> P<span id="calculatedAmount">0.00</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="readingNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveMeterReadingBtn">Save Reading</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/navbar.js"></script>
+    <script>
+        // Initialize navbar
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeNavbar('sales');
+            loadDashboardData();
+            loadCustomers();
+            loadProducts();
+            loadAllBillingData();
+        });
+
+        // Global data stores
+        let customers = [];
+        let products = [];
+        let billingCycles = [];
+        let billableItems = [];
+
+        // Load dashboard statistics
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/v1/billing/dashboard');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboard(data);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function updateDashboard(data) {
+            document.getElementById('activeRentalsCount').textContent = data.active_rentals || 0;
+            document.getElementById('rentalsRevenue').textContent = `P${(data.rentals_revenue || 0).toFixed(2)}/month`;
+            document.getElementById('utilityMetersCount').textContent = data.utility_meters || 0;
+            document.getElementById('pendingReadings').textContent = `${data.pending_readings || 0} pending readings`;
+            document.getElementById('subscriptionsCount').textContent = data.subscriptions || 0;
+            document.getElementById('subscriptionsRevenue').textContent = `P${(data.subscriptions_revenue || 0).toFixed(2)}/month`;
+            document.getElementById('usageItemsCount').textContent = data.usage_items || 0;
+            document.getElementById('usageRevenue').textContent = `P${(data.usage_revenue || 0).toFixed(2)} this month`;
+        }
+
+        // Load customers
+        async function loadCustomers() {
+            try {
+                const response = await fetch('/api/v1/sales/customers');
+                if (response.ok) {
+                    const data = await response.json();
+                    customers = data.customers || data || [];
+                    console.log('Loaded customers:', customers.length);
+                    populateCustomerDropdowns();
+                } else {
+                    console.error('Failed to load customers:', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+
+        function populateCustomerDropdowns() {
+            const dropdowns = ['billingCustomer', 'cycleCustomer'];
+            dropdowns.forEach(id => {
+                const select = document.getElementById(id);
+                if (!select) {
+                    console.error('Customer dropdown not found:', id);
+                    return;
+                }
+                select.innerHTML = '<option value="">Select Customer</option>';
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = customer.name;
+                    select.appendChild(option);
+                });
+                console.log('Populated', id, 'with', customers.length, 'customers');
+            });
+        }
+
+        // Load products and fixed assets
+        async function loadProducts() {
+            try {
+                // Load inventory products
+                const productsResponse = await fetch('/api/v1/inventory/products');
+                if (productsResponse.ok) {
+                    const data = await productsResponse.json();
+                    products = data.products || data || [];
+                    console.log('Loaded products:', products.length);
+                } else {
+                    console.error('Failed to load products:', productsResponse.status);
+                }
+
+                // Load fixed assets (buildings, properties, equipment)
+                const assetsResponse = await fetch('/api/v1/asset-management/assets');
+                if (assetsResponse.ok) {
+                    const assetsData = await assetsResponse.json();
+                    const assets = assetsData.data || [];
+                    console.log('Loaded fixed assets:', assets.length);
+
+                    // Combine assets with products
+                    // Assets will have a different structure, so we'll add them as special entries
+                    assets.forEach(asset => {
+                        products.push({
+                            id: asset.id,
+                            name: asset.name,
+                            sku: asset.asset_tag || null, // Don't fall back to UUID
+                            type: 'asset',
+                            category: asset.category
+                        });
+                    });
+                } else {
+                    console.error('Failed to load fixed assets:', assetsResponse.status);
+                }
+
+                populateProductDropdown();
+            } catch (error) {
+                console.error('Error loading products/assets:', error);
+            }
+        }
+
+        function populateProductDropdown() {
+            const select = document.getElementById('billingProduct');
+            select.innerHTML = '<option value="">Select Product/Asset</option>';
+
+            // Group by type
+            const inventoryProducts = products.filter(p => !p.type || p.type !== 'asset');
+            const fixedAssets = products.filter(p => p.type === 'asset');
+
+            // Add fixed assets group (for rental properties)
+            if (fixedAssets.length > 0) {
+                const assetGroup = document.createElement('optgroup');
+                assetGroup.label = 'Fixed Assets (Buildings, Properties)';
+                fixedAssets.forEach(asset => {
+                    const option = document.createElement('option');
+                    option.value = asset.id;
+                    // Show name first, then optional asset tag and category
+                    let displayText = asset.name;
+                    if (asset.sku) {
+                        displayText = `${asset.sku} - ${displayText}`;
+                    }
+                    if (asset.category) {
+                        displayText += ` (${asset.category})`;
+                    }
+                    option.textContent = displayText;
+                    assetGroup.appendChild(option);
+                });
+                select.appendChild(assetGroup);
+            }
+
+            // Add inventory products group
+            if (inventoryProducts.length > 0) {
+                const productGroup = document.createElement('optgroup');
+                productGroup.label = 'Inventory Products';
+                inventoryProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = `${product.sku} - ${product.name}`;
+                    productGroup.appendChild(option);
+                });
+                select.appendChild(productGroup);
+            }
+        }
+
+        // Load all billing data
+        async function loadAllBillingData() {
+            await loadBillingCycles();
+            await loadBillableItems();
+        }
+
+        async function loadBillingCycles() {
+            try {
+                const response = await fetch('/api/v1/billing/cycles');
+                if (response.ok) {
+                    const data = await response.json();
+                    billingCycles = data.cycles || data || [];
+                    console.log('Loaded billing cycles:', billingCycles.length);
+                    renderBillingCycles();
+                    populateCycleDropdown();
+                } else {
+                    console.error('Failed to load billing cycles:', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading billing cycles:', error);
+            }
+        }
+
+        async function loadBillableItems() {
+            try {
+                const response = await fetch('/api/v1/billing/items');
+                if (response.ok) {
+                    const data = await response.json();
+                    billableItems = data.items || data || [];
+                    renderBillableItems();
+                }
+            } catch (error) {
+                console.error('Error loading billable items:', error);
+            }
+        }
+
+        function populateCycleDropdown() {
+            const select = document.getElementById('billingCycleId');
+            const alert = document.getElementById('noCyclesAlert');
+
+            if (!select) {
+                console.error('Billing cycle dropdown not found');
+                return;
+            }
+
+            select.innerHTML = '<option value="">Select Billing Cycle</option>';
+
+            if (billingCycles.length === 0) {
+                // Show alert if no cycles exist
+                if (alert) alert.style.display = 'block';
+                console.warn('No billing cycles found. Please create a billing cycle first.');
+            } else {
+                // Hide alert if cycles exist
+                if (alert) alert.style.display = 'none';
+                billingCycles.forEach(cycle => {
+                    const option = document.createElement('option');
+                    option.value = cycle.id;
+                    option.textContent = `${cycle.name} (${cycle.cycle_type})`;
+                    select.appendChild(option);
+                });
+            }
+
+            console.log('Populated billing cycles dropdown with', billingCycles.length, 'cycles');
+        }
+
+        function renderBillingCycles() {
+            const tbody = document.getElementById('cyclesTableBody');
+            if (!billingCycles || billingCycles.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No billing cycles found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = billingCycles.map(cycle => {
+                const customer = customers.find(c => c.id === cycle.customer_id);
+                return `
+                    <tr>
+                        <td>${cycle.name}</td>
+                        <td>${customer ? customer.name : 'N/A'}</td>
+                        <td><span class="badge bg-info">${cycle.cycle_type}</span></td>
+                        <td>${cycle.interval} ${cycle.interval_count > 1 ? `(x${cycle.interval_count})` : ''}</td>
+                        <td>${cycle.item_count || 0}</td>
+                        <td>P${(cycle.total_value || 0).toFixed(2)}</td>
+                        <td><span class="badge bg-${cycle.status === 'active' ? 'success' : 'secondary'}">${cycle.status}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewCycle('${cycle.id}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderBillableItems() {
+            // Separate items by type
+            const rentals = billableItems.filter(i => i.billable_type?.includes('rental'));
+            const utilities = billableItems.filter(i => i.billable_type?.includes('utility'));
+            const subscriptions = billableItems.filter(i => i.billable_type?.includes('subscription'));
+            const usage = billableItems.filter(i => i.billable_type?.includes('usage'));
+
+            renderRentals(rentals);
+            renderUtilities(utilities);
+            renderSubscriptions(subscriptions);
+            renderUsage(usage);
+        }
+
+        function renderRentals(rentals) {
+            const tbody = document.getElementById('rentalsTableBody');
+            if (!rentals || rentals.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No rental items found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = rentals.map(item => {
+                const cycle = billingCycles.find(c => c.id === item.billing_cycle_id);
+                const customer = cycle ? customers.find(c => c.id === cycle.customer_id) : null;
+                const product = products.find(p => p.id === item.billable_id);
+
+                return `
+                    <tr>
+                        <td>${customer ? customer.name : 'N/A'}</td>
+                        <td>${product ? product.name : 'N/A'}</td>
+                        <td><span class="badge billing-type-badge bg-primary">${item.billable_type}</span></td>
+                        <td>P${parseFloat(item.amount).toFixed(2)}</td>
+                        <td>${new Date(item.start_date).toLocaleDateString()}</td>
+                        <td>${item.end_date ? new Date(item.end_date).toLocaleDateString() : 'Ongoing'}</td>
+                        <td><span class="badge bg-${item.status === 'active' ? 'success' : 'secondary'}">${item.status}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editBillableItem('${item.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderUtilities(utilities) {
+            const tbody = document.getElementById('utilitiesTableBody');
+            if (!utilities || utilities.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No utility meters found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = utilities.map(item => {
+                const cycle = billingCycles.find(c => c.id === item.billing_cycle_id);
+                const customer = cycle ? customers.find(c => c.id === cycle.customer_id) : null;
+                const metadata = item.meta_data || {};
+                const lastReading = metadata.last_reading || 0;
+                const currentReading = metadata.current_reading || 0;
+                const usage = currentReading - lastReading;
+                const rate = metadata.rate || 0;
+                const amount = usage * rate;
+
+                return `
+                    <tr>
+                        <td>${customer ? customer.name : 'N/A'}</td>
+                        <td><span class="badge billing-type-badge bg-success">${item.billable_type}</span></td>
+                        <td>${metadata.meter_number || 'N/A'}</td>
+                        <td>${lastReading.toFixed(2)}</td>
+                        <td>${currentReading.toFixed(2)}</td>
+                        <td class="usage-display">${usage.toFixed(2)}</td>
+                        <td>P${rate.toFixed(2)}</td>
+                        <td><strong>P${amount.toFixed(2)}</strong></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="recordReading('${item.id}')">
+                                <i class="bi bi-speedometer"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Populate meter dropdown
+            const meterSelect = document.getElementById('readingMeter');
+            meterSelect.innerHTML = '<option value="">Select Meter</option>';
+            utilities.forEach(item => {
+                const cycle = billingCycles.find(c => c.id === item.billing_cycle_id);
+                const customer = cycle ? customers.find(c => c.id === cycle.customer_id) : null;
+                const metadata = item.meta_data || {};
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${customer ? customer.name : 'N/A'} - ${metadata.meter_number || 'N/A'}`;
+                option.dataset.rate = metadata.rate || 0;
+                option.dataset.lastReading = metadata.current_reading || 0;
+                meterSelect.appendChild(option);
+            });
+        }
+
+        function renderSubscriptions(subscriptions) {
+            const tbody = document.getElementById('subscriptionsTableBody');
+            if (!subscriptions || subscriptions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No subscriptions found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = subscriptions.map(item => {
+                const cycle = billingCycles.find(c => c.id === item.billing_cycle_id);
+                const customer = cycle ? customers.find(c => c.id === cycle.customer_id) : null;
+                const product = products.find(p => p.id === item.billable_id);
+
+                return `
+                    <tr>
+                        <td>${customer ? customer.name : 'N/A'}</td>
+                        <td>${product ? product.name : 'N/A'}</td>
+                        <td><span class="badge billing-type-badge bg-warning text-dark">${item.billable_type}</span></td>
+                        <td>${cycle ? cycle.interval : 'N/A'}</td>
+                        <td>P${parseFloat(item.amount).toFixed(2)}</td>
+                        <td>${item.next_billing_date ? new Date(item.next_billing_date).toLocaleDateString() : 'N/A'}</td>
+                        <td><span class="badge bg-${item.status === 'active' ? 'success' : 'secondary'}">${item.status}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editBillableItem('${item.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderUsage(usageItems) {
+            const tbody = document.getElementById('usageTableBody');
+            if (!usageItems || usageItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No usage records found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = usageItems.map(item => {
+                const cycle = billingCycles.find(c => c.id === item.billing_cycle_id);
+                const customer = cycle ? customers.find(c => c.id === cycle.customer_id) : null;
+                const product = products.find(p => p.id === item.billable_id);
+                const metadata = item.meta_data || {};
+                const quantity = metadata.quantity || 0;
+                const rate = metadata.rate || parseFloat(item.amount) / quantity || 0;
+                const total = quantity * rate;
+
+                return `
+                    <tr>
+                        <td>${customer ? customer.name : 'N/A'}</td>
+                        <td>${product ? product.name : 'N/A'}</td>
+                        <td><span class="badge billing-type-badge bg-danger">${item.billable_type}</span></td>
+                        <td>${quantity.toFixed(2)}</td>
+                        <td>${metadata.unit || 'units'}</td>
+                        <td>P${rate.toFixed(4)}</td>
+                        <td><strong>P${total.toFixed(2)}</strong></td>
+                        <td>${new Date(item.start_date).toLocaleDateString()} - ${item.end_date ? new Date(item.end_date).toLocaleDateString() : 'Now'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editBillableItem('${item.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Show/hide conditional fields based on billing type
+        document.getElementById('billingType')?.addEventListener('change', function () {
+            const type = this.value;
+            document.getElementById('rentalFields').style.display = type.includes('rental') ? 'block' : 'none';
+            document.getElementById('utilityFields').style.display = type.includes('utility') ? 'block' : 'none';
+            document.getElementById('licenseFields').style.display = type === 'license' ? 'block' : 'none';
+        });
+
+        // Calculate usage and amount when meter reading changes
+        document.getElementById('readingValue')?.addEventListener('input', function () {
+            const meterSelect = document.getElementById('readingMeter');
+            const selectedOption = meterSelect.options[meterSelect.selectedIndex];
+            if (!selectedOption.value) return;
+
+            const lastReading = parseFloat(selectedOption.dataset.lastReading || 0);
+            const rate = parseFloat(selectedOption.dataset.rate || 0);
+            const currentReading = parseFloat(this.value || 0);
+            const usage = currentReading - lastReading;
+            const amount = usage * rate;
+
+            document.getElementById('prevReading').textContent = lastReading.toFixed(2);
+            document.getElementById('calculatedUsage').textContent = usage.toFixed(2);
+            document.getElementById('calculatedAmount').textContent = amount.toFixed(2);
+            document.getElementById('readingSummary').style.display = 'block';
+        });
+
+        // Create new billing cycle
+        document.getElementById('newCycleForm')?.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const cycleData = {
+                name: document.getElementById('cycleName').value,
+                customer_id: document.getElementById('cycleCustomer').value,
+                cycle_type: document.getElementById('cycleType').value,
+                interval: document.getElementById('cycleType').value,
+                interval_count: 1,
+                start_date: document.getElementById('cycleStartDate').value,
+                status: 'active'
+            };
+
+            try {
+                const response = await fetch('/api/v1/billing/cycles', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cycleData)
+                });
+
+                if (response.ok) {
+                    alert('Billing cycle created successfully!');
+                    this.reset();
+                    loadBillingCycles();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'Failed to create billing cycle'));
+                }
+            } catch (error) {
+                console.error('Error creating cycle:', error);
+                alert('Error creating billing cycle');
+            }
+        });
+
+        // Save billing item
+        document.getElementById('saveBillingBtn')?.addEventListener('click', async function () {
+            const form = document.getElementById('newBillingForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const type = document.getElementById('billingType').value;
+            const metadata = {};
+
+            // Add type-specific metadata
+            if (type.includes('rental')) {
+                metadata.item_id = document.getElementById('rentalItemId').value;
+                metadata.deposit = document.getElementById('rentalDeposit').value;
+            } else if (type.includes('utility')) {
+                metadata.meter_number = document.getElementById('meterNumber').value;
+                metadata.rate = document.getElementById('utilityRate').value;
+                metadata.current_reading = document.getElementById('currentReading').value;
+                metadata.last_reading = metadata.current_reading;
+            } else if (type === 'license') {
+                metadata.license_number = document.getElementById('licenseNumber').value;
+                metadata.license_type = document.getElementById('licenseType').value;
+                metadata.expiry_date = document.getElementById('licenseExpiry').value;
+            }
+
+            const itemData = {
+                billing_cycle_id: document.getElementById('billingCycleId').value,
+                billable_type: type,
+                billable_id: document.getElementById('billingProduct').value,
+                amount: document.getElementById('billingAmount').value,
+                start_date: document.getElementById('billingStartDate').value,
+                end_date: document.getElementById('billingEndDate').value || null,
+                description: document.getElementById('billingDescription').value,
+                status: 'active',
+                meta_data: metadata
+            };
+
+            try {
+                const response = await fetch('/api/v1/billing/items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemData)
+                });
+
+                if (response.ok) {
+                    alert('Billing item created successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('newBillingModal')).hide();
+                    form.reset();
+                    loadAllBillingData();
+                    loadDashboardData();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'Failed to create billing item'));
+                }
+            } catch (error) {
+                console.error('Error creating billing item:', error);
+                alert('Error creating billing item');
+            }
+        });
+
+        // Save meter reading
+        document.getElementById('saveMeterReadingBtn')?.addEventListener('click', async function () {
+            const form = document.getElementById('meterReadingForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const itemId = document.getElementById('readingMeter').value;
+            const readingData = {
+                reading_date: document.getElementById('readingDate').value,
+                reading_value: document.getElementById('readingValue').value,
+                notes: document.getElementById('readingNotes').value
+            };
+
+            try {
+                const response = await fetch(`/api/v1/billing/items/${itemId}/readings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(readingData)
+                });
+
+                if (response.ok) {
+                    alert('Meter reading recorded successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('meterReadingModal')).hide();
+                    form.reset();
+                    document.getElementById('readingSummary').style.display = 'none';
+                    loadAllBillingData();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'Failed to record reading'));
+                }
+            } catch (error) {
+                console.error('Error recording reading:', error);
+                alert('Error recording meter reading');
+            }
+        });
+
+        // Generate invoices for all due billing items
+        document.getElementById('generateInvoicesBtn')?.addEventListener('click', async function () {
+            if (!confirm('Generate invoices for all due billing items?')) return;
+
+            try {
+                const response = await fetch('/api/v1/billing/generate-invoices', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`Successfully generated ${result.count || 0} invoices!`);
+                    loadAllBillingData();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'Failed to generate invoices'));
+                }
+            } catch (error) {
+                console.error('Error generating invoices:', error);
+                alert('Error generating invoices');
+            }
+        });
+
+        function showCreateCycleQuick() {
+            // Close the New Billing Item modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newBillingModal'));
+            if (modal) {
+                modal.hide();
+            }
+
+            // Switch to Billing Cycles tab
+            const cyclesTab = document.getElementById('cycles-tab');
+            if (cyclesTab) {
+                cyclesTab.click();
+            }
+
+            // Focus on cycle name field after modal closes
+            setTimeout(() => {
+                const nameField = document.getElementById('cycleName');
+                if (nameField) {
+                    nameField.focus();
+                    nameField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500);
+        }
+
+        function viewCycle(cycleId) {
+            // TODO: Implement cycle details view
+            alert('View cycle details: ' + cycleId);
+        }
+
+        function editBillableItem(itemId) {
+            // TODO: Implement edit functionality
+            alert('Edit item: ' + itemId);
+        }
+
+        function recordReading(itemId) {
+            const modal = new bootstrap.Modal(document.getElementById('meterReadingModal'));
+            document.getElementById('readingMeter').value = itemId;
+            modal.show();
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Transfers - CNPERP ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Include Standardized Navbar -->
+    
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-arrow-left-right me-2"></i>Bank Transfers
+                        </h1>
+                        <p class="text-muted mb-0">Manage inter-bank transfers and fund movements</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bank"></i> Banking Modules
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/static/bank-accounts.html">
+                                    <i class="bi bi-bank"></i> Bank Accounts
+                                </a></li>
+                                <li><a class="dropdown-item" href="/static/bank-transactions.html">
+                                    <i class="bi bi-arrow-left-right"></i> Transactions
+                                </a></li>
+                                <li><a class="dropdown-item" href="/static/bank-reconciliations.html">
+                                    <i class="bi bi-check2-square"></i> Reconciliations
+                                </a></li>
+                                <li><a class="dropdown-item active" href="/static/bank-transfers.html">
+                                    <i class="bi bi-arrow-repeat"></i> Transfers
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/static/banking-reports.html">
+                                    <i class="bi bi-graph-up"></i> Banking Reports
+                                </a></li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTransferModal">
+                            <i class="bi bi-plus-circle me-2"></i>New Transfer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Transfers</h6>
+                                <h3 class="mb-0" id="totalTransfers">-</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-arrow-left-right fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Completed</h6>
+                                <h3 class="mb-0" id="completedTransfers">-</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-check-circle fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Pending</h6>
+                                <h3 class="mb-0" id="pendingTransfers">-</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-clock fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Amount</h6>
+                                <h3 class="mb-0" id="totalAmount">-</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-currency-dollar fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search transfers by reference, amount, or status...">
+                    <button class="btn btn-outline-secondary" type="button" onclick="filterTransfers()">Search</button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="failed">Failed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button class="btn btn-outline-primary" onclick="filterTransfers()">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfers Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Bank Transfers</h5>
+            </div>
+            <div class="card-body">
+                <div id="transfersTableContainer">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading transfers...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Transfer Modal -->
+    <div class="modal fade" id="newTransferModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Bank Transfer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transferForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">From Account</label>
+                                    <select class="form-select" id="sourceAccountSelect" required>
+                                        <option value="">Select Source Account</option>
+                                        <!-- Bank accounts will be loaded here -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">To Account</label>
+                                    <select class="form-select" id="destinationAccountSelect" required>
+                                        <option value="">Select Destination Account</option>
+                                        <!-- Bank accounts will be loaded here -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Transfer Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">P</span>
+                                        <input type="number" class="form-control" id="transferAmount" placeholder="0.00" step="0.01" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Transfer Date</label>
+                                    <input type="datetime-local" class="form-control" id="transferDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reference/Description</label>
+                            <input type="text" class="form-control" id="transferReference" placeholder="Enter transfer reference or description" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="transferNotes" rows="3" placeholder="Additional notes about this transfer"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="transferForm" class="btn btn-primary" onclick="createTransfer()">
+                        <i class="bi bi-check-circle me-2"></i>Create Transfer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Details Modal -->
+    <div class="modal fade" id="transferDetailsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Transfer Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Reference:</strong> <span id="transferDetailsReference"></span></p>
+                            <p><strong>Status:</strong> <span id="transferDetailsStatus"></span></p>
+                            <p><strong>Amount:</strong> <span id="transferDetailsAmount"></span></p>
+                            <p><strong>Date:</strong> <span id="transferDetailsDate"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>From Account:</strong> <span id="transferDetailsFromAccount"></span></p>
+                            <p><strong>To Account:</strong> <span id="transferDetailsToAccount"></span></p>
+                            <p><strong>Fee:</strong> <span id="transferDetailsFee"></span></p>
+                            <p><strong>Processing Time:</strong> <span id="transferDetailsProcessingTime"></span></p>
+                        </div>
+                    </div>
+                    <hr>
+                    <p><strong>Description:</strong> <span id="transferDetailsDescription"></span></p>
+                    <p><strong>Notes:</strong> <span id="transferDetailsNotes"></span></p>
+                    <div class="mt-3">
+                        <h6>Accounting Impact:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Source Account:</strong></p>
+                                <p class="text-danger">Dr: <span id="sourceAccountDebit">-</span></p>
+                                <p class="text-success">Cr: <span id="sourceAccountCredit">-</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Destination Account:</strong></p>
+                                <p class="text-danger">Dr: <span id="destinationAccountDebit">-</span></p>
+                                <p class="text-success">Cr: <span id="destinationAccountCredit">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="downloadTransferReceipt()">
+                        <i class="bi bi-download me-2"></i>Download Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+    <script src="js/navbar-loader.js"></script>
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    
+    <script>
+        // Global variables
+        let currentCurrency = 'BWP';
+        let currencySymbol = 'P';
+        let currencyCode = 'BWP';
+        let bankTransfers = [];
+        let bankAccounts = [];
+        let currentTransferId = null;
+
+        // API endpoints
+        const API_BASE = '/api/v1';
+        const BANKING_ENDPOINT = `${API_BASE}/banking`;
+        const TRANSFERS_ENDPOINT = `${BANKING_ENDPOINT}/transfers`;
+        const ACCOUNTS_ENDPOINT = `${BANKING_ENDPOINT}/accounts`;
+
+        // Load settings and currency
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/v1/settings/currency');
+                if (response.ok) {
+                    const settings = await response.json();
+                    currentCurrency = settings.data.currency || 'BWP';
+                    currencySymbol = settings.data.currency_symbol || 'P';
+                    currencyCode = settings.data.currency || 'BWP';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Format currency amount
+        function formatCurrency(amount) {
+            return `${currencySymbol}${parseFloat(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Load bank accounts for dropdowns
+        async function loadBankAccounts() {
+            try {
+                const response = await fetch(ACCOUNTS_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                bankAccounts = data.data || [];
+                
+                // Populate dropdowns
+                const sourceSelect = document.getElementById('sourceAccountSelect');
+                const destinationSelect = document.getElementById('destinationAccountSelect');
+                
+                if (sourceSelect && destinationSelect) {
+                    // Clear existing options except the first one
+                    sourceSelect.innerHTML = '<option value="">Select Source Account</option>';
+                    destinationSelect.innerHTML = '<option value="">Select Destination Account</option>';
+                    
+                    // Add bank accounts to dropdowns
+                    bankAccounts.forEach(account => {
+                        const sourceOption = document.createElement('option');
+                        sourceOption.value = account.id;
+                        sourceOption.textContent = `${account.institution} - ${account.account_number} (${formatCurrency(account.balance)})`;
+                        sourceSelect.appendChild(sourceOption);
+                        
+                        const destinationOption = document.createElement('option');
+                        destinationOption.value = account.id;
+                        destinationOption.textContent = `${account.institution} - ${account.account_number} (${formatCurrency(account.balance)})`;
+                        destinationSelect.appendChild(destinationOption);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading bank accounts:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load bank accounts', 'error');
+                }
+            }
+        }
+
+        // Fetch bank transfers data
+        async function fetchBankTransfers() {
+            try {
+                const response = await fetch(TRANSFERS_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                bankTransfers = data.data || [];
+                
+                renderTransfersTable();
+                updateStatistics();
+                
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Bank transfers loaded successfully', 'success');
+                }
+            } catch (error) {
+                console.error('Error fetching bank transfers:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load bank transfers', 'error');
+                }
+                // Show empty state
+                bankTransfers = [];
+                renderTransfersTable();
+                updateStatistics();
+            }
+        }
+
+        // Render transfers table
+        function renderTransfersTable() {
+            const container = document.getElementById('transfersTableContainer');
+            if (!container) return;
+            
+            if (bankTransfers.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="bi bi-arrow-left-right fs-1 text-muted"></i>
+                        <h5 class="mt-3">No bank transfers found</h5>
+                        <p class="text-muted">No transfers match your current filters.</p>
+                        <button class="btn btn-primary" onclick="clearFilters()">
+                            <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>From Account</th>
+                                <th>To Account</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bankTransfers.map(transfer => `
+                                <tr>
+                                    <td><strong>${transfer.reference || 'N/A'}</strong></td>
+                                    <td>${getAccountDisplayName(transfer.source_account_id)}</td>
+                                    <td>${getAccountDisplayName(transfer.destination_account_id)}</td>
+                                    <td><span class="text-success">${formatCurrency(transfer.amount)}</span></td>
+                                    <td><span class="badge bg-${getStatusBadgeClass(transfer.status)}">${transfer.status}</span></td>
+                                    <td>${formatDate(transfer.transfer_date || transfer.created_at)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" title="View Details" onclick="viewTransferDetails('${transfer.id}')">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        ${transfer.status === 'completed' ? `
+                                            <button class="btn btn-sm btn-outline-secondary" title="Download Receipt" onclick="downloadTransferReceipt('${transfer.id}')">
+                                                <i class="bi bi-download"></i>
+                                            </button>
+                                        ` : ''}
+                                        ${transfer.status === 'pending' ? `
+                                            <button class="btn btn-sm btn-outline-danger" title="Cancel" onclick="cancelTransfer('${transfer.id}')">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Get account display name
+        function getAccountDisplayName(accountId) {
+            const account = bankAccounts.find(a => a.id === accountId);
+            return account ? `${account.institution} - ${account.account_number}` : 'Unknown Account';
+        }
+
+        // Get status badge class
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'completed': return 'success';
+                case 'pending': return 'warning';
+                case 'failed': return 'danger';
+                case 'cancelled': return 'secondary';
+                default: return 'info';
+            }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const totalTransfers = bankTransfers.length;
+            const completedTransfers = bankTransfers.filter(t => t.status === 'completed').length;
+            const pendingTransfers = bankTransfers.filter(t => t.status === 'pending').length;
+            const totalAmount = bankTransfers.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+            document.getElementById('totalTransfers').textContent = totalTransfers;
+            document.getElementById('completedTransfers').textContent = completedTransfers;
+            document.getElementById('pendingTransfers').textContent = pendingTransfers;
+            document.getElementById('totalAmount').textContent = formatCurrency(totalAmount);
+        }
+
+        // Filter transfers
+        function filterTransfers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            const filteredTransfers = bankTransfers.filter(transfer => {
+                const matchesSearch = !searchTerm || 
+                    (transfer.reference && transfer.reference.toLowerCase().includes(searchTerm)) ||
+                    (transfer.description && transfer.description.toLowerCase().includes(searchTerm));
+                
+                const matchesStatus = !statusFilter || transfer.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            renderFilteredTransfers(filteredTransfers);
+        }
+
+        // Render filtered transfers
+        function renderFilteredTransfers(filteredTransfers) {
+            const container = document.getElementById('transfersTableContainer');
+            if (!container) return;
+            
+            if (filteredTransfers.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="bi bi-search fs-1 text-muted"></i>
+                        <h5 class="mt-3">No transfers found</h5>
+                        <p class="text-muted">No transfers match your search criteria.</p>
+                        <button class="btn btn-primary" onclick="clearFilters()">
+                            <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>From Account</th>
+                                <th>To Account</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filteredTransfers.map(transfer => `
+                                <tr>
+                                    <td><strong>${transfer.reference || 'N/A'}</strong></td>
+                                    <td>${getAccountDisplayName(transfer.source_account_id)}</td>
+                                    <td>${getAccountDisplayName(transfer.destination_account_id)}</td>
+                                    <td><span class="text-success">${formatCurrency(transfer.amount)}</span></td>
+                                    <td><span class="badge bg-${getStatusBadgeClass(transfer.status)}">${transfer.status}</span></td>
+                                    <td>${formatDate(transfer.transfer_date || transfer.created_at)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" title="View Details" onclick="viewTransferDetails('${transfer.id}')">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        ${transfer.status === 'completed' ? `
+                                            <button class="btn btn-sm btn-outline-secondary" title="Download Receipt" onclick="downloadTransferReceipt('${transfer.id}')">
+                                                <i class="bi bi-download"></i>
+                                            </button>
+                                        ` : ''}
+                                        ${transfer.status === 'pending' ? `
+                                            <button class="btn btn-sm btn-outline-danger" title="Cancel" onclick="cancelTransfer('${transfer.id}')">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            renderTransfersTable();
+        }
+
+        // View transfer details
+        function viewTransferDetails(transferId) {
+            const transfer = bankTransfers.find(t => t.id === transferId);
+            if (!transfer) return;
+            
+            currentTransferId = transferId;
+            
+            // Populate modal with transfer details
+            document.getElementById('transferDetailsReference').textContent = transfer.reference || 'N/A';
+            document.getElementById('transferDetailsStatus').innerHTML = `<span class="badge bg-${getStatusBadgeClass(transfer.status)}">${transfer.status}</span>`;
+            document.getElementById('transferDetailsAmount').textContent = formatCurrency(transfer.amount);
+            document.getElementById('transferDetailsDate').textContent = formatDate(transfer.transfer_date || transfer.created_at);
+            document.getElementById('transferDetailsFromAccount').textContent = getAccountDisplayName(transfer.source_account_id);
+            document.getElementById('transferDetailsToAccount').textContent = getAccountDisplayName(transfer.destination_account_id);
+            document.getElementById('transferDetailsFee').textContent = formatCurrency(transfer.transfer_fee || 0);
+            document.getElementById('transferDetailsProcessingTime').textContent = '2 hours'; // Placeholder
+            document.getElementById('transferDetailsDescription').textContent = transfer.description || 'N/A';
+            document.getElementById('transferDetailsNotes').textContent = transfer.notes || 'N/A';
+            
+            // Show accounting impact
+            const sourceAccount = bankAccounts.find(a => a.id === transfer.source_account_id);
+            const destinationAccount = bankAccounts.find(a => a.id === transfer.destination_account_id);
+            
+            if (sourceAccount) {
+                document.getElementById('sourceAccountDebit').textContent = formatCurrency(sourceAccount.total_debits || 0);
+                document.getElementById('sourceAccountCredit').textContent = formatCurrency(sourceAccount.total_credits || 0);
+            }
+            
+            if (destinationAccount) {
+                document.getElementById('destinationAccountDebit').textContent = formatCurrency(destinationAccount.total_debits || 0);
+                document.getElementById('destinationAccountCredit').textContent = formatCurrency(destinationAccount.total_credits || 0);
+            }
+            
+            // Show modal
+            new bootstrap.Modal(document.getElementById('transferDetailsModal')).show();
+        }
+
+        // Create transfer
+        async function createTransfer() {
+            const form = document.getElementById('transferForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            try {
+                const formData = new FormData(form);
+                const transferData = {
+                    source_account_id: document.getElementById('sourceAccountSelect').value,
+                    destination_account_id: document.getElementById('destinationAccountSelect').value,
+                    amount: parseFloat(document.getElementById('transferAmount').value),
+                    transfer_type: 'internal',
+                    reference: document.getElementById('transferReference').value,
+                    description: document.getElementById('transferReference').value,
+                    notes: document.getElementById('transferNotes').value,
+                    transfer_date: document.getElementById('transferDate').value
+                };
+
+                const response = await fetch(TRANSFERS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(transferData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create bank transfer');
+                }
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Bank transfer created successfully', 'success');
+                } else {
+                    alert('Bank transfer created successfully!');
+                }
+
+                // Clear form and close modal
+                form.reset();
+                bootstrap.Modal.getInstance(document.getElementById('newTransferModal')).hide();
+                
+                // Reload transfers
+                await fetchBankTransfers();
+            } catch (error) {
+                console.error('Error creating bank transfer:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to create bank transfer', 'error');
+                } else {
+                    alert('Error creating bank transfer: ' + error.message);
+                }
+            }
+        }
+
+        // Download transfer receipt
+        function downloadTransferReceipt(transferId = null) {
+            const id = transferId || currentTransferId;
+            if (!id) return;
+            
+            // Placeholder for receipt download
+            alert('Receipt download functionality would be implemented here');
+        }
+
+        // Cancel transfer
+        async function cancelTransfer(transferId) {
+            if (!confirm('Are you sure you want to cancel this transfer?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${TRANSFERS_ENDPOINT}/${transferId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to cancel transfer');
+                }
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Transfer cancelled successfully', 'success');
+                } else {
+                    alert('Transfer cancelled successfully!');
+                }
+
+                // Reload transfers
+                await fetchBankTransfers();
+            } catch (error) {
+                console.error('Error cancelling transfer:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to cancel transfer', 'error');
+                } else {
+                    alert('Error cancelling transfer: ' + error.message);
+                }
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Debug navbar container
+            const navbarContainer = document.getElementById('navbar-container');
+            console.log('🔍 Navbar container:', navbarContainer);
+            if (navbarContainer) {
+                console.log('📝 Navbar container HTML:', navbarContainer.innerHTML);
+                console.log('📏 Navbar container style:', navbarContainer.style.cssText);
+                // Add temporary visible border for debugging
+                navbarContainer.style.border = '3px solid navy';
+                navbarContainer.style.backgroundColor = '#000080';
+                navbarContainer.style.padding = '10px';
+                navbarContainer.style.margin = '10px';
+            }
+            
+            await loadSettings();
+            await loadBankAccounts();
+            await fetchBankTransfers();
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/';
+            }
+        }
+    </script>
+    
+    <!-- Include modern UI for navbar -->
+    
+    <script>
+        // Initialize navbar
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof createNavbar === 'function') {
+                createNavbar('bank-transfers');
+            }
+        });
+    </script>
+</body>
+</html>

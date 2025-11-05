@@ -1,0 +1,1 @@
+﻿api_router.include_router(business_intelligence.router, prefix="/bi", tags=["Business Intelligence"])

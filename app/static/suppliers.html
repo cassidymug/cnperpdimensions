@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Suppliers</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        .dark-mode {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        .supplier-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .supplier-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .balance-positive {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .balance-negative {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .supplier-type-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .active-badge {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .filter-section {
+            background-color: var(--bg-primary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .table {
+            color: var(--text-primary);
+        }
+
+        .table th {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+
+        .table td {
+            border-color: var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+    <!-- Navbar Scripts -->
+    <script src="js/navbar.js?v=20250106001"></script>
+    
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+    
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-truck text-primary"></i> Suppliers
+                        </h1>
+                        <p class="text-muted mb-0">Manage supplier relationships and purchases</p>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                        <i class="bi bi-plus"></i> Add Supplier
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Suppliers</h6>
+                            <h3 class="mb-0" id="totalSuppliers">-</h3>
+                        </div>
+                        <i class="bi bi-truck fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Active Suppliers</h6>
+                            <h3 class="mb-0" id="activeSuppliers">-</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Payables</h6>
+                            <h3 class="mb-0" id="totalPayables">-</h3>
+                        </div>
+                        <i class="bi bi-currency-Pula fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Avg. Order Value</h6>
+                            <h3 class="mb-0" id="avgOrderValue">-</h3>
+                        </div>
+                        <i class="bi bi-graph-up fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Supplier Type</label>
+                    <select class="form-select" id="typeFilter">
+                        <option value="">All Types</option>
+                        <option value="vendor">Vendor</option>
+                        <option value="manufacturer">Manufacturer</option>
+                        <option value="distributor">Distributor</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Balance Range</label>
+                    <select class="form-select" id="balanceFilter">
+                        <option value="">All Balances</option>
+                        <option value="positive">Positive Balance</option>
+                        <option value="negative">Negative Balance</option>
+                        <option value="zero">Zero Balance</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Branch</label>
+                    <select class="form-select" id="branchFilter">
+                        <option value="">All Branches</option>
+                        <option value="1">Main Branch</option>
+                        <option value="2">North Branch</option>
+                        <option value="3">South Branch</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Search suppliers...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                        <i class="bi bi-arrow-clockwise"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suppliers Grid -->
+        <div class="row" id="suppliersGrid">
+            <!-- Supplier cards will be dynamically generated here -->
+        </div>
+    </div>
+
+    <!-- Add Supplier Modal -->
+    <div class="modal fade" id="addSupplierModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Add New Supplier
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSupplierForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Supplier Name *</label>
+                                    <input type="text" class="form-control" id="supplierName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Supplier Type *</label>
+                                    <select class="form-select" id="supplierType" required>
+                                        <option value="">Select Type</option>
+                                        <option value="vendor">Vendor</option>
+                                        <option value="manufacturer">Manufacturer</option>
+                                        <option value="distributor">Distributor</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="supplierEmail">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Telephone</label>
+                                    <input type="tel" class="form-control" id="supplierPhone">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">VAT Registration Number</label>
+                                    <input type="text" class="form-control" id="supplierVatNumber">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Credit Limit</label>
+                                    <input type="number" class="form-control" id="supplierCreditLimit" step="0.01" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Terms (days)</label>
+                                    <input type="number" class="form-control" id="paymentTerms" value="30">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Person</label>
+                                    <input type="text" class="form-control" id="contactPerson">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Accounting Code *</label>
+                                    <select class="form-select" id="supplierAccountingCode" required>
+                                        <option value="">Select Accounting Code</option>
+                                        <!-- Accounting codes will be loaded here -->
+                                    </select>
+                                    <small class="form-text text-muted">This code will be used to track expenses from this supplier</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Current Balance</label>
+                                    <input type="number" class="form-control" id="currentBalance" step="0.01" value="0" readonly>
+                                    <small class="form-text text-muted">Current outstanding balance with this supplier</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" id="supplierAddress" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="supplierNotes" rows="3"></textarea>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="taxExempt">
+                            <label class="form-check-label" for="taxExempt">
+                                Tax Exempt
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveSupplierBtn">
+                        <i class="bi bi-check"></i> Save Supplier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier Details Modal -->
+    <div class="modal fade" id="supplierDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-truck"></i> Supplier Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="supplierTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab">
+                                <i class="bi bi-info-circle"></i> Details
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases" type="button" role="tab" onclick="loadSupplierPurchases()">
+                                <i class="bi bi-list-ul"></i> Purchases
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" onclick="loadSupplierProducts()">
+                                <i class="bi bi-box"></i> Products
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" onclick="loadSupplierPayments()">
+                                <i class="bi bi-credit-card"></i> Payments
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3" id="supplierTabsContent">
+                        <div class="tab-pane fade show active" id="details" role="tabpanel">
+                            <!-- View Mode (default) -->
+                            <div id="viewMode">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Supplier Information</h6>
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td><strong>Name:</strong></td>
+                                                <td id="detailSupplierName">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Type:</strong></td>
+                                                <td><span class="badge bg-primary" id="detailSupplierType">-</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Email:</strong></td>
+                                                <td id="detailSupplierEmail">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Phone:</strong></td>
+                                                <td id="detailSupplierPhone">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>VAT Number:</strong></td>
+                                                <td id="detailSupplierVatNumber">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Contact Person:</strong></td>
+                                                <td id="detailContactPerson">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Payment Terms:</strong></td>
+                                                <td id="detailPaymentTerms">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Credit Limit:</strong></td>
+                                                <td id="detailSupplierCreditLimit">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Current Balance:</strong></td>
+                                                <td class="balance-negative" id="detailSupplierBalance">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Tax Exempt:</strong></td>
+                                                <td id="detailTaxExempt">-</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Address</h6>
+                                        <p id="detailSupplierAddress">-</p>
+                                        
+                                        <h6>Notes</h6>
+                                        <p id="detailSupplierNotes">-</p>
+                                        
+                                        <h6>Accounting Code</h6>
+                                        <p id="detailAccountingCode">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Edit Mode (hidden by default) -->
+                            <div id="editMode" style="display: none;">
+                                <form id="editSupplierForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Supplier Name *</label>
+                                                <input type="text" class="form-control" id="editSupplierName" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Supplier Type *</label>
+                                                <select class="form-select" id="editSupplierType" required>
+                                                    <option value="">Select Type</option>
+                                                    <option value="vendor">Vendor</option>
+                                                    <option value="manufacturer">Manufacturer</option>
+                                                    <option value="distributor">Distributor</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="editSupplierEmail">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Telephone</label>
+                                                <input type="tel" class="form-control" id="editSupplierPhone">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">VAT Registration Number</label>
+                                                <input type="text" class="form-control" id="editSupplierVatNumber">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Contact Person</label>
+                                                <input type="text" class="form-control" id="editContactPerson">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Payment Terms (days)</label>
+                                                <input type="number" class="form-control" id="editPaymentTerms" value="30">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Credit Limit</label>
+                                                <input type="number" class="form-control" id="editSupplierCreditLimit" step="0.01" value="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Accounting Code *</label>
+                                                <select class="form-select" id="editSupplierAccountingCode" required>
+                                                    <option value="">Select Accounting Code</option>
+                                                    <!-- Accounting codes will be loaded here -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Current Balance</label>
+                                                <input type="number" class="form-control" id="editCurrentBalance" step="0.01" value="0" readonly>
+                                                <small class="form-text text-muted">Current outstanding balance (read-only)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Address</label>
+                                        <textarea class="form-control" id="editSupplierAddress" rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Notes</label>
+                                        <textarea class="form-control" id="editSupplierNotes" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="editTaxExempt">
+                                        <label class="form-check-label" for="editTaxExempt">
+                                            Tax Exempt
+                                        </label>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="purchases" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Purchase History</h6>
+                                <small class="text-muted" id="purchasesCount">Loading...</small>
+                            </div>
+                            <div id="purchasesLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <span class="ms-2">Loading purchases...</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Reference</th>
+                                            <th>Date</th>
+                                            <th>Total Amount</th>
+                                            <th>Amount Paid</th>
+                                            <th>Outstanding</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="supplierPurchases">
+                                        <!-- Supplier purchases will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="noPurchasesMessage" class="text-center text-muted py-4" style="display: none;">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <p class="mt-2">No purchases found for this supplier</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="products" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">Products from this Supplier</h6>
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="form-control form-control-sm" id="productSearch" placeholder="Search products..." style="width: 200px;">
+                                    <small class="text-muted align-self-center" id="productsCount">Loading...</small>
+                                </div>
+                            </div>
+                            <div id="productsLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <span class="ms-2">Loading products...</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Product Name</th>
+                                            <th>SKU</th>
+                                            <th>Category</th>
+                                            <th>Cost Price</th>
+                                            <th>Selling Price</th>
+                                            <th>Stock Level</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="supplierProducts">
+                                        <!-- Supplier products will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="noProductsMessage" class="text-center text-muted py-4" style="display: none;">
+                                <i class="bi bi-box fs-1"></i>
+                                <p class="mt-2">No products found for this supplier</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="payments" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <h6 class="mb-0">Payment History</h6>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="row text-end">
+                                        <div class="col-6">
+                                            <small class="text-muted">Total Paid:</small><br>
+                                            <strong class="text-success" id="totalPaid">P0.00</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Outstanding:</small><br>
+                                            <strong class="text-danger" id="totalOutstanding">P0.00</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="paymentsLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                <span class="ms-2">Loading payments...</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Transaction Type</th>
+                                            <th>Reference</th>
+                                            <th>Payment Method</th>
+                                            <th>Amount</th>
+                                            <th>Balance After</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="supplierPayments">
+                                        <!-- Supplier payments will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="noPaymentsMessage" class="text-center text-muted py-4" style="display: none;">
+                                <i class="bi bi-credit-card fs-1"></i>
+                                <p class="mt-2">No payment history found for this supplier</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <!-- View Mode Buttons -->
+                    <div id="viewModeButtons">
+                        <button type="button" class="btn btn-danger" onclick="deleteSupplierFromModal()">
+                            <i class="bi bi-trash"></i> Delete Supplier
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="toggleEditMode(true)">
+                            <i class="bi bi-pencil"></i> Edit Supplier
+                        </button>
+                    </div>
+                    
+                    <!-- Edit Mode Buttons -->
+                    <div id="editModeButtons" style="display: none;">
+                        <button type="button" class="btn btn-secondary" onclick="toggleEditMode(false)">
+                            <i class="bi bi-x"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="saveSupplierChanges()">
+                            <i class="bi bi-check"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    
+    <script>
+        // Global variables
+        let suppliers = [];
+        let loading = false;
+        let currentSupplierId = null; // Track current supplier being viewed
+
+        // Currency settings
+        let currentCurrency = 'BWP';
+        let currencySymbol = 'P';
+        let currencyCode = 'BWP';
+
+        // API endpoints
+        const API_BASE = '/api/v1';
+        const PURCHASES_ENDPOINT = `${API_BASE}/purchases`;
+        const SUPPLIERS_ENDPOINT = `${PURCHASES_ENDPOINT}/suppliers`;
+
+        // Load settings and currency
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/v1/settings/currency');
+                if (response.ok) {
+                    const settings = await response.json();
+                    currentCurrency = settings.data.currency || 'BWP';
+                    currencySymbol = settings.data.currency_symbol || 'P';
+                    currencyCode = settings.data.currency || 'BWP';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Format currency amount
+        function formatCurrency(amount) {
+            return `${currencySymbol}${parseFloat(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Fetch suppliers from database
+        async function fetchSuppliers() {
+            try {
+                console.log('Fetching suppliers from database...');
+                loading = true;
+                showLoadingState();
+                
+                const params = new URLSearchParams();
+                const typeFilter = document.getElementById('typeFilter').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+                const searchFilter = document.getElementById('searchFilter').value;
+
+                if (typeFilter) params.append('supplier_type', typeFilter);
+                if (statusFilter) params.append('active', statusFilter === 'active');
+                if (searchFilter) params.append('search', searchFilter);
+
+                console.log('API URL:', `${SUPPLIERS_ENDPOINT}?${params}`);
+                const response = await fetch(`${SUPPLIERS_ENDPOINT}?${params}`);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const responseData = await response.json();
+                console.log('API response received:', responseData);
+                
+                // Handle UnifiedResponse format
+                let data;
+                if (responseData.success && responseData.data) {
+                    data = responseData.data;
+                    console.log('Extracted suppliers from UnifiedResponse:', data);
+                } else if (Array.isArray(responseData)) {
+                    data = responseData;
+                    console.log('Direct array response:', data);
+                } else {
+                    throw new Error('Unexpected response format');
+                }
+                
+                console.log('Number of suppliers:', data.length);
+                suppliers = data;
+
+                console.log('Rendering suppliers...');
+                renderSuppliers();
+                console.log('Updating statistics...');
+                updateStatistics();
+                
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Suppliers loaded successfully', 'success');
+                }
+            } catch (error) {
+                console.error('Error fetching suppliers:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load suppliers', 'error');
+                }
+            } finally {
+                loading = false;
+                hideLoadingState();
+            }
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            const grid = document.getElementById('suppliersGrid');
+            if (grid) {
+                grid.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading suppliers...</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Hide loading state
+        function hideLoadingState() {
+            // Loading state will be replaced by render functions
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const totalSuppliers = suppliers.length;
+            const activeSuppliers = suppliers.length; // All suppliers are considered active for now
+            const totalCreditLimit = suppliers.reduce((sum, s) => sum + (parseFloat(s.credit_limit) || 0), 0);
+            const totalAccountBalance = suppliers.reduce((sum, s) => sum + (parseFloat(s.current_balance) || 0), 0);
+
+            document.getElementById('totalSuppliers').textContent = totalSuppliers;
+            document.getElementById('activeSuppliers').textContent = activeSuppliers;
+            document.getElementById('totalPayables').textContent = formatCurrency(totalAccountBalance);
+            document.getElementById('avgOrderValue').textContent = formatCurrency(totalAccountBalance / Math.max(totalSuppliers, 1));
+        }
+
+        // Theme switching (only if themeToggle exists)
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                if (html.classList.contains('light-mode')) {
+                    html.classList.remove('light-mode');
+                    html.classList.add('dark-mode');
+                    themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
+                } else {
+                    html.classList.remove('dark-mode');
+                    html.classList.add('light-mode');
+                    themeToggle.innerHTML = '<i class="bi bi-moon"></i>';
+                }
+            });
+        }
+
+        // Render suppliers
+        function renderSuppliers(suppliersToRender = suppliers) {
+            console.log('renderSuppliers called with:', suppliersToRender.length, 'suppliers');
+            const grid = document.getElementById('suppliersGrid');
+            console.log('Grid element:', grid);
+            console.log('Grid computed style:', window.getComputedStyle(grid));
+            console.log('Grid offsetHeight:', grid.offsetHeight);
+            console.log('Grid offsetWidth:', grid.offsetWidth);
+            if (!grid) {
+                console.error('Grid element not found!');
+                return;
+            }
+            
+            grid.innerHTML = '';
+
+            if (suppliersToRender.length === 0) {
+                console.log('No suppliers to render, showing empty state');
+                grid.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="modern-card">
+                            <div class="card-body">
+                                <i class="bi bi-truck fs-1 text-muted"></i>
+                                <h5 class="mt-3">No suppliers found</h5>
+                                <p class="text-muted">No suppliers match your current filters.</p>
+                                <button class="btn-modern btn-primary" onclick="clearFilters()">
+                                    <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            console.log('Rendering', suppliersToRender.length, 'supplier cards');
+            suppliersToRender.forEach((supplier, index) => {
+                console.log(`Rendering supplier ${index + 1}:`, supplier.name);
+                const card = document.createElement('div');
+                card.className = 'col-md-6 col-lg-4 mb-4';
+                card.innerHTML = `
+                    <div class="card supplier-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="card-title mb-1">${supplier.name}</h6>
+                                    <p class="text-muted mb-0 small">${supplier.email || 'No email'}</p>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary supplier-type-badge">${supplier.supplier_type || 'vendor'}</span>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteSupplier('${supplier.id}', '${supplier.name}')" title="Delete Supplier">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <span class="badge bg-success supplier-type-badge">Active</span>
+                                ${supplier.vat_reg_number ? `<span class="badge bg-info supplier-type-badge">VAT</span>` : ''}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-0 ${(parseFloat(supplier.current_balance) || 0) >= 0 ? 'balance-positive' : 'balance-negative'}">
+                                        ${formatCurrency(supplier.current_balance || 0)}
+                                    </h5>
+                                    <small class="text-muted">Credit limit: ${formatCurrency(supplier.credit_limit || 0)}</small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" onclick="showSupplierDetails('${supplier.id}')" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+                console.log(`Card ${index + 1} added to grid. Grid now has ${grid.children.length} children`);
+            });
+            console.log('Finished rendering suppliers. Total grid children:', grid.children.length);
+            console.log('Grid HTML:', grid.innerHTML.substring(0, 500) + '...');
+        }
+
+        // Show supplier details
+        function showSupplierDetails(supplierId) {
+            currentSupplierId = supplierId;
+            const localSupplier = suppliers.find(sup => sup.id === supplierId);
+            // Optimistically show local data while fetching fresh copy
+            if (localSupplier) {
+                populateSupplierView(localSupplier);
+            }
+            // Always fetch fresh supplier data to avoid stale state
+            fetch(`${SUPPLIERS_ENDPOINT}/${supplierId}`)
+                .then(r => r.json())
+                .then(resp => {
+                    let supData = resp;
+                    if (resp && resp.success && resp.data) supData = resp.data;
+                    if (supData && supData.id) {
+                        // Update local cache
+                        const idx = suppliers.findIndex(s => s.id === supData.id);
+                        if (idx !== -1) {
+                            suppliers[idx] = supData;
+                        } else {
+                            suppliers.push(supData);
+                        }
+                        populateSupplierView(supData);
+                    }
+                })
+                .catch(err => console.error('Failed to refresh supplier details:', err))
+                .finally(() => {
+                    toggleEditMode(false, false);
+                    new bootstrap.Modal(document.getElementById('supplierDetailsModal')).show();
+                });
+        }
+
+        // Helper: populate supplier detail (view mode)
+        function populateSupplierView(supplier) {
+            if (!supplier) return;
+            const safe = (v, alt='N/A') => (v === null || v === undefined || v === '' ? alt : v);
+            document.getElementById('detailSupplierName').textContent = safe(supplier.name, '-');
+            document.getElementById('detailSupplierType').textContent = safe(supplier.supplier_type || 'vendor');
+            document.getElementById('detailSupplierEmail').textContent = safe(supplier.email);
+            document.getElementById('detailSupplierPhone').textContent = safe(supplier.telephone);
+            document.getElementById('detailSupplierVatNumber').textContent = safe(supplier.vat_reg_number);
+            document.getElementById('detailContactPerson').textContent = safe(supplier.contact_person);
+            document.getElementById('detailPaymentTerms').textContent = `${supplier.payment_terms || 30} days`;
+            document.getElementById('detailSupplierCreditLimit').textContent = formatCurrency(supplier.credit_limit || 0);
+            document.getElementById('detailSupplierBalance').textContent = formatCurrency(supplier.current_balance || 0);
+            document.getElementById('detailSupplierAddress').textContent = safe(supplier.address);
+            document.getElementById('detailSupplierNotes').textContent = safe(supplier.notes, 'No notes');
+            document.getElementById('detailTaxExempt').textContent = supplier.tax_exempt ? 'Yes' : 'No';
+            const acEl = document.getElementById('detailAccountingCode');
+            if (supplier.accounting_code && supplier.accounting_code.code) {
+                acEl.textContent = `${supplier.accounting_code.code} - ${supplier.accounting_code.name}`;
+            } else if (window._accountingCodeMap && window._accountingCodeMap[supplier.accounting_code_id]) {
+                acEl.textContent = window._accountingCodeMap[supplier.accounting_code_id];
+            } else {
+                acEl.textContent = supplier.accounting_code_id || 'N/A';
+            }
+        }
+
+        // Delete supplier from modal
+        async function deleteSupplierFromModal() {
+            if (currentSupplierId) {
+                const supplier = suppliers.find(sup => sup.id === currentSupplierId);
+                if (supplier) {
+                    // Close modal first
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('supplierDetailsModal'));
+                    if (modal) modal.hide();
+                    
+                    // Then delete the supplier
+                    await deleteSupplier(currentSupplierId, supplier.name);
+                    currentSupplierId = null; // Reset current supplier
+                }
+            }
+        }
+
+        // Filter suppliers
+        function filterSuppliers() {
+            fetchSuppliers();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('balanceFilter').value = '';
+            document.getElementById('branchFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            fetchSuppliers();
+        }
+
+        // Add event listeners (only if elements exist)
+        const typeFilter = document.getElementById('typeFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const balanceFilter = document.getElementById('balanceFilter');
+        const branchFilter = document.getElementById('branchFilter');
+        const searchFilter = document.getElementById('searchFilter');
+
+        if (typeFilter) typeFilter.addEventListener('change', filterSuppliers);
+        if (statusFilter) statusFilter.addEventListener('change', filterSuppliers);
+        if (balanceFilter) balanceFilter.addEventListener('change', filterSuppliers);
+        if (branchFilter) branchFilter.addEventListener('change', filterSuppliers);
+        if (searchFilter) searchFilter.addEventListener('input', filterSuppliers);
+
+        // Save supplier
+        const saveSupplierBtn = document.getElementById('saveSupplierBtn');
+        if (saveSupplierBtn) {
+            saveSupplierBtn.addEventListener('click', async function() {
+                const form = document.getElementById('addSupplierForm');
+                if (form && form.checkValidity()) {
+                    try {
+                        // Collect form data
+                        const supplierData = {
+                            name: document.getElementById('supplierName').value,
+                            email: document.getElementById('supplierEmail').value || null,
+                            telephone: document.getElementById('supplierPhone').value || null,
+                            address: document.getElementById('supplierAddress').value || null,
+                            accounting_code_id: document.getElementById('supplierAccountingCode').value,
+                            vat_reg_number: document.getElementById('supplierVatNumber').value || null,
+                            supplier_type: document.getElementById('supplierType').value,
+                            contact_person: document.getElementById('contactPerson').value || null,
+                            payment_terms: parseInt(document.getElementById('paymentTerms').value) || 30,
+                            credit_limit: parseFloat(document.getElementById('supplierCreditLimit').value) || 0,
+                            current_balance: parseFloat(document.getElementById('currentBalance').value) || 0,
+                            tax_exempt: document.getElementById('taxExempt').checked
+                        };
+
+                        console.log('Saving supplier data:', supplierData);
+
+                        // Send to backend
+                        const response = await fetch('/api/v1/purchases/suppliers', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(supplierData)
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || errorData.detail || 'Failed to save supplier');
+                        }
+
+                        const responseData = await response.json();
+                        console.log('Supplier creation response:', responseData);
+                        
+                        // Handle UnifiedResponse format
+                        let savedSupplier;
+                        if (responseData.success && responseData.data) {
+                            savedSupplier = responseData.data;
+                        } else {
+                            savedSupplier = responseData;
+                        }
+                        
+                        console.log('Supplier saved successfully:', savedSupplier);
+
+                        // Show success message
+                        if (window.modernUI) {
+                            window.modernUI.showNotification('Supplier saved successfully!', 'success');
+                        } else {
+                            alert('Supplier saved successfully!');
+                        }
+
+                        // Close modal and reset form
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addSupplierModal'));
+                        if (modal) modal.hide();
+                        form.reset();
+
+                        // Refresh suppliers list
+                        await fetchSuppliers();
+
+                    } catch (error) {
+                        console.error('Error saving supplier:', error);
+                        if (window.modernUI) {
+                            window.modernUI.showNotification(`Failed to save supplier: ${error.message}`, 'error');
+                        } else {
+                            alert(`Failed to save supplier: ${error.message}`);
+                        }
+                    }
+                } else if (form) {
+                    form.reportValidity();
+                }
+            });
+        }
+
+        // Delete supplier
+        async function deleteSupplier(supplierId, supplierName) {
+            if (!confirm(`Are you sure you want to delete supplier "${supplierName}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            const extractErrorMessage = (payload) => {
+                if (!payload) return 'Failed to delete supplier';
+                if (typeof payload === 'string') return payload;
+                if (payload.message) return payload.message;
+                if (payload.detail) {
+                    if (typeof payload.detail === 'string') return payload.detail;
+                    if (payload.detail.error?.message) return payload.detail.error.message;
+                    if (payload.detail.message) return payload.detail.message;
+                }
+                return JSON.stringify(payload);
+            };
+
+            try {
+                console.log('Deleting supplier:', supplierId);
+
+                const response = await fetch(`${SUPPLIERS_ENDPOINT}/${supplierId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                let responseData = null;
+                try {
+                    responseData = await response.json();
+                } catch (_) {
+                    // Ignore JSON parse errors; response may be empty
+                }
+
+                if (!response.ok || (responseData && responseData.success === false)) {
+                    const message = extractErrorMessage(responseData);
+                    throw new Error(message);
+                }
+
+                console.log('Supplier deletion response:', responseData);
+
+                const message = responseData?.message
+                    || (responseData?.data?.name ? `Supplier "${responseData.data.name}" deleted successfully!` : `Supplier "${supplierName}" deleted successfully!`);
+
+                // Remove from local cache & re-render
+                const beforeCount = suppliers.length;
+                suppliers = suppliers.filter(s => s.id !== supplierId);
+                console.log(`Removed supplier locally. Before: ${beforeCount}, After: ${suppliers.length}`);
+                renderSuppliers();
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification(message, 'success');
+                } else {
+                    alert(message);
+                }
+
+                // Background refresh (non-blocking)
+                setTimeout(() => fetchSuppliers().catch(e => console.warn('Background refresh failed after delete:', e)), 300);
+
+            } catch (error) {
+                console.error('Error deleting supplier:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification(`Failed to delete supplier: ${error.message}`, 'error');
+                } else {
+                    alert(`Failed to delete supplier: ${error.message}`);
+                }
+            }
+        }
+
+        // Toggle between view and edit modes
+        function toggleEditMode(isEdit, loadAccountingCodes = true) {
+            const viewMode = document.getElementById('viewMode');
+            const editMode = document.getElementById('editMode');
+            const viewButtons = document.getElementById('viewModeButtons');
+            const editButtons = document.getElementById('editModeButtons');
+            
+            if (isEdit) {
+                // Switch to edit mode
+                viewMode.style.display = 'none';
+                editMode.style.display = 'block';
+                viewButtons.style.display = 'none';
+                editButtons.style.display = 'block';
+                
+                // Populate edit form with current data
+                populateEditForm();
+                
+                // Load accounting codes for dropdown
+                if (loadAccountingCodes) {
+                    loadAccountingCodesForEdit();
+                }
+            } else {
+                // Switch to view mode
+                viewMode.style.display = 'block';
+                editMode.style.display = 'none';
+                viewButtons.style.display = 'block';
+                editButtons.style.display = 'none';
+            }
+        }
+        
+        // Populate edit form with current supplier data
+        function populateEditForm() {
+            const supplier = suppliers.find(sup => sup.id === currentSupplierId);
+            if (supplier) {
+                document.getElementById('editSupplierName').value = supplier.name || '';
+                document.getElementById('editSupplierType').value = supplier.supplier_type || 'vendor';
+                document.getElementById('editSupplierEmail').value = supplier.email || '';
+                document.getElementById('editSupplierPhone').value = supplier.telephone || '';
+                document.getElementById('editSupplierVatNumber').value = supplier.vat_reg_number || '';
+                document.getElementById('editContactPerson').value = supplier.contact_person || '';
+                document.getElementById('editPaymentTerms').value = supplier.payment_terms || 30;
+                document.getElementById('editSupplierCreditLimit').value = supplier.credit_limit || 0;
+                document.getElementById('editCurrentBalance').value = supplier.current_balance || 0;
+                document.getElementById('editSupplierAddress').value = supplier.address || '';
+                document.getElementById('editSupplierNotes').value = supplier.notes || '';
+                document.getElementById('editTaxExempt').checked = supplier.tax_exempt || false;
+                document.getElementById('editSupplierAccountingCode').value = supplier.accounting_code_id || '';
+            }
+        }
+        
+        // Load accounting codes for edit dropdown
+        async function loadAccountingCodesForEdit() {
+            try {
+                const response = await fetch('/api/v1/accounting-codes');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch accounting codes: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const accountingCodeSelect = document.getElementById('editSupplierAccountingCode');
+                
+                if (accountingCodeSelect) {
+                    // Clear existing options except the first one
+                    accountingCodeSelect.innerHTML = '<option value="">Select Accounting Code</option>';
+                    
+                    // Sort and populate options
+                    const sortedData = data.sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+                    sortedData.forEach(code => {
+                        const option = document.createElement('option');
+                        option.value = code.id;
+                        option.textContent = `${code.code} - ${code.name}`;
+                        if (code.account_type) {
+                            option.textContent += ` (${code.account_type})`;
+                        }
+                        accountingCodeSelect.appendChild(option);
+                    });
+                    
+                    // Set the current supplier's accounting code
+                    const supplier = suppliers.find(sup => sup.id === currentSupplierId);
+                    if (supplier && supplier.accounting_code_id) {
+                        accountingCodeSelect.value = supplier.accounting_code_id;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading accounting codes for edit:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load accounting codes', 'error');
+                }
+            }
+        }
+        
+        // Save supplier changes
+        async function saveSupplierChanges() {
+            const form = document.getElementById('editSupplierForm');
+            if (form && form.checkValidity()) {
+                try {
+                    // Collect form data
+                    const supplierData = {
+                        name: document.getElementById('editSupplierName').value,
+                        email: document.getElementById('editSupplierEmail').value || null,
+                        telephone: document.getElementById('editSupplierPhone').value || null,
+                        address: document.getElementById('editSupplierAddress').value || null,
+                        accounting_code_id: document.getElementById('editSupplierAccountingCode').value,
+                        vat_reg_number: document.getElementById('editSupplierVatNumber').value || null,
+                        supplier_type: document.getElementById('editSupplierType').value,
+                        contact_person: document.getElementById('editContactPerson').value || null,
+                        payment_terms: parseInt(document.getElementById('editPaymentTerms').value) || 30,
+                        credit_limit: parseFloat(document.getElementById('editSupplierCreditLimit').value) || 0,
+                        current_balance: parseFloat(document.getElementById('editCurrentBalance').value) || 0,
+                        tax_exempt: document.getElementById('editTaxExempt').checked,
+                        notes: document.getElementById('editSupplierNotes').value || null
+                    };
+
+                    console.log('Updating supplier data:', supplierData);
+
+                    // Send to backend
+                    const response = await fetch(`${SUPPLIERS_ENDPOINT}/${currentSupplierId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(supplierData)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || errorData.detail || 'Failed to update supplier');
+                    }
+
+                    const responseData = await response.json();
+                    console.log('Supplier update response:', responseData);
+                    
+                    // Handle UnifiedResponse format
+                    let updatedSupplier;
+                    if (responseData.success && responseData.data) {
+                        updatedSupplier = responseData.data;
+                    } else {
+                        updatedSupplier = responseData;
+                    }
+                    
+                    console.log('Supplier updated successfully:', updatedSupplier);
+
+                    // Update local cache immediately (optimistic UI)
+                    if (updatedSupplier && updatedSupplier.id) {
+                        const idx = suppliers.findIndex(s => s.id === updatedSupplier.id);
+                        if (idx !== -1) {
+                            suppliers[idx] = updatedSupplier;
+                        } else {
+                            suppliers.push(updatedSupplier);
+                        }
+                        // Re-render grid without full refetch to keep UI snappy
+                        renderSuppliers();
+                    }
+
+                    // Show success message
+                    if (window.modernUI) {
+                        window.modernUI.showNotification('Supplier updated successfully!', 'success');
+                    } else {
+                        alert('Supplier updated successfully!');
+                    }
+
+                    // Switch back to view mode
+                    toggleEditMode(false, false);
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('supplierDetailsModal'));
+                    if (modal) modal.hide();
+
+                    // Background refresh (non-blocking) to ensure data consistency
+                    setTimeout(() => fetchSuppliers().catch(e => console.warn('Background refresh failed:', e)), 200);
+
+                } catch (error) {
+                    console.error('Error updating supplier:', error);
+                    if (window.modernUI) {
+                        window.modernUI.showNotification(`Failed to update supplier: ${error.message}`, 'error');
+                    } else {
+                        alert(`Failed to update supplier: ${error.message}`);
+                    }
+                }
+            } else if (form) {
+                form.reportValidity();
+            }
+        }
+
+        // Initialize data loading
+        async function initializeData() {
+            try {
+                await loadSettings();
+                await fetchSuppliers();
+                await fetchAccountingCodes();
+            } catch (error) {
+                console.error('Error initializing data:', error);
+            }
+        }
+
+        // Fetch accounting codes for supplier assignment
+        async function fetchAccountingCodes() {
+            try {
+                console.log('Fetching accounting codes...');
+                const response = await fetch('/api/v1/accounting-codes');
+                console.log('API Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to fetch accounting codes: ${response.status} - ${errorText}`);
+                }
+                
+                const data = await response.json();
+                // Build a quick lookup map for code display fallbacks
+                window._accountingCodeMap = {};
+                data.forEach(c => { window._accountingCodeMap[c.id] = `${c.code} - ${c.name}`; });
+                console.log('Accounting codes API response:', data.length, 'codes received');
+                console.log('Sample data:', data.slice(0, 3));
+                
+                // Populate accounting code dropdown
+                const accountingCodeSelect = document.getElementById('supplierAccountingCode');
+                console.log('Accounting code select element:', accountingCodeSelect);
+                
+                if (accountingCodeSelect) {
+                    // Clear existing options
+                    accountingCodeSelect.innerHTML = '<option value="">Select Accounting Code</option>';
+                    
+                    // Sort accounting codes by code for better UX
+                    const sortedData = data.sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+                    
+                    // Include ALL accounting codes (not just expense accounts)
+                    sortedData.forEach((code, index) => {
+                        const option = document.createElement('option');
+                        option.value = code.id;
+                        option.textContent = `${code.code} - ${code.name}`;
+                        // Add account type info for better selection
+                        if (code.account_type) {
+                            option.textContent += ` (${code.account_type})`;
+                        }
+                        accountingCodeSelect.appendChild(option);
+                        
+                        // Log first few options for debugging
+                        if (index < 5) {
+                            console.log(`Added option ${index + 1}:`, option.textContent);
+                        }
+                    });
+                    
+                    console.log(`✅ Loaded ${data.length} accounting codes for supplier dropdown`);
+                    console.log('Final dropdown options count:', accountingCodeSelect.options.length);
+                    
+                    // Verify the dropdown has options
+                    if (accountingCodeSelect.options.length > 1) {
+                        console.log('✅ Dropdown populated successfully');
+                        
+                        // Show success notification if available
+                        if (window.modernUI) {
+                            window.modernUI.showNotification(`Loaded ${data.length} accounting codes`, 'success');
+                        }
+                    } else {
+                        console.error('❌ Dropdown has no options');
+                    }
+                } else {
+                    console.error('❌ Accounting code select element not found!');
+                }
+            } catch (error) {
+                console.error('❌ Error fetching accounting codes:', error);
+            }
+        }
+        
+        // Load supplier purchases
+        async function loadSupplierPurchases() {
+            if (!currentSupplierId) return;
+            
+            const loadingEl = document.getElementById('purchasesLoading');
+            const tableBody = document.getElementById('supplierPurchases');
+            const countEl = document.getElementById('purchasesCount');
+            const noDataEl = document.getElementById('noPurchasesMessage');
+            
+            try {
+                // Show loading state
+                loadingEl.style.display = 'block';
+                noDataEl.style.display = 'none';
+                tableBody.innerHTML = '';
+                countEl.textContent = 'Loading...';
+                
+                // Fetch purchases for this supplier
+                const response = await fetch(`${PURCHASES_ENDPOINT}/purchases?supplier_id=${currentSupplierId}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch purchases: ${response.status}`);
+                }
+                
+                const purchases = await response.json();
+                loadingEl.style.display = 'none';
+                
+                if (purchases.length === 0) {
+                    noDataEl.style.display = 'block';
+                    countEl.textContent = '0 purchases';
+                    return;
+                }
+                
+                // Populate purchases table
+                countEl.textContent = `${purchases.length} purchase${purchases.length !== 1 ? 's' : ''}`;
+                
+                purchases.forEach(purchase => {
+                    const outstanding = (parseFloat(purchase.total_amount) || 0) - (parseFloat(purchase.amount_paid) || 0);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${purchase.reference || purchase.id.substring(0, 8)}</td>
+                        <td>${new Date(purchase.purchase_date).toLocaleDateString()}</td>
+                        <td class="text-end">${formatCurrency(purchase.total_amount || 0)}</td>
+                        <td class="text-end">${formatCurrency(purchase.amount_paid || 0)}</td>
+                        <td class="text-end ${outstanding > 0 ? 'text-danger' : 'text-success'}">${formatCurrency(outstanding)}</td>
+                        <td><span class="badge bg-${getStatusColor(purchase.status)}">${purchase.status || 'pending'}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewPurchaseDetails('${purchase.id}')" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error loading supplier purchases:', error);
+                loadingEl.style.display = 'none';
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error loading purchases: ${error.message}</td></tr>`;
+                countEl.textContent = 'Error';
+            }
+        }
+        
+        // Load supplier products
+        async function loadSupplierProducts() {
+            if (!currentSupplierId) return;
+            
+            const loadingEl = document.getElementById('productsLoading');
+            const tableBody = document.getElementById('supplierProducts');
+            const countEl = document.getElementById('productsCount');
+            const noDataEl = document.getElementById('noProductsMessage');
+            
+            try {
+                // Show loading state
+                loadingEl.style.display = 'block';
+                noDataEl.style.display = 'none';
+                tableBody.innerHTML = '';
+                countEl.textContent = 'Loading...';
+                
+                // Fetch products for this supplier
+                const response = await fetch(`${PURCHASES_ENDPOINT}/products?supplier_id=${currentSupplierId}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch products: ${response.status}`);
+                }
+                
+                const products = await response.json();
+                loadingEl.style.display = 'none';
+                
+                if (products.length === 0) {
+                    noDataEl.style.display = 'block';
+                    countEl.textContent = '0 products';
+                    return;
+                }
+                
+                // Store products for search functionality
+                window.currentSupplierProducts = products;
+                
+                // Populate products table
+                renderSupplierProducts(products);
+                countEl.textContent = `${products.length} product${products.length !== 1 ? 's' : ''}`;
+                
+            } catch (error) {
+                console.error('Error loading supplier products:', error);
+                loadingEl.style.display = 'none';
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error loading products: ${error.message}</td></tr>`;
+                countEl.textContent = 'Error';
+            }
+        }
+        
+        // Render supplier products (with search capability)
+        function renderSupplierProducts(products) {
+            const tableBody = document.getElementById('supplierProducts');
+            tableBody.innerHTML = '';
+            
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.name || 'N/A'}</td>
+                    <td>${product.sku || 'N/A'}</td>
+                    <td>${product.category || 'N/A'}</td>
+                    <td class="text-end">${formatCurrency(product.cost_price || 0)}</td>
+                    <td class="text-end">${formatCurrency(product.selling_price || 0)}</td>
+                    <td class="text-center">
+                        <span class="badge ${(product.quantity_in_stock || 0) > 0 ? 'bg-success' : 'bg-warning'}">
+                            ${product.quantity_in_stock || 0}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-${product.active ? 'success' : 'secondary'}">
+                            ${product.active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Load supplier payments and transactions
+        async function loadSupplierPayments() {
+            if (!currentSupplierId) return;
+            
+            const loadingEl = document.getElementById('paymentsLoading');
+            const tableBody = document.getElementById('supplierPayments');
+            const noDataEl = document.getElementById('noPaymentsMessage');
+            const totalPaidEl = document.getElementById('totalPaid');
+            const totalOutstandingEl = document.getElementById('totalOutstanding');
+            
+            try {
+                // Show loading state
+                loadingEl.style.display = 'block';
+                noDataEl.style.display = 'none';
+                tableBody.innerHTML = '';
+                
+                // Fetch accounting entries for this supplier (try different approaches)
+                let payments = [];
+                let totalPaid = 0;
+                let totalOutstanding = 0;
+                
+                try {
+                    // Try accounting entries first
+                    const response = await fetch(`/api/v1/accounting/entries?supplier_id=${currentSupplierId}`);
+                    if (response.ok) {
+                        const entries = await response.json();
+                        payments = entries.filter(entry => 
+                            entry.transaction_type && 
+                            (entry.transaction_type.includes('payment') || entry.transaction_type.includes('purchase'))
+                        );
+                    }
+                } catch (err) {
+                    console.log('Accounting entries not available, using purchase data');
+                }
+                
+                // If no accounting entries, get payment info from purchases
+                if (payments.length === 0) {
+                    const purchasesResponse = await fetch(`${PURCHASES_ENDPOINT}/purchases?supplier_id=${currentSupplierId}`);
+                    if (purchasesResponse.ok) {
+                        const purchases = await purchasesResponse.json();
+                        
+                        // Create payment-like entries from purchase data
+                        payments = purchases.map(purchase => ({
+                            date: purchase.purchase_date,
+                            transaction_type: 'Purchase',
+                            reference: purchase.reference || purchase.id.substring(0, 8),
+                            payment_method: purchase.payment_method || 'N/A',
+                            amount: purchase.total_amount || 0,
+                            amount_paid: purchase.amount_paid || 0,
+                            status: purchase.status || 'pending'
+                        }));
+                        
+                        totalPaid = purchases.reduce((sum, p) => sum + (parseFloat(p.amount_paid) || 0), 0);
+                        totalOutstanding = purchases.reduce((sum, p) => {
+                            const outstanding = (parseFloat(p.total_amount) || 0) - (parseFloat(p.amount_paid) || 0);
+                            return sum + outstanding;
+                        }, 0);
+                    }
+                }
+                
+                loadingEl.style.display = 'none';
+                
+                // Update totals
+                totalPaidEl.textContent = formatCurrency(totalPaid);
+                totalOutstandingEl.textContent = formatCurrency(totalOutstanding);
+                
+                if (payments.length === 0) {
+                    noDataEl.style.display = 'block';
+                    return;
+                }
+                
+                // Sort payments by date (newest first)
+                payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Populate payments table
+                let runningBalance = totalOutstanding;
+                payments.forEach(payment => {
+                    const row = document.createElement('tr');
+                    const amount = parseFloat(payment.amount) || 0;
+                    const amountPaid = parseFloat(payment.amount_paid) || 0;
+                    
+                    row.innerHTML = `
+                        <td>${new Date(payment.date).toLocaleDateString()}</td>
+                        <td>${payment.transaction_type || 'Payment'}</td>
+                        <td>${payment.reference || 'N/A'}</td>
+                        <td>${payment.payment_method || 'N/A'}</td>
+                        <td class="text-end">${formatCurrency(amountPaid > 0 ? amountPaid : amount)}</td>
+                        <td class="text-end">${formatCurrency(runningBalance)}</td>
+                        <td><span class="badge bg-${getStatusColor(payment.status)}">${payment.status || 'completed'}</span></td>
+                    `;
+                    tableBody.appendChild(row);
+                    
+                    runningBalance -= amountPaid;
+                });
+                
+            } catch (error) {
+                console.error('Error loading supplier payments:', error);
+                loadingEl.style.display = 'none';
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error loading payments: ${error.message}</td></tr>`;
+            }
+        }
+        
+        // Helper function to get status colors
+        function getStatusColor(status) {
+            switch (status?.toLowerCase()) {
+                case 'completed':
+                case 'paid':
+                case 'received':
+                    return 'success';
+                case 'pending':
+                case 'processing':
+                    return 'warning';
+                case 'cancelled':
+                case 'failed':
+                case 'rejected':
+                    return 'danger';
+                case 'draft':
+                    return 'secondary';
+                default:
+                    return 'primary';
+            }
+        }
+        
+        // View purchase details (placeholder function)
+        function viewPurchaseDetails(purchaseId) {
+            if (window.modernUI) {
+                window.modernUI.showNotification(`Opening purchase details for ID: ${purchaseId}`, 'info');
+            } else {
+                alert(`Purchase details would open for ID: ${purchaseId}`);
+            }
+            // TODO: Implement purchase details modal or redirect to purchases page
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded event fired');
+            initializeData();
+            
+            // Add event listener for the add supplier modal to ensure accounting codes are loaded
+            const addSupplierModal = document.getElementById('addSupplierModal');
+            console.log('Add supplier modal element:', addSupplierModal);
+            
+            if (addSupplierModal) {
+                addSupplierModal.addEventListener('show.bs.modal', function() {
+                    console.log('Add Supplier modal opened - loading accounting codes...');
+                    fetchAccountingCodes();
+                });
+            } else {
+                console.error('❌ Add supplier modal not found!');
+            }
+            
+            // Also test the dropdown immediately for debugging
+            setTimeout(() => {
+                console.log('Testing dropdown population after 2 seconds...');
+                fetchAccountingCodes();
+            }, 2000);
+            
+            // Add product search functionality
+            const productSearch = document.getElementById('productSearch');
+            if (productSearch) {
+                productSearch.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    if (!window.currentSupplierProducts) return;
+                    
+                    const filteredProducts = window.currentSupplierProducts.filter(product => 
+                        (product.name || '').toLowerCase().includes(searchTerm) ||
+                        (product.sku || '').toLowerCase().includes(searchTerm) ||
+                        (product.category || '').toLowerCase().includes(searchTerm)
+                    );
+                    
+                    renderSupplierProducts(filteredProducts);
+                    const countEl = document.getElementById('productsCount');
+                    if (countEl) {
+                        countEl.textContent = `${filteredProducts.length} of ${window.currentSupplierProducts.length} products`;
+                    }
+                });
+            }
+        });
+    
+    // Navbar is auto-initialized by navbar.js
+    </script>
+</body>
+</html> 

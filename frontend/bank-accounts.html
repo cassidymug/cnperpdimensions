@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Accounts - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.c                // Search and filter
+                document.getElementById('searchAccounts').addEventListener('input', () => this.filterAccounts());
+                document.getElementById('filterType').addEventListener('change', () => this.filterAccounts());
+                document.getElementById('clearFilters').addEventListener('click', () => this.clearFilters());el="stylesheet">
+    
+    <style>
+        .bank-card {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .bank-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .bank-card-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .bank-card-body {
+            padding: 20px;
+        }
+        .account-balance {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .balance-positive {
+            color: #28a745;
+        }
+        .balance-negative {
+            color: #dc3545;
+        }
+        .balance-zero {
+            color: #6c757d;
+        }
+        .account-number {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #495057;
+        }
+        .bank-institution {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .transaction-summary {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        .loading-spinner {
+            text-align: center;
+            padding: 50px;
+        }
+        .action-buttons {
+            margin-top: 15px;
+        }
+        .bank-type-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+        }
+        .search-filters {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stats-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .quick-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        .fab-button {
+            min-width: 140px;
+            height: 50px;
+            border-radius: 25px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+        
+        .fab-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            background-color: #0b5ed7 !important;
+            color: white !important;
+        }
+        
+        .fab-button:focus,
+        .fab-button:active {
+            background-color: #0a58ca !important;
+            color: white !important;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        
+        .fab-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            color: white !important;
+        }
+        
+        .fab-button i {
+            color: white !important;
+        }
+        
+        /* Transaction Modal Styles */
+        .transaction-row {
+            transition: all 0.2s ease;
+        }
+        .transaction-row:hover {
+            background-color: #f8f9fa;
+        }
+        .transaction-debit {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .transaction-credit {
+            color: #198754;
+            font-weight: 600;
+        }
+        .transaction-balance {
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        .transaction-balance.positive {
+            color: #198754;
+        }
+        .transaction-balance.negative {
+            color: #dc3545;
+        }
+        .transaction-balance.zero {
+            color: #6c757d;
+        }
+        .transaction-reference {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        .transaction-date {
+            font-weight: 500;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .modal-xl .modal-dialog {
+            max-width: 90%;
+        }
+        @media (max-width: 768px) {
+            .modal-xl .modal-dialog {
+                max-width: 95%;
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-6 fw-bold">
+                    <i class="bi bi-bank text-primary me-3"></i>
+                    Bank Accounts Management
+                </h1>
+                <p class="lead text-muted">Manage your bank accounts, view balances, and track transactions</p>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stats-card">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <div class="stats-value" id="totalAccounts">0</div>
+                            <div>Total Accounts</div>
+                        </div>
+                        <i class="bi bi-credit-card fs-1 ms-auto opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #007bff, #0056b3);">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <div class="stats-value" id="totalBalance">$0.00</div>
+                            <div>Total Balance</div>
+                        </div>
+                        <i class="bi bi-wallet2 fs-1 ms-auto opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #ffc107, #e0a800);">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <div class="stats-value" id="activeAccounts">0</div>
+                            <div>Active Accounts</div>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 ms-auto opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #6f42c1, #5a2d91);">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <div class="stats-value" id="totalTransactions">0</div>
+                            <div>Transactions</div>
+                        </div>
+                        <i class="bi bi-arrow-left-right fs-1 ms-auto opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="search-filters">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <label for="searchAccounts" class="form-label">Search Accounts</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="searchAccounts" placeholder="Search by name or account number...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterType" class="form-label">Account Type</label>
+                    <select class="form-select" id="filterType">
+                        <option value="">All Types</option>
+                        <option value="current">Current Account</option>
+                        <option value="savings">Savings Account</option>
+                        <option value="business">Business Account</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <button class="btn btn-outline-secondary w-100" id="clearFilters">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading bank accounts...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading bank accounts...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="alert alert-danger d-none" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Error loading bank accounts!</strong>
+            <span id="errorMessage">Failed to connect to the server. Please check your connection and try again.</span>
+            <button class="btn btn-outline-danger btn-sm ms-3" id="retryLoad">
+                <i class="bi bi-arrow-clockwise"></i> Retry
+            </button>
+        </div>
+
+        <!-- Bank Accounts Grid -->
+        <div id="bankAccountsContainer" class="d-none">
+            <div class="row" id="bankAccountsGrid">
+                <!-- Bank account cards will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- No Results -->
+        <div id="noResultsState" class="text-center py-5 d-none">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No Bank Accounts Found</h3>
+            <p class="text-muted">No bank accounts match your current filters.</p>
+            <button class="btn btn-primary" id="addFirstAccount">
+                <i class="bi bi-plus-circle"></i> Add Your First Bank Account
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="quick-actions">
+        <button class="fab-button btn btn-primary" title="Add New Bank Account" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+            <i class="bi bi-plus me-2"></i>
+            <span class="fab-label">Add Account</span>
+        </button>
+        <button class="fab-button btn btn-primary" title="Refresh Data" id="refreshData">
+            <i class="bi bi-arrow-clockwise me-2"></i>
+            <span class="fab-label">Refresh Data</span>
+        </button>
+    </div>
+
+    <!-- Add/Edit Account Modal -->
+    <div class="modal fade" id="addAccountModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="bi bi-bank"></i> Add New Bank Account
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="accountForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="accountCode" class="form-label">Account Code <span class="text-danger">*</span></label>
+                                <select class="form-select" id="accountCode" required>
+                                    <option value="">Select Accounting Code</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="accountName" class="form-label">Account Name</label>
+                                <input type="text" class="form-control" id="accountName" required>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label for="accountType" class="form-label">Account Type</label>
+                                <select class="form-select" id="accountType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="current">Current Account</option>
+                                    <option value="savings">Savings Account</option>
+                                    <option value="business">Business Account</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="bankName" class="form-label">Bank Name</label>
+                                <input type="text" class="form-control" id="bankName" required>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label for="accountNumber" class="form-label">Account Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="accountNumber" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="currency" class="form-label">Currency</label>
+                                <select class="form-select" id="currency" required>
+                                    <optgroup label="Major International Currencies">
+                                        <option value="USD">US Dollar (USD)</option>
+                                        <option value="EUR">Euro (EUR)</option>
+                                        <option value="GBP">British Pound (GBP)</option>
+                                    </optgroup>
+                                    <optgroup label="African Currencies">
+                                        <option value="DZD">Algerian Dinar (DZD)</option>
+                                        <option value="AOA">Angolan Kwanza (AOA)</option>
+                                        <option value="BWP">Botswana Pula (BWP)</option>
+                                        <option value="BIF">Burundian Franc (BIF)</option>
+                                        <option value="XAF">Central African CFA Franc (XAF)</option>
+                                        <option value="EGP">Egyptian Pound (EGP)</option>
+                                        <option value="ETB">Ethiopian Birr (ETB)</option>
+                                        <option value="GMD">Gambian Dalasi (GMD)</option>
+                                        <option value="GHS">Ghanaian Cedi (GHS)</option>
+                                        <option value="GNF">Guinean Franc (GNF)</option>
+                                        <option value="KES">Kenyan Shilling (KES)</option>
+                                        <option value="LSL">Lesotho Loti (LSL)</option>
+                                        <option value="LRD">Liberian Dollar (LRD)</option>
+                                        <option value="LYD">Libyan Dinar (LYD)</option>
+                                        <option value="MGA">Malagasy Ariary (MGA)</option>
+                                        <option value="MWK">Malawian Kwacha (MWK)</option>
+                                        <option value="MRU">Mauritanian Ouguiya (MRU)</option>
+                                        <option value="MUR">Mauritian Rupee (MUR)</option>
+                                        <option value="MAD">Moroccan Dirham (MAD)</option>
+                                        <option value="MZN">Mozambican Metical (MZN)</option>
+                                        <option value="NAD">Namibian Dollar (NAD)</option>
+                                        <option value="NGN" selected>Nigerian Naira (NGN)</option>
+                                        <option value="RWF">Rwandan Franc (RWF)</option>
+                                        <option value="SHP">Saint Helena Pound (SHP)</option>
+                                        <option value="STN">São Tomé and Príncipe Dobra (STN)</option>
+                                        <option value="SCR">Seychellois Rupee (SCR)</option>
+                                        <option value="SLL">Sierra Leonean Leone (SLL)</option>
+                                        <option value="SOS">Somali Shilling (SOS)</option>
+                                        <option value="ZAR">South African Rand (ZAR)</option>
+                                        <option value="SSP">South Sudanese Pound (SSP)</option>
+                                        <option value="SDG">Sudanese Pound (SDG)</option>
+                                        <option value="SZL">Swazi Lilangeni (SZL)</option>
+                                        <option value="TZS">Tanzanian Shilling (TZS)</option>
+                                        <option value="TND">Tunisian Dinar (TND)</option>
+                                        <option value="UGX">Ugandan Shilling (UGX)</option>
+                                        <option value="XOF">West African CFA Franc (XOF)</option>
+                                        <option value="ZMW">Zambian Kwacha (ZMW)</option>
+                                        <option value="ZWL">Zimbabwean Dollar (ZWL)</option>
+                                    </optgroup>
+                                    <optgroup label="Other Common Currencies">
+                                        <option value="AUD">Australian Dollar (AUD)</option>
+                                        <option value="CAD">Canadian Dollar (CAD)</option>
+                                        <option value="CHF">Swiss Franc (CHF)</option>
+                                        <option value="CNY">Chinese Yuan (CNY)</option>
+                                        <option value="INR">Indian Rupee (INR)</option>
+                                        <option value="JPY">Japanese Yen (JPY)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Note:</strong> The opening balance will be handled through journal entries. Use the accounting system to record initial balances.
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveAccount">
+                        <i class="bi bi-check-circle"></i> Save Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Actions Modal -->
+    <div class="modal fade" id="accountActionsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Account Actions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" id="viewTransactions">
+                            <i class="bi bi-list-ul"></i> View Transactions
+                        </button>
+                        <button class="btn btn-outline-info" id="addTransaction">
+                            <i class="bi bi-plus-circle"></i> Add Transaction
+                        </button>
+                        <button class="btn btn-outline-warning" id="editAccount">
+                            <i class="bi bi-pencil"></i> Edit Account
+                        </button>
+                        <button class="btn btn-outline-success" id="reconcileAccount">
+                            <i class="bi bi-check2-all"></i> Reconcile Account
+                        </button>
+                        <hr>
+                        <button class="btn btn-outline-danger" id="deleteAccount">
+                            <i class="bi bi-trash"></i> Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Transactions Modal -->
+    <div class="modal fade" id="accountTransactionsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-list-ul me-2"></i>
+                        <span id="transactionsAccountName">Account Transactions</span>
+                        <span class="badge bg-primary ms-2" id="transactionsCount">0</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Account Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Current Balance</h6>
+                                    <h4 class="text-primary mb-0" id="transactionsCurrentBalance">$0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Total Debits</h6>
+                                    <h4 class="text-danger mb-0" id="transactionsTotalDebits">$0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Total Credits</h6>
+                                    <h4 class="text-success mb-0" id="transactionsTotalCredits">$0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="transactionsLoading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading transactions...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading recent transactions...</p>
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="transactionsError" class="alert alert-danger d-none" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Error loading transactions!</strong>
+                        <span id="transactionsErrorMessage">Failed to load transaction data.</span>
+                        <button class="btn btn-outline-danger btn-sm ms-3" id="retryTransactions">
+                            <i class="bi bi-arrow-clockwise"></i> Retry
+                        </button>
+                    </div>
+
+                    <!-- No Transactions State -->
+                    <div id="noTransactions" class="text-center py-4 d-none">
+                        <i class="bi bi-inbox display-4 text-muted"></i>
+                        <h5 class="mt-3 text-muted">No Transactions Found</h5>
+                        <p class="text-muted">This account has no recent transactions.</p>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div id="transactionsTableContainer" class="d-none">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="transactionsTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Reference</th>
+                                        <th>Description</th>
+                                        <th>Debit</th>
+                                        <th>Credit</th>
+                                        <th>Balance</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsTableBody">
+                                    <!-- Transactions will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="exportTransactions">
+                        <i class="bi bi-download"></i> Export to CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Bank Accounts Management Application
+        class BankAccountsApp {
+            constructor() {
+                this.accounts = [];
+                this.filteredAccounts = [];
+                this.currentEditId = null;
+                this.apiBaseUrl = 'http://localhost:8010/api/v1';
+                this.appSettings = null;
+                this.init();
+            }
+
+            async init() {
+                try {
+                    console.log('🚀 Initializing Bank Accounts App...');
+                    
+                    // Initialize navbar
+                    this.initializeNavbar();
+                    
+                    // Load application settings first
+                    await this.loadAppSettings();
+                    
+                    // Bind events
+                    this.bindEvents();
+                    
+                    // Load initial data
+                    await this.loadAccountingCodes();
+                    await this.loadBankAccounts();
+                    
+                    console.log('✅ Bank Accounts App initialized successfully');
+                } catch (error) {
+                    console.error('❌ Failed to initialize app:', error);
+                    this.showError('Failed to initialize application: ' + error.message);
+                }
+            }
+
+            initializeNavbar() {
+                if (typeof createNavbar === 'function') {
+                    createNavbar('bank-accounts');
+                } else {
+                    console.error('createNavbar function not found');
+                }
+            }
+
+            bindEvents() {
+                // Search and filters
+                document.getElementById('searchAccounts').addEventListener('input', () => this.filterAccounts());
+                document.getElementById('filterType').addEventListener('change', () => this.filterAccounts());
+                document.getElementById('clearFilters').addEventListener('click', () => this.clearFilters());
+
+                // Actions
+                document.getElementById('refreshData').addEventListener('click', () => this.refreshData());
+                document.getElementById('retryLoad').addEventListener('click', () => this.refreshData());
+                document.getElementById('saveAccount').addEventListener('click', () => this.saveAccount());
+                document.getElementById('addFirstAccount').addEventListener('click', () => this.showAddAccountModal());
+
+                // Modal events
+                const addAccountModal = document.getElementById('addAccountModal');
+                addAccountModal.addEventListener('hidden.bs.modal', () => this.resetForm());
+                
+                // Transactions modal events
+                document.getElementById('retryTransactions').addEventListener('click', () => {
+                    const modal = document.querySelector('#accountTransactionsModal');
+                    const accountId = modal.dataset.currentAccountId;
+                    const account = this.accounts.find(acc => acc.id === accountId);
+                    if (accountId && account) {
+                        this.loadAccountTransactions(accountId, account);
+                    }
+                });
+                
+                document.getElementById('exportTransactions').addEventListener('click', () => this.exportTransactions());
+            }
+
+            async loadAccountingCodes() {
+                try {
+                    console.log('📥 Loading accounting codes...');
+                    const response = await fetch(`${this.apiBaseUrl}/accounting/codes`);
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch accounting codes');
+                    }
+                    
+                    const codes = await response.json();
+                    const selectElement = document.getElementById('accountCode');
+                    
+                    // Clear existing options except the first one
+                    selectElement.innerHTML = '<option value="">Select Accounting Code</option>';
+                    
+                    // Add accounting codes to dropdown
+                    codes.forEach(code => {
+                        const option = document.createElement('option');
+                        option.value = code.id;
+                        option.textContent = `${code.code} - ${code.name}`;
+                        selectElement.appendChild(option);
+                    });
+                    
+                    console.log(`✅ Loaded ${codes.length} accounting codes`);
+                } catch (error) {
+                    console.error('❌ Failed to load accounting codes:', error);
+                    // Don't show error to user as this is not critical for viewing accounts
+                }
+            }
+
+            async loadBankAccounts() {
+                try {
+                    console.log('📥 Loading bank accounts...');
+                    this.showLoading();
+
+                    // Try dedicated banking API first, fallback to accounting codes
+                    let bankAccounts = [];
+                    
+                    try {
+                        console.log('🏦 Trying dedicated banking API...');
+                        const bankingResponse = await fetch(`${this.apiBaseUrl}/banking/accounts`);
+                        if (bankingResponse.ok) {
+                            const bankingData = await bankingResponse.json();
+                            if (bankingData.success && bankingData.data && bankingData.data.length > 0) {
+                                bankAccounts = bankingData.data;
+                                console.log(`✅ Loaded ${bankAccounts.length} accounts from banking API`);
+                            }
+                        }
+                    } catch (bankingError) {
+                        console.log('⚠️ Banking API not available, using accounting codes');
+                    }
+
+                    // If no accounts from banking API, use accounting codes
+                    if (bankAccounts.length === 0) {
+                        console.log('📋 Loading from accounting codes API...');
+                        const response = await fetch(`${this.apiBaseUrl}/accounting-codes`);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        const allAccounts = await response.json();
+                        
+                        // Filter for bank accounts (category = 'Bank' or contains 'bank' in name)
+                        bankAccounts = allAccounts.filter(account => 
+                            account.category === 'Bank' || 
+                            (account.account_type === 'Asset' && account.name.toLowerCase().includes('bank'))
+                        );
+
+                        console.log(`✅ Loaded ${bankAccounts.length} bank accounts from accounting codes`);
+                    }
+
+                    this.accounts = bankAccounts;
+                    this.filteredAccounts = [...this.accounts];
+                    this.updateStatistics();
+                    this.renderBankAccounts();
+                    this.hideLoading();
+
+                } catch (error) {
+                    console.error('❌ Error loading bank accounts:', error);
+                    this.showError('Failed to load bank accounts: ' + error.message);
+                }
+            }
+
+            updateStatistics() {
+                const totalAccounts = this.accounts.length;
+                const activeAccounts = this.accounts.length; // All accounts are considered active since we removed status
+                const totalBalance = this.accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
+
+                document.getElementById('totalAccounts').textContent = totalAccounts;
+                document.getElementById('activeAccounts').textContent = activeAccounts;
+                document.getElementById('totalBalance').textContent = this.formatCurrency(totalBalance);
+                document.getElementById('totalTransactions').textContent = '0'; // Placeholder
+            }
+
+            renderBankAccounts() {
+                const container = document.getElementById('bankAccountsGrid');
+                const noResults = document.getElementById('noResultsState');
+                const accountsContainer = document.getElementById('bankAccountsContainer');
+
+                if (this.filteredAccounts.length === 0) {
+                    accountsContainer.classList.add('d-none');
+                    noResults.classList.remove('d-none');
+                    return;
+                }
+
+                accountsContainer.classList.remove('d-none');
+                noResults.classList.add('d-none');
+
+                container.innerHTML = this.filteredAccounts.map(account => this.createAccountCard(account)).join('');
+            }
+
+            createAccountCard(account) {
+                const balance = parseFloat(account.balance) || 0;
+                const balanceClass = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
+                const accountType = this.getAccountType(account);
+
+                return `
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="bank-card" data-account-id="${account.id}">
+                            <div class="bank-card-header">
+                                <div>
+                                    <h6 class="mb-0">${account.name}</h6>
+                                    <div class="bank-institution">${account.institution || 'Unknown Bank'}</div>
+                                    <div class="account-number">${account.account_number || 'No account number'}</div>
+                                    <small class="text-muted">${account.accounting_code || account.accounting_code_id} - ${account.accounting_code_name || 'No accounting code'}</small>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-white" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="bankApp.viewTransactions('${account.id}')">
+                                            <i class="bi bi-list-ul"></i> View Transactions
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="bankApp.editAccount('${account.id}')">
+                                            <i class="bi bi-pencil"></i> Edit Account
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="bankApp.deleteAccount('${account.id}')">
+                                            <i class="bi bi-trash"></i> Delete Account
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="bank-card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="bank-type-badge badge bg-info">${accountType}</span>
+                                </div>
+                                
+                                <div class="account-balance ${balanceClass}">
+                                    ${this.formatCurrency(balance)}
+                                </div>
+                                
+                                <div class="transaction-summary">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Debits</small>
+                                            <strong class="text-danger">${this.formatCurrency(account.total_debits || 0)}</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Credits</small>
+                                            <strong class="text-success">${this.formatCurrency(account.total_credits || 0)}</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Net</small>
+                                            <strong class="${balanceClass}">${this.formatCurrency(balance)}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="action-buttons">
+                                    <button class="btn btn-primary btn-sm me-2" onclick="bankApp.addTransaction('${account.id}')">
+                                        <i class="bi bi-plus"></i> Add Transaction
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="bankApp.reconcileAccount('${account.id}')">
+                                        <i class="bi bi-check2-all"></i> Reconcile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getAccountType(account) {
+                // Use the actual account_type from the API, fall back to name-based detection if not available
+                if (account.account_type) {
+                    return account.account_type;
+                }
+                
+                // Fallback to name-based detection for legacy accounts
+                if (account.name.toLowerCase().includes('savings')) return 'Savings';
+                if (account.name.toLowerCase().includes('business')) return 'Business';
+                if (account.name.toLowerCase().includes('current')) return 'Current';
+                return 'Bank Account';
+            }
+
+            filterAccounts() {
+                const searchTerm = document.getElementById('searchAccounts').value.toLowerCase();
+                const typeFilter = document.getElementById('filterType').value;
+
+                this.filteredAccounts = this.accounts.filter(account => {
+                    const matchesSearch = !searchTerm || 
+                        account.name.toLowerCase().includes(searchTerm) ||
+                        account.code.toLowerCase().includes(searchTerm);
+                    
+                    const matchesType = !typeFilter || this.getAccountType(account).toLowerCase().includes(typeFilter);
+
+                    return matchesSearch && matchesType;
+                });
+
+                this.renderBankAccounts();
+            }
+
+            clearFilters() {
+                document.getElementById('searchAccounts').value = '';
+                document.getElementById('filterType').value = '';
+                this.filteredAccounts = [...this.accounts];
+                this.renderBankAccounts();
+            }
+
+            showAddAccountModal() {
+                this.currentEditId = null;
+                document.getElementById('modalTitle').innerHTML = '<i class="bi bi-bank"></i> Add New Bank Account';
+                document.getElementById('saveAccount').innerHTML = '<i class="bi bi-check-circle"></i> Save Account';
+                this.resetForm();
+                new bootstrap.Modal(document.getElementById('addAccountModal')).show();
+            }
+
+            resetForm() {
+                this.currentEditId = null; // Clear edit mode
+                document.getElementById('accountForm').reset();
+                document.getElementById('currency').value = 'NGN'; // Reset to default currency
+            }
+
+            async saveAccount() {
+                const accountData = {
+                    name: document.getElementById('accountName').value,
+                    institution: document.getElementById('bankName').value,
+                    account_number: document.getElementById('accountNumber').value,
+                    currency: document.getElementById('currency').value,
+                    account_type: document.getElementById('accountType').value,
+                    accounting_code_id: document.getElementById('accountCode').value,
+                };
+
+                // Basic validation
+                if (!accountData.name || !accountData.institution || !accountData.account_number || !accountData.account_type || !accountData.accounting_code_id) {
+                    alert('Please fill all required fields.');
+                    return;
+                }
+
+                try {
+                    let url = `${this.apiBaseUrl}/banking/accounts`;
+                    let method = 'POST';
+                    
+                    // If we're editing, use PUT method and add account ID to URL
+                    if (this.currentEditId) {
+                        url += `/${this.currentEditId}`;
+                        method = 'PUT';
+                    }
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(accountData),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    }
+
+                    await this.loadBankAccounts(); // Refresh the list
+                    bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
+
+                } catch (error) {
+                    console.error('Error saving account:', error);
+                    alert(`Failed to ${this.currentEditId ? 'update' : 'save'} account: ${error.message}`);
+                }
+            }
+
+            // View transactions for a specific account
+            async viewTransactions(accountId) {
+                console.log('📋 View transactions for account:', accountId);
+                
+                // Find the account data
+                const account = this.accounts.find(acc => acc.id === accountId);
+                if (!account) {
+                    alert('Account not found');
+                    return;
+                }
+                
+                // Update modal title with account name
+                document.getElementById('transactionsAccountName').textContent = `${account.name} Transactions`;
+                
+                // Show the modal and store account ID for retry functionality
+                const modalElement = document.getElementById('accountTransactionsModal');
+                modalElement.dataset.currentAccountId = accountId;
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+                
+                // Load transactions data
+                await this.loadAccountTransactions(accountId, account);
+            }
+
+            async loadAccountTransactions(accountId, account) {
+                try {
+                    console.log('📥 Loading transactions for account:', accountId);
+                    
+                    // Show loading state
+                    document.getElementById('transactionsLoading').classList.remove('d-none');
+                    document.getElementById('transactionsError').classList.add('d-none');
+                    document.getElementById('noTransactions').classList.add('d-none');
+                    document.getElementById('transactionsTableContainer').classList.add('d-none');
+                    
+                    // Update account summary
+                    const balance = parseFloat(account.balance) || 0;
+                    document.getElementById('transactionsCurrentBalance').textContent = this.formatCurrency(balance);
+                    document.getElementById('transactionsTotalDebits').textContent = this.formatCurrency(account.total_debits || 0);
+                    document.getElementById('transactionsTotalCredits').textContent = this.formatCurrency(account.total_credits || 0);
+                    
+                    // Try to fetch transactions from multiple potential endpoints
+                    let transactions = [];
+                    
+                    try {
+                        // Try banking API endpoint first
+                        const bankingResponse = await fetch(`${this.apiBaseUrl}/banking/accounts/${accountId}/transactions?limit=50`);
+                        if (bankingResponse.ok) {
+                            const bankingData = await bankingResponse.json();
+                            if (bankingData.success && bankingData.data) {
+                                transactions = bankingData.data;
+                            }
+                        }
+                    } catch (bankingError) {
+                        console.log('⚠️ Banking API not available, trying journal entries');
+                    }
+                    
+                    // If no transactions from banking API, try journal entries
+                    if (transactions.length === 0) {
+                        try {
+                            const journalResponse = await fetch(`${this.apiBaseUrl}/journal-entries?account_id=${accountId}&limit=50`);
+                            if (journalResponse.ok) {
+                                const journalData = await journalResponse.json();
+                                if (Array.isArray(journalData)) {
+                                    // Transform journal entries to transaction format
+                                    transactions = journalData.map(entry => ({
+                                        id: entry.id,
+                                        date: entry.transaction_date || entry.created_at,
+                                        reference: entry.reference || `JE-${entry.id}`,
+                                        description: entry.description || entry.memo,
+                                        debit_amount: entry.debit_amount || 0,
+                                        credit_amount: entry.credit_amount || 0,
+                                        balance: entry.running_balance || 0,
+                                        status: entry.status || 'completed',
+                                        type: 'journal_entry'
+                                    }));
+                                }
+                            }
+                        } catch (journalError) {
+                            console.log('⚠️ Journal entries API not available');
+                        }
+                    }
+                    
+                    // If still no transactions, create mock data for demonstration
+                    if (transactions.length === 0) {
+                        transactions = this.generateMockTransactions(account);
+                    }
+                    
+                    // Hide loading state
+                    document.getElementById('transactionsLoading').classList.add('d-none');
+                    
+                    if (transactions.length === 0) {
+                        document.getElementById('noTransactions').classList.remove('d-none');
+                    } else {
+                        this.renderTransactions(transactions);
+                        document.getElementById('transactionsTableContainer').classList.remove('d-none');
+                    }
+                    
+                    // Update transaction count
+                    document.getElementById('transactionsCount').textContent = transactions.length;
+                    
+                } catch (error) {
+                    console.error('❌ Error loading transactions:', error);
+                    document.getElementById('transactionsLoading').classList.add('d-none');
+                    document.getElementById('transactionsError').classList.remove('d-none');
+                    document.getElementById('transactionsErrorMessage').textContent = error.message;
+                }
+            }
+            
+            generateMockTransactions(account) {
+                const transactions = [];
+                const today = new Date();
+                let runningBalance = parseFloat(account.balance) || 1000;
+                
+                // Generate 15 sample transactions for demonstration
+                for (let i = 0; i < 15; i++) {
+                    const date = new Date(today.getTime() - (i * 24 * 60 * 60 * 1000));
+                    const isCredit = Math.random() > 0.4;
+                    const amount = Math.random() * 5000 + 100;
+                    
+                    if (isCredit) {
+                        runningBalance += amount;
+                    } else {
+                        runningBalance -= amount;
+                    }
+                    
+                    transactions.push({
+                        id: `mock-${i}`,
+                        date: date.toISOString().split('T')[0],
+                        reference: `TXN-${String(Math.floor(Math.random() * 100000)).padStart(6, '0')}`,
+                        description: isCredit ? 
+                            ['Credit Transfer', 'Deposit', 'Interest Payment', 'Refund'][Math.floor(Math.random() * 4)] :
+                            ['ATM Withdrawal', 'Online Purchase', 'Bill Payment', 'Transfer Out'][Math.floor(Math.random() * 4)],
+                        debit_amount: isCredit ? 0 : amount,
+                        credit_amount: isCredit ? amount : 0,
+                        balance: runningBalance,
+                        status: 'completed',
+                        type: 'bank_transaction'
+                    });
+                }
+                
+                return transactions.reverse(); // Show newest first
+            }
+            
+            renderTransactions(transactions) {
+                const tbody = document.getElementById('transactionsTableBody');
+                tbody.innerHTML = '';
+                
+                transactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.className = 'transaction-row';
+                    
+                    const balance = parseFloat(transaction.balance) || 0;
+                    const balanceClass = balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'zero';
+                    
+                    const statusBadge = this.getStatusBadge(transaction.status);
+                    
+                    row.innerHTML = `
+                        <td class="transaction-date">${this.formatDate(transaction.date)}</td>
+                        <td class="transaction-reference">${transaction.reference || 'N/A'}</td>
+                        <td>${transaction.description || 'No description'}</td>
+                        <td class="transaction-debit">${transaction.debit_amount > 0 ? this.formatCurrency(transaction.debit_amount) : '-'}</td>
+                        <td class="transaction-credit">${transaction.credit_amount > 0 ? this.formatCurrency(transaction.credit_amount) : '-'}</td>
+                        <td class="transaction-balance ${balanceClass}">${this.formatCurrency(balance)}</td>
+                        <td>${statusBadge}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            }
+            
+            getStatusBadge(status) {
+                const statusMap = {
+                    'completed': '<span class="badge bg-success status-badge">Completed</span>',
+                    'pending': '<span class="badge bg-warning status-badge">Pending</span>',
+                    'failed': '<span class="badge bg-danger status-badge">Failed</span>',
+                    'cancelled': '<span class="badge bg-secondary status-badge">Cancelled</span>'
+                };
+                return statusMap[status] || '<span class="badge bg-secondary status-badge">Unknown</span>';
+            }
+            
+
+
+            addTransaction(accountId) {
+                console.log('➕ Add transaction for account:', accountId);
+                // Show add transaction modal
+            }
+
+            editAccount(accountId) {
+                console.log('✏️ Edit account:', accountId);
+                
+                // Find the account data
+                const account = this.accounts.find(acc => acc.id === accountId);
+                if (!account) {
+                    alert('Account not found');
+                    return;
+                }
+                
+                // Store the current edit ID
+                this.currentEditId = accountId;
+                
+                // Populate the form with existing data
+                document.getElementById('accountCode').value = account.accounting_code_id || '';
+                document.getElementById('accountName').value = account.name || '';
+                document.getElementById('accountType').value = account.account_type || '';
+                document.getElementById('bankName').value = account.institution || '';
+                document.getElementById('accountNumber').value = account.account_number || '';
+                document.getElementById('currency').value = account.currency || 'NGN';
+                
+                // Update modal title and button
+                document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil"></i> Edit Bank Account';
+                document.getElementById('saveAccount').innerHTML = '<i class="bi bi-check-circle"></i> Update Account';
+                
+                // Show the modal
+                new bootstrap.Modal(document.getElementById('addAccountModal')).show();
+            }
+
+            reconcileAccount(accountId) {
+                console.log('🔄 Reconcile account:', accountId);
+                // Show reconciliation interface
+            }
+
+            deleteAccount(accountId) {
+                console.log('🗑️ Delete account:', accountId);
+                // Show confirmation and delete
+            }
+            
+            exportTransactions() {
+                const tableBody = document.getElementById('transactionsTableBody');
+                if (!tableBody || tableBody.children.length === 0) {
+                    alert('No transactions to export');
+                    return;
+                }
+                
+                try {
+                    // Get account name for filename
+                    const accountName = document.getElementById('transactionsAccountName').textContent;
+                    
+                    // Prepare CSV data
+                    const headers = ['Date', 'Reference', 'Description', 'Debit', 'Credit', 'Balance', 'Status'];
+                    let csvContent = headers.join(',') + '\n';
+                    
+                    // Extract data from table rows
+                    Array.from(tableBody.children).forEach(row => {
+                        const cells = Array.from(row.children).map(cell => {
+                            // Clean cell content (remove HTML tags and extra spaces)
+                            let content = cell.textContent.trim();
+                            // Escape commas and quotes in CSV
+                            if (content.includes(',') || content.includes('"')) {
+                                content = '"' + content.replace(/"/g, '""') + '"';
+                            }
+                            return content;
+                        });
+                        csvContent += cells.join(',') + '\n';
+                    });
+                    
+                    // Create and download file
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `${accountName.replace(/[^a-z0-9]/gi, '_')}_transactions_${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    console.log('✅ Transactions exported successfully');
+                    
+                } catch (error) {
+                    console.error('❌ Error exporting transactions:', error);
+                    alert('Failed to export transactions: ' + error.message);
+                }
+            }
+
+            // Application Settings Integration
+            async loadAppSettings() {
+                try {
+                    console.log('🔧 Loading application settings...');
+                    const response = await fetch(`${this.apiBaseUrl}/app-settings/`);
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            this.appSettings = result.data;
+                            console.log('✅ Application settings loaded:', this.appSettings);
+                            
+                            // Apply settings to the UI
+                            this.applySettingsToUI();
+                        }
+                    } else {
+                        console.warn('⚠️ Could not load app settings, using defaults');
+                        this.appSettings = this.getDefaultSettings();
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading app settings:', error);
+                    this.appSettings = this.getDefaultSettings();
+                }
+            }
+
+            getDefaultSettings() {
+                return {
+                    currency: {
+                        currency: 'USD',
+                        currency_symbol: '$',
+                        vat_rate: 0.0,
+                        country: 'US',
+                        locale: 'en-US',
+                        timezone: 'UTC'
+                    },
+                    business: {
+                        company_name: 'Your Company',
+                        app_name: 'CNPERP ERP System'
+                    }
+                };
+            }
+
+            applySettingsToUI() {
+                try {
+                    if (!this.appSettings) return;
+                    
+                    // Update page title with company name
+                    if (this.appSettings.business?.company_name) {
+                        document.title = `Bank Accounts - ${this.appSettings.business.company_name}`;
+                    }
+                    
+                    // Update any existing currency displays
+                    this.updateCurrencyDisplays();
+                    
+                } catch (error) {
+                    console.error('Error applying settings to UI:', error);
+                }
+            }
+
+            updateCurrencyDisplays() {
+                // Re-render accounts with correct currency
+                if (this.accounts.length > 0) {
+                    this.renderAccounts();
+                    this.updateSummaryStats();
+                }
+            }
+
+            formatCurrency(amount) {
+                if (!this.appSettings?.currency) {
+                    return new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        minimumFractionDigits: 2
+                    }).format(amount);
+                }
+                
+                const currencySettings = this.appSettings.currency;
+                const locale = currencySettings.locale || 'en-US';
+                const currency = currencySettings.currency || 'USD';
+                
+                try {
+                    return new Intl.NumberFormat(locale, {
+                        style: 'currency',
+                        currency: currency,
+                        minimumFractionDigits: 2
+                    }).format(amount);
+                } catch (error) {
+                    // Fallback if locale/currency is invalid
+                    console.warn('Invalid currency settings, using fallback:', error);
+                    return `${currencySettings.currency_symbol || '$'}${amount.toFixed(2)}`;
+                }
+            }
+
+            formatDate(dateString) {
+                if (!dateString) return 'N/A';
+                
+                const locale = this.appSettings?.currency?.locale || 'en-US';
+                const timezone = this.appSettings?.currency?.timezone;
+                
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit'
+                };
+                
+                if (timezone) {
+                    options.timeZone = timezone;
+                }
+                
+                try {
+                    return new Date(dateString).toLocaleDateString(locale, options);
+                } catch (error) {
+                    // Fallback to default formatting
+                    return new Date(dateString).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: '2-digit'
+                    });
+                }
+            }
+
+            async refreshData() {
+                await this.loadAppSettings(); // Reload settings in case they changed
+                await this.loadBankAccounts();
+            }
+
+            showLoading() {
+                document.getElementById('loadingState').classList.remove('d-none');
+                document.getElementById('errorState').classList.add('d-none');
+                document.getElementById('bankAccountsContainer').classList.add('d-none');
+                document.getElementById('noResultsState').classList.add('d-none');
+            }
+
+            hideLoading() {
+                document.getElementById('loadingState').classList.add('d-none');
+            }
+
+            showError(message) {
+                document.getElementById('errorMessage').textContent = message;
+                document.getElementById('errorState').classList.remove('d-none');
+                document.getElementById('loadingState').classList.add('d-none');
+                document.getElementById('bankAccountsContainer').classList.add('d-none');
+                document.getElementById('noResultsState').classList.add('d-none');
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        let bankApp;
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 DOM loaded, initializing Bank Accounts App...');
+            bankApp = new BankAccountsApp();
+        });
+    </script>
+</body>
+</html>

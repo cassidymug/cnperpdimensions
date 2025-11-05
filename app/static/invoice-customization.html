@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Customization - CNPERP ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .settings-sidebar {
+            background: #343a40;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .settings-sidebar .nav-link {
+            color: #adb5bd;
+            padding: 10px 20px;
+            border-radius: 0;
+        }
+
+        .settings-sidebar .nav-link:hover,
+        .settings-sidebar .nav-link.active {
+            background: #495057;
+            color: white;
+        }
+
+        .preview-invoice {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .color-picker {
+            width: 50px;
+            height: 35px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .settings-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-header {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .live-preview {
+            position: sticky;
+            top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Include Standardized Navbar -->
+    <div id="navbar-container"></div>
+    <script src="js/navbar.js?v=20250121001"></script>
+
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Settings Sidebar -->
+            <div class="col-md-3 settings-sidebar">
+                <h5 class="text-white mb-4 px-3">Invoice Settings</h5>
+                <a class="nav-link active" href="#general" onclick="showSection('general')">
+                    <i class="bi bi-gear"></i> General Settings
+                </a>
+                <a class="nav-link" href="#header" onclick="showSection('header')">
+                    <i class="bi bi-layout-text-window"></i> Header Design
+                </a>
+                <a class="nav-link" href="#logo" onclick="showSection('logo')">
+                    <i class="bi bi-image"></i> Logo & Branding
+                </a>
+                <a class="nav-link" href="#company" onclick="showSection('company')">
+                    <i class="bi bi-building"></i> Company Info
+                </a>
+                <a class="nav-link" href="#customer" onclick="showSection('customer')">
+                    <i class="bi bi-person"></i> Customer Section
+                </a>
+                <a class="nav-link" href="#items" onclick="showSection('items')">
+                    <i class="bi bi-table"></i> Items Table
+                </a>
+                <a class="nav-link" href="#totals" onclick="showSection('totals')">
+                    <i class="bi bi-calculator"></i> Totals Section
+                </a>
+                <a class="nav-link" href="#footer" onclick="showSection('footer')">
+                    <i class="bi bi-layout-text-window-reverse"></i> Footer Design
+                </a>
+                <a class="nav-link" href="#colors" onclick="showSection('colors')">
+                    <i class="bi bi-palette"></i> Color Scheme
+                </a>
+                <a class="nav-link" href="#typography" onclick="showSection('typography')">
+                    <i class="bi bi-fonts"></i> Typography
+                </a>
+                </nav>
+
+                <div class="mt-4 px-3">
+                    <button class="btn btn-success w-100 mb-2" onclick="saveSettings()">
+                        <i class="bi bi-save"></i> Save Settings
+                    </button>
+                    <button class="btn btn-outline-light w-100 mb-2" onclick="resetToDefaults()">
+                        <i class="bi bi-arrow-clockwise"></i> Reset to Defaults
+                    </button>
+                    <button class="btn btn-outline-light w-100" onclick="previewInvoice()">
+                        <i class="bi bi-eye"></i> Full Preview
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings Content -->
+            <div class="col-md-6">
+                <div class="p-4">
+                    <!-- General Settings -->
+                    <div id="general-section" class="settings-section">
+                        <div class="settings-header">
+                            <h4><i class="bi bi-gear"></i> General Settings</h4>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Paper Size</label>
+                                <select class="form-select" id="invoice_paper_size" onchange="updatePreview()">
+                                    <option value="A4">A4 (210 × 297 mm)</option>
+                                    <option value="Letter">Letter (8.5 × 11 in)</option>
+                                    <option value="Legal">Legal (8.5 × 14 in)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Template Style</label>
+                                <select class="form-select" id="invoice_template_style" onchange="updatePreview()">
+                                    <option value="modern">Modern</option>
+                                    <option value="classic">Classic</option>
+                                    <option value="minimal">Minimal</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h6 class="mt-4">Page Margins (mm)</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Top</label>
+                                <input type="number" class="form-control" id="invoice_margin_top"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Bottom</label>
+                                <input type="number" class="form-control" id="invoice_margin_bottom"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Left</label>
+                                <input type="number" class="form-control" id="invoice_margin_left"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Right</label>
+                                <input type="number" class="form-control" id="invoice_margin_right"
+                                    onchange="updatePreview()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Header Design -->
+                    <div id="header-section" class="settings-section d-none">
+                        <div class="settings-header">
+                            <h4><i class="bi bi-layout-text-window"></i> Header Design</h4>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Header Height (px)</label>
+                                <input type="number" class="form-control" id="invoice_header_height"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Background Color</label>
+                                <input type="color" class="color-picker" id="invoice_header_background_color"
+                                    onchange="updatePreview()">
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Text Color</label>
+                                <input type="color" class="color-picker" id="invoice_header_text_color"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Border Style</label>
+                                <select class="form-select" id="invoice_header_border_style" onchange="updatePreview()">
+                                    <option value="none">None</option>
+                                    <option value="solid">Solid</option>
+                                    <option value="dashed">Dashed</option>
+                                    <option value="dotted">Dotted</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Border Width (px)</label>
+                                <input type="number" class="form-control" id="invoice_header_border_width"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Border Color</label>
+                                <input type="color" class="color-picker" id="invoice_header_border_color"
+                                    onchange="updatePreview()">
+                            </div>
+                        </div>
+
+                        <!-- Invoice Title Settings -->
+                        <h6 class="mt-4">Invoice Title</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Title Text</label>
+                                <input type="text" class="form-control" id="invoice_title_text"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Font Size (px)</label>
+                                <input type="number" class="form-control" id="invoice_title_font_size"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Alignment</label>
+                                <select class="form-select" id="invoice_title_alignment" onchange="updatePreview()">
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Font Weight</label>
+                                <select class="form-select" id="invoice_title_font_weight" onchange="updatePreview()">
+                                    <option value="normal">Normal</option>
+                                    <option value="bold">Bold</option>
+                                    <option value="bolder">Extra Bold</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Title Color</label>
+                                <input type="color" class="color-picker" id="invoice_title_color"
+                                    onchange="updatePreview()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logo & Branding -->
+                    <div id="logo-section" class="settings-section d-none">
+                        <div class="settings-header">
+                            <h4><i class="bi bi-image"></i> Logo & Branding</h4>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Company Logo</label>
+                            <input type="file" class="form-control" accept="image/*" onchange="uploadLogo(this)">
+                            <div class="form-text">Upload your company logo (JPG, PNG, SVG)</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Logo Width (px)</label>
+                                <input type="number" class="form-control" id="logo_width" onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Logo Height (px)</label>
+                                <input type="number" class="form-control" id="logo_height" onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Position</label>
+                                <select class="form-select" id="logo_position" onchange="updatePreview()">
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Top Margin (px)</label>
+                                <input type="number" class="form-control" id="logo_margin_top"
+                                    onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Bottom Margin (px)</label>
+                                <input type="number" class="form-control" id="logo_margin_bottom"
+                                    onchange="updatePreview()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional sections would go here... -->
+
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="col-md-3">
+                <div class="live-preview p-3">
+                    <h6><i class="bi bi-eye"></i> Live Preview</h6>
+                    <div class="preview-invoice" id="previewInvoice">
+                        <!-- Mini invoice preview will be rendered here -->
+                        <div class="preview-header"
+                            style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="preview-logo"
+                                        style="width: 60px; height: 30px; background: #ddd; margin-bottom: 5px;"></div>
+                                    <small>Company Name</small>
+                                </div>
+                                <div>
+                                    <h6 class="preview-title" style="margin: 0;">INVOICE</h6>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="preview-details"
+                            style="background: #f8f9fa; padding: 10px; margin-bottom: 10px; font-size: 10px;">
+                            <div class="row">
+                                <div class="col-6">Invoice #: INV-001</div>
+                                <div class="col-6">Date: Today</div>
+                            </div>
+                        </div>
+
+                        <div class="preview-customer"
+                            style="border: 1px solid #dee2e6; padding: 10px; margin-bottom: 10px; font-size: 10px;">
+                            <strong>Bill To:</strong><br>
+                            Customer Name<br>
+                            Customer Address
+                        </div>
+
+                        <div class="preview-items" style="margin-bottom: 10px;">
+                            <table class="table table-sm" style="font-size: 10px;">
+                                <thead style="background: #343a40; color: white;">
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Qty</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Sample Item</td>
+                                        <td>1</td>
+                                        <td>100.00</td>
+                                        <td>100.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="preview-totals" style="background: #f8f9fa; padding: 10px; font-size: 10px;">
+                            <div class="text-end">
+                                <div>Subtotal: 100.00</div>
+                                <div>Tax: 12.00</div>
+                                <div><strong>Total: 112.00</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="preview-footer"
+                            style="border-top: 1px solid #333; padding-top: 10px; margin-top: 15px; font-size: 9px;">
+                            Thank you for your business!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentSettings = {};
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function () {
+            loadCurrentSettings();
+            showSection('general');
+        });
+
+        // Load current settings from the API
+        async function loadCurrentSettings() {
+            try {
+                const response = await fetch('/api/v1/app-settings/');
+                currentSettings = await response.json();
+                populateForm();
+                updatePreview();
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Populate form with current settings
+        function populateForm() {
+            Object.keys(currentSettings).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = currentSettings[key] || '';
+                }
+            });
+        }
+
+        // Show specific settings section
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.settings-section').forEach(el => {
+                el.classList.add('d-none');
+            });
+
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(section + '-section').classList.remove('d-none');
+
+            // Add active class to selected nav link
+            document.querySelector(`[href="#${section}"]`).classList.add('active');
+        }
+
+        // Update live preview
+        function updatePreview() {
+            const preview = document.getElementById('previewInvoice');
+
+            // Update header
+            const header = preview.querySelector('.preview-header');
+            if (document.getElementById('invoice_header_background_color')) {
+                header.style.backgroundColor = document.getElementById('invoice_header_background_color').value;
+            }
+
+            // Update title
+            const title = preview.querySelector('.preview-title');
+            if (document.getElementById('invoice_title_text')) {
+                title.textContent = document.getElementById('invoice_title_text').value || 'INVOICE';
+            }
+            if (document.getElementById('invoice_title_color')) {
+                title.style.color = document.getElementById('invoice_title_color').value;
+            }
+            if (document.getElementById('invoice_title_font_size')) {
+                const fontSize = document.getElementById('invoice_title_font_size').value;
+                title.style.fontSize = (fontSize / 3) + 'px'; // Scaled down for preview
+            }
+
+            // Update other elements based on settings...
+        }
+
+        // Upload logo
+        async function uploadLogo(input) {
+            const file = input.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('logo', file);
+
+                try {
+                    // Show loading state
+                    const originalText = input.nextElementSibling ? input.nextElementSibling.textContent : '';
+                    if (input.nextElementSibling) {
+                        input.nextElementSibling.textContent = 'Uploading...';
+                    }
+
+                    // Upload logo to server
+                    const response = await fetch('/api/v1/invoice-designer/upload-logo', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+
+                        // Update preview
+                        const logo = document.querySelector('.preview-logo');
+                        const logoUrl = result.logo_url || result.logo_base64;
+                        logo.style.backgroundImage = `url(${logoUrl})`;
+                        logo.style.backgroundSize = 'contain';
+                        logo.style.backgroundRepeat = 'no-repeat';
+                        logo.style.backgroundColor = 'transparent';
+
+                        // Show success message
+                        showAlert('Logo uploaded successfully!', 'success');
+
+                        // Update preview
+                        updatePreview();
+                    } else {
+                        showAlert('Failed to upload logo. Please try again.', 'danger');
+                    }
+
+                    // Reset loading state
+                    if (input.nextElementSibling) {
+                        input.nextElementSibling.textContent = originalText;
+                    }
+                } catch (error) {
+                    console.error('Logo upload error:', error);
+                    showAlert('Error uploading logo. Please try again.', 'danger');
+                }
+            }
+        }
+
+        // Show alert messages
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Save settings
+        async function saveSettings() {
+            try {
+                // Collect all form values
+                const settingsData = {};
+                const inputs = document.querySelectorAll('input, select, textarea');
+
+                inputs.forEach(input => {
+                    if (input.id && input.value !== '') {
+                        let value = input.value;
+
+                        // Convert appropriate types
+                        if (input.type === 'number') {
+                            value = parseFloat(value) || 0;
+                        } else if (input.type === 'checkbox') {
+                            value = input.checked;
+                        } else if (input.type === 'color') {
+                            value = value;
+                        }
+
+                        settingsData[input.id] = value;
+                    }
+                });
+
+                console.log('Sending settings data:', settingsData);
+
+                // Try to update settings using the invoice designer endpoint first
+                const response = await fetch('/api/v1/invoice-designer/save-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(settingsData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('Settings saved successfully!', 'success');
+                    updatePreview();
+                } else {
+                    // Fallback: try the app settings endpoint
+                    const fallbackResponse = await fetch('/api/v1/settings/', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(settingsData)
+                    });
+
+                    if (fallbackResponse.ok) {
+                        showAlert('Settings saved successfully!', 'success');
+                        updatePreview();
+                    } else {
+                        const errorText = await fallbackResponse.text();
+                        console.error('Save error:', errorText);
+                        showAlert('Error saving settings. Please try again.', 'danger');
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showAlert('Error saving settings: ' + error.message, 'danger');
+            }
+        }
+
+        // Reset to defaults
+        function resetToDefaults() {
+            if (confirm('Are you sure you want to reset all settings to defaults?')) {
+                // Reset form to defaults
+                document.querySelectorAll('input, select, textarea').forEach(input => {
+                    if (input.type === 'color') {
+                        input.value = input.defaultValue || '#000000';
+                    } else if (input.type === 'number') {
+                        input.value = input.defaultValue || '0';
+                    } else {
+                        input.value = input.defaultValue || '';
+                    }
+                });
+                updatePreview();
+            }
+        }
+
+        // Preview invoice
+        function previewInvoice() {
+            window.open('/static/invoice-designer.html', '_blank');
+        }
+    </script>
+
+
+    <script src="js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+
+
+</body>
+
+
+</html>

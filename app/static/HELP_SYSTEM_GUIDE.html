@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help System Access Guide | CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .f1-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .container {
+            max-width: 1200px;
+            background: white;
+            border-radius: 15px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+            margin-bottom: 2rem;
+        }
+        .guide-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+        }
+        .guide-card h4 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .link-list a {
+            display: block;
+            padding: 0.75rem 1rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+            border: 1px solid #dee2e6;
+        }
+        .link-list a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(10px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .badge-new {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .access-method {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .access-method h3 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="f1-badge">
+        <i class="bi bi-keyboard me-2"></i>Press <kbd>F1</kbd> from any page to open help
+    </div>
+
+    <div class="container">
+        <h1 class="text-center"><i class="bi bi-compass me-3"></i>CNPERP Help System Access Guide</h1>
+        
+        <div class="alert alert-success">
+            <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>All Help Pages Are Live!</h4>
+            <p>All 10 professional HTML help guides are now accessible via your web browser. No markdown files needed!</p>
+            <p class="mb-0"><strong>💡 Pro Tip:</strong> Press <kbd class="bg-warning text-dark px-2 py-1">F1</kbd> from anywhere in the system to instantly access this help page!</p>
+        </div>
+
+        <div class="access-method">
+            <h3><i class="bi bi-list-ul me-2"></i>Method 1: Navigation Menu (Easiest)</h3>
+            <ol class="text-white mb-0">
+                <li>Click on <strong>Settings/Admin</strong> menu in the top navigation bar</li>
+                <li>Look for <strong>"Help & Documentation"</strong> section</li>
+                <li>Choose from <strong>10 Quick Guides</strong> or go to <strong>Help Center Home</strong></li>
+            </ol>
+        </div>
+
+        <div class="access-method">
+            <h3><i class="bi bi-house-door me-2"></i>Method 2: Help Center</h3>
+            <p class="text-white mb-2">Access the main help center at:</p>
+            <p><a href="/static/help-center.html" class="btn btn-light btn-lg">
+                <i class="bi bi-arrow-right-circle me-2"></i>http://localhost:8010/static/help-center.html
+            </a></p>
+            <p class="text-white mb-0"><small>Browse all topics organized by module with search functionality</small></p>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4"><i class="bi bi-star-fill text-warning me-2"></i>All Available Help Guides</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="guide-card">
+                    <h4><i class="bi bi-rocket-takeoff me-2"></i>Quick Start Guides</h4>
+                    <div class="link-list">
+                        <a href="/static/help/recipe-manager-quick-start.html">
+                            <i class="bi bi-book me-2"></i>Recipe Manager Quick Start
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="guide-card">
+                    <h4><i class="bi bi-gear-wide-connected me-2"></i>Manufacturing</h4>
+                    <div class="link-list">
+                        <a href="/static/help/manufacturing-module.html">
+                            <i class="bi bi-gear me-2"></i>Manufacturing Module Guide
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                        <a href="/static/help/job-cards-bom.html">
+                            <i class="bi bi-clipboard-check me-2"></i>Job Cards & BOM Integration
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="guide-card">
+                    <h4><i class="bi bi-calculator me-2"></i>Accounting & Finance</h4>
+                    <div class="link-list">
+                        <a href="/static/help/accounting-codes.html">
+                            <i class="bi bi-pie-chart me-2"></i>Accounting Codes & Chart of Accounts
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                        <a href="/static/help/banking-system.html">
+                            <i class="bi bi-bank me-2"></i>Banking System Guide
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="guide-card">
+                    <h4><i class="bi bi-cart me-2"></i>Sales & Invoicing</h4>
+                    <div class="link-list">
+                        <a href="/static/help/invoice-system.html">
+                            <i class="bi bi-file-earmark-text me-2"></i>Invoice System Designer
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                        <a href="/static/help/credit-notes-system.html">
+                            <i class="bi bi-arrow-return-left me-2"></i>Credit Notes & Returns
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="guide-card">
+                    <h4><i class="bi bi-cash-register me-2"></i>Point of Sale</h4>
+                    <div class="link-list">
+                        <a href="/static/help/pos-system.html">
+                            <i class="bi bi-shop me-2"></i>POS System Guide
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                        <a href="/static/help/weight-products.html">
+                            <i class="bi bi-upc-scan me-2"></i>Weight-Based Products
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="guide-card">
+                    <h4><i class="bi bi-cloud-upload me-2"></i>System Management</h4>
+                    <div class="link-list">
+                        <a href="/static/help/backup-system.html">
+                            <i class="bi bi-database me-2"></i>Backup Management
+                            <span class="badge-new float-end">NEW</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <h5 class="alert-heading"><i class="bi bi-info-circle-fill me-2"></i>Features of Each Guide:</h5>
+            <ul class="mb-0">
+                <li><strong>Professional Design:</strong> Bootstrap 5 styling with unique color schemes per module</li>
+                <li><strong>Easy Navigation:</strong> Back buttons to return to help center</li>
+                <li><strong>Comprehensive Content:</strong> Step-by-step instructions, examples, and best practices</li>
+                <li><strong>Mobile Responsive:</strong> Works perfectly on all devices</li>
+                <li><strong>Rich Visuals:</strong> Icons, cards, tables, and accordions for better readability</li>
+            </ul>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/static/help-center.html" class="btn btn-primary btn-lg me-3">
+                <i class="bi bi-house-door me-2"></i>Go to Help Center
+            </a>
+            <a href="/static/index.html" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-grid me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

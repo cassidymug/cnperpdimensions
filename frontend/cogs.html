@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost of Goods Sold - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .cogs-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .cogs-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .manufactured-card {
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .retail-card {
+            background: linear-gradient(135deg, #fd7e14, #ffc107);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .variance-card {
+            background: linear-gradient(135deg, #dc3545, #fd5e53);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .batch-tag {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .cost-alert {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .advanced-filter-panel {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border: none;
+        }
+
+        .integration-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .integration-status.connected {
+            background-color: #28a745;
+        }
+
+        .integration-status.disconnected {
+            background-color: #dc3545;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            border: none;
+            color: white;
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #0056b3, var(--primary-color));
+            color: white;
+        }
+
+        .alert-cost-variance {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 fw-bold">
+                            <i class="bi bi-tags text-primary me-3"></i>
+                            Cost of Goods Sold
+                        </h1>
+                        <p class="lead text-muted">Advanced cost tracking, analysis, and optimization</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-info" onclick="refreshData()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                        <button class="btn btn-gradient" data-bs-toggle="modal" data-bs-target="#addCOGSModal">
+                            <i class="bi bi-plus-circle me-2"></i>Add COGS Entry
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration Status Bar -->
+        <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <div class="flex-grow-1">
+                <strong>System Integration Status:</strong>
+                <span class="integration-status connected"></span>Inventory Connected
+                <span class="integration-status connected"></span>Sales Connected
+                <span class="integration-status disconnected"></span>Purchase Orders Disconnected
+                <span class="integration-status connected"></span>Accounting Connected
+            </div>
+            <button class="btn btn-sm btn-outline-primary" onclick="checkIntegrations()">
+                <i class="bi bi-gear"></i> Configure
+            </button>
+        </div>
+
+        <!-- Enhanced Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card cogs-card stats-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-currency-dollar fs-1 mb-2"></i>
+                        <h4 id="totalCogs">₦0.00</h4>
+                        <p class="mb-1">Total COGS</p>
+                        <small class="opacity-75">
+                            <i class="bi bi-graph-up text-white"></i>
+                            <span id="cogsGrowth">+5.2%</span> vs last month
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card cogs-card manufactured-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-gear fs-1 mb-2"></i>
+                        <h4 id="manufacturedCogs">₦0.00</h4>
+                        <p class="mb-1">Manufacturing COGS</p>
+                        <small class="opacity-75">
+                            <span id="mfgBatches">12</span> active batches
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card cogs-card retail-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shop fs-1 mb-2"></i>
+                        <h4 id="retailCogs">₦0.00</h4>
+                        <p class="mb-1">Retail COGS</p>
+                        <small class="opacity-75">
+                            <i class="bi bi-graph-down text-white"></i>
+                            <span id="retailGrowth">-2.1%</span> vs last month
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card cogs-card variance-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle fs-1 mb-2"></i>
+                        <h4 id="costVariance">₦0.00</h4>
+                        <p class="mb-1">Cost Variance</p>
+                        <small class="opacity-75">
+                            Budget vs Actual
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card cogs-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>Cost Trends Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="costTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card cogs-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pie-chart me-2"></i>Cost Breakdown
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="costBreakdownChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced COGS Entries Table -->
+        <div class="card cogs-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table me-2"></i>COGS Entries
+                        <span class="badge bg-primary ms-2" id="entriesCount">0</span>
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-success" onclick="exportCOGSData()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="viewBatchTracking()">
+                            <i class="bi bi-boxes"></i> Batch Tracking
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="cogsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Batch/Lot</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Standard Cost</th>
+                                <th>Actual Cost</th>
+                                <th>Variance</th>
+                                <th>Cost Center</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cogsTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Add COGS Entry Modal -->
+    <div class="modal fade" id="addCOGSModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i>Add COGS Entry
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="cogsForm">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="productSelect" required>
+                                        <option value="">Select a product...</option>
+                                    </select>
+                                    <label for="productSelect">Product</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="productType" required>
+                                        <option value="">Select type...</option>
+                                        <option value="retail">Retail/Resale</option>
+                                        <option value="manufactured">Manufactured</option>
+                                        <option value="service">Service</option>
+                                    </select>
+                                    <label for="productType">Product Type</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="date" class="form-control" id="entryDate" required>
+                                    <label for="entryDate">Date</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="quantity" step="0.01" required>
+                                    <label for="quantity">Quantity</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="totalCost" step="0.01" readonly>
+                                    <label for="totalCost">Total Cost</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3">Cost Breakdown</h6>
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="materialCost" step="0.01">
+                                    <label for="materialCost">Material Cost</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="laborCost" step="0.01">
+                                    <label for="laborCost">Labor Cost</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="overheadCost" step="0.01">
+                                    <label for="overheadCost">Overhead Cost</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-success mb-3">Batch/Lot Tracking</h6>
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="batchNumber">
+                                    <label for="batchNumber">Batch/Lot Number</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="costCenter">
+                                        <option value="production">Production</option>
+                                        <option value="warehouse">Warehouse</option>
+                                        <option value="retail">Retail</option>
+                                    </select>
+                                    <label for="costCenter">Cost Center</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <textarea class="form-control" id="notes" style="height: 100px"></textarea>
+                                    <label for="notes">Notes</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-gradient" onclick="saveCogsEntry()">
+                        <i class="bi bi-check-circle"></i> Save Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Enhanced COGS Management Application
+        class EnhancedCOGSApp {
+            constructor() {
+                this.entries = [];
+                this.filteredEntries = [];
+                this.charts = {};
+                this.apiBaseUrl = 'http://localhost:8010/api/v1';
+                this.loading = false;
+                this.appSettings = null;
+                this.init();
+            }
+
+            async init() {
+                try {
+                    console.log('🚀 Initializing Enhanced COGS App...');
+                    
+                    // Initialize navbar
+                    this.initializeNavbar();
+                    
+                    // Load application settings first
+                    await this.loadAppSettings();
+                    
+                    // Bind events
+                    this.bindEvents();
+                    
+                    // Load initial data
+                    await this.loadProducts();
+                    await this.loadCOGSEntries();
+                    
+                    // Initialize charts
+                    this.initializeCharts();
+                    
+                    // Load analytics data for enhanced insights
+                    await this.loadAnalyticsData();
+                    
+                    // Set today's date as default
+                    document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+                    
+                    // Add modal event listeners
+                    document.getElementById('addCOGSModal').addEventListener('hidden.bs.modal', () => {
+                        this.resetForm();
+                    });
+                    
+                    console.log('✅ Enhanced COGS App initialized successfully');
+                } catch (error) {
+                    console.error('❌ Failed to initialize app:', error);
+                }
+            }
+
+            initializeNavbar() {
+                if (typeof createNavbar === 'function') {
+                    createNavbar('cogs');
+                } else {
+                    console.error('createNavbar function not found');
+                }
+            }
+
+            bindEvents() {
+                // Cost calculation events
+                ['materialCost', 'laborCost', 'overheadCost', 'quantity'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', () => this.calculateTotal());
+                });
+            }
+
+            calculateTotal() {
+                const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+                const materialCost = parseFloat(document.getElementById('materialCost').value) || 0;
+                const laborCost = parseFloat(document.getElementById('laborCost').value) || 0;
+                const overheadCost = parseFloat(document.getElementById('overheadCost').value) || 0;
+                
+                let totalCost = materialCost + laborCost + overheadCost;
+                
+                // Store the base cost for display purposes
+                const baseCost = totalCost;
+                
+                // Show VAT information if configured
+                if (this.appSettings?.currency?.vat_rate > 0) {
+                    const vatAmount = baseCost * (this.appSettings.currency.vat_rate / 100);
+                    
+                    // Update the total cost field
+                    document.getElementById('totalCost').value = baseCost.toFixed(2);
+                    
+                    // Add VAT information display
+                    const vatInfo = document.getElementById('vatInfo') || this.createVATInfoElement();
+                    vatInfo.innerHTML = `
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> 
+                            Base: ${this.formatCurrency(baseCost)} + VAT (${this.appSettings.currency.vat_rate}%): ${this.formatCurrency(vatAmount)} 
+                            = <strong>${this.formatCurrency(baseCost + vatAmount)}</strong>
+                        </small>
+                    `;
+                } else {
+                    document.getElementById('totalCost').value = totalCost.toFixed(2);
+                    // Remove VAT info if exists
+                    const vatInfo = document.getElementById('vatInfo');
+                    if (vatInfo) vatInfo.innerHTML = '';
+                }
+            }
+
+            createVATInfoElement() {
+                const vatInfo = document.createElement('div');
+                vatInfo.id = 'vatInfo';
+                vatInfo.className = 'mt-2';
+                
+                // Insert after the totalCost input
+                const totalCostField = document.getElementById('totalCost').parentNode;
+                totalCostField.appendChild(vatInfo);
+                
+                return vatInfo;
+            }
+
+            async loadProducts() {
+                try {
+                    this.showLoading('Loading products...');
+                    
+                    const response = await fetch(`${this.apiBaseUrl}/inventory/products`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const products = await response.json();
+                    
+                    const select = document.getElementById('productSelect');
+                    select.innerHTML = '<option value="">Select a product...</option>';
+                    
+                    products.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.id;
+                        option.textContent = `${product.name} (${product.sku || 'N/A'})`;
+                        select.appendChild(option);
+                    });
+                    
+                    console.log(`✅ Loaded ${products.length} products`);
+                } catch (error) {
+                    console.error('Error loading products:', error);
+                    this.showError('Failed to load products. Please refresh the page.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async loadCOGSEntries() {
+                try {
+                    this.showLoading('Loading COGS entries...');
+                    
+                    // Load both COGS entries and manufacturing costs
+                    const [cogsResponse, manufacturingResponse] = await Promise.all([
+                        fetch(`${this.apiBaseUrl}/cogs/`),
+                        fetch(`${this.apiBaseUrl}/manufacturing/`)
+                    ]);
+                    
+                    let cogsEntries = [];
+                    let manufacturingCosts = [];
+                    
+                    if (cogsResponse.ok) {
+                        cogsEntries = await cogsResponse.json();
+                    }
+                    
+                    if (manufacturingResponse.ok) {
+                        manufacturingCosts = await manufacturingResponse.json();
+                    }
+                    
+                    // Transform and combine both types of entries
+                    this.entries = this.transformApiDataToEntries(cogsEntries, manufacturingCosts);
+                    this.filteredEntries = [...this.entries];
+                    
+                    this.renderCOGSTable();
+                    this.updateSummaryStats();
+                    this.updateChartsWithRealData();
+                    
+                    console.log(`✅ Loaded ${this.entries.length} COGS entries`);
+                } catch (error) {
+                    console.error('Error loading COGS entries:', error);
+                    this.showError('Failed to load COGS entries. Please refresh the page.');
+                    
+                    // Fallback to empty entries if API fails
+                    this.entries = [];
+                    this.filteredEntries = [];
+                    this.renderCOGSTable();
+                    this.updateSummaryStats();
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            transformApiDataToEntries(cogsEntries, manufacturingCosts) {
+                const entries = [];
+                
+                // Transform COGS entries
+                cogsEntries.forEach(entry => {
+                    entries.push({
+                        id: entry.id,
+                        date: entry.date.split('T')[0],
+                        product_name: entry.product_name || 'Unknown Product',
+                        product_id: entry.product_id,
+                        batch_number: entry.reference || 'N/A',
+                        product_type: 'retail', // COGS entries are typically retail
+                        quantity: entry.quantity || 0,
+                        standard_cost: entry.unit_cost || 0,
+                        actual_cost: entry.total_cost || 0,
+                        variance: (entry.total_cost || 0) - (entry.unit_cost || 0) * (entry.quantity || 0),
+                        cost_center: 'retail',
+                        material_cost: (entry.total_cost || 0) * 0.7, // Estimated breakdown
+                        labor_cost: (entry.total_cost || 0) * 0.2,
+                        overhead_cost: (entry.total_cost || 0) * 0.1,
+                        source_type: 'cogs',
+                        raw_data: entry
+                    });
+                });
+                
+                // Transform manufacturing costs
+                manufacturingCosts.forEach(cost => {
+                    const standardCost = cost.unit_cost || 0;
+                    const actualCost = cost.total_cost || 0;
+                    const quantity = cost.batch_size || 1;
+                    
+                    entries.push({
+                        id: `mfg_${cost.id}`,
+                        date: cost.date.split('T')[0],
+                        product_name: cost.product_name || 'Unknown Product',
+                        product_id: cost.product_id,
+                        batch_number: cost.batch_number || 'N/A',
+                        product_type: 'manufactured',
+                        quantity: quantity,
+                        standard_cost: standardCost,
+                        actual_cost: actualCost,
+                        variance: actualCost - (standardCost * quantity),
+                        cost_center: 'production',
+                        material_cost: cost.material_cost || 0,
+                        labor_cost: cost.labor_cost || 0,
+                        overhead_cost: cost.overhead_cost || 0,
+                        source_type: 'manufacturing',
+                        raw_data: cost
+                    });
+                });
+                
+                // Sort by date descending
+                return entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+            }
+
+            renderCOGSTable() {
+                const tbody = document.getElementById('cogsTableBody');
+                tbody.innerHTML = '';
+                
+                this.filteredEntries.forEach(entry => {
+                    const row = document.createElement('tr');
+                    
+                    const variancePercent = ((entry.variance / entry.standard_cost) * 100).toFixed(1);
+                    const varianceClass = entry.variance > 0 ? 'text-danger' : entry.variance < 0 ? 'text-success' : 'text-muted';
+                    const varianceIcon = entry.variance > 0 ? 'bi-arrow-up' : entry.variance < 0 ? 'bi-arrow-down' : 'bi-dash';
+                    
+                    row.innerHTML = `
+                        <td>${this.formatDate(entry.date)}</td>
+                        <td><strong>${entry.product_name}</strong></td>
+                        <td><span class="batch-tag">${entry.batch_number}</span></td>
+                        <td>${this.getProductTypeBadge(entry.product_type)}</td>
+                        <td>${entry.quantity}</td>
+                        <td>₦${entry.standard_cost.toFixed(2)}</td>
+                        <td>₦${entry.actual_cost.toFixed(2)}</td>
+                        <td class="${varianceClass}">
+                            <i class="bi ${varianceIcon}"></i>
+                            ₦${Math.abs(entry.variance).toFixed(2)}
+                            <small>(${variancePercent}%)</small>
+                        </td>
+                        <td><span class="badge bg-secondary">${entry.cost_center}</span></td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="cogsApp.editEntry(${entry.id})" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="cogsApp.viewBreakdown(${entry.id})" title="View Breakdown">
+                                    <i class="bi bi-pie-chart"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="cogsApp.deleteEntry(${entry.id})" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                document.getElementById('entriesCount').textContent = this.filteredEntries.length;
+            }
+
+            updateSummaryStats() {
+                const totalCogs = this.entries.reduce((sum, entry) => sum + entry.actual_cost, 0);
+                const totalVariance = this.entries.reduce((sum, entry) => sum + entry.variance, 0);
+                const manufacturedCogs = this.entries
+                    .filter(entry => entry.product_type === 'manufactured')
+                    .reduce((sum, entry) => sum + entry.actual_cost, 0);
+                const retailCogs = this.entries
+                    .filter(entry => entry.product_type === 'retail')
+                    .reduce((sum, entry) => sum + entry.actual_cost, 0);
+                
+                document.getElementById('totalCogs').textContent = this.formatCurrency(totalCogs);
+                document.getElementById('costVariance').textContent = this.formatCurrency(Math.abs(totalVariance));
+                document.getElementById('manufacturedCogs').textContent = this.formatCurrency(manufacturedCogs);
+                document.getElementById('retailCogs').textContent = this.formatCurrency(retailCogs);
+            }
+
+            initializeCharts() {
+                this.initializeCostTrendsChart();
+                this.initializeCostBreakdownChart();
+            }
+
+            initializeCostTrendsChart() {
+                const ctx = document.getElementById('costTrendsChart').getContext('2d');
+                
+                const labels = [];
+                const standardData = [];
+                const actualData = [];
+                
+                for (let i = 29; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                    
+                    const baseStandard = 1000 + Math.sin(i * 0.1) * 200;
+                    const baseActual = baseStandard * (0.9 + Math.random() * 0.2);
+                    
+                    standardData.push(baseStandard);
+                    actualData.push(baseActual);
+                }
+                
+                const self = this; // Store reference for callback
+                this.charts.costTrends = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Standard Cost',
+                            data: standardData,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Actual Cost',
+                            data: actualData,
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return self.formatCurrencyForChart(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            initializeCostBreakdownChart() {
+                const ctx = document.getElementById('costBreakdownChart').getContext('2d');
+                
+                const totalMaterial = this.entries.reduce((sum, entry) => sum + (entry.material_cost || 0), 0);
+                const totalLabor = this.entries.reduce((sum, entry) => sum + (entry.labor_cost || 0), 0);
+                const totalOverhead = this.entries.reduce((sum, entry) => sum + (entry.overhead_cost || 0), 0);
+                
+                this.charts.costBreakdown = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Material', 'Labor', 'Overhead'],
+                        datasets: [{
+                            data: [totalMaterial, totalLabor, totalOverhead],
+                            backgroundColor: [
+                                '#0d6efd',
+                                '#198754',
+                                '#ffc107'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Application Settings Integration
+            async loadAppSettings() {
+                try {
+                    console.log('🔧 Loading application settings...');
+                    const response = await fetch(`${this.apiBaseUrl}/app-settings/`);
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            this.appSettings = result.data;
+                            console.log('✅ Application settings loaded:', this.appSettings);
+                            
+                            // Apply settings to the UI
+                            this.applySettingsToUI();
+                        }
+                    } else {
+                        console.warn('⚠️ Could not load app settings, using defaults');
+                        this.appSettings = this.getDefaultSettings();
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading app settings:', error);
+                    this.appSettings = this.getDefaultSettings();
+                }
+            }
+
+            getDefaultSettings() {
+                return {
+                    currency: {
+                        currency: 'USD',
+                        currency_symbol: '$',
+                        vat_rate: 0.0,
+                        country: 'US',
+                        locale: 'en-US',
+                        timezone: 'UTC'
+                    },
+                    business: {
+                        company_name: 'Your Company',
+                        app_name: 'CNPERP ERP System'
+                    }
+                };
+            }
+
+            applySettingsToUI() {
+                try {
+                    if (!this.appSettings) return;
+                    
+                    // Update page title with company name
+                    if (this.appSettings.business?.company_name) {
+                        document.title = `Cost of Goods Sold - ${this.appSettings.business.company_name}`;
+                    }
+                    
+                    // Update any existing currency displays
+                    this.updateCurrencyDisplays();
+                    
+                } catch (error) {
+                    console.error('Error applying settings to UI:', error);
+                }
+            }
+
+            updateCurrencyDisplays() {
+                // Re-render table and summary stats with correct currency
+                if (this.entries.length > 0) {
+                    this.renderCOGSTable();
+                    this.updateSummaryStats();
+                }
+            }
+
+            // Utility methods
+            formatCurrency(amount) {
+                if (!this.appSettings?.currency) {
+                    return new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        minimumFractionDigits: 2
+                    }).format(amount);
+                }
+                
+                const currencySettings = this.appSettings.currency;
+                const locale = currencySettings.locale || 'en-US';
+                const currency = currencySettings.currency || 'USD';
+                
+                try {
+                    return new Intl.NumberFormat(locale, {
+                        style: 'currency',
+                        currency: currency,
+                        minimumFractionDigits: 2
+                    }).format(amount);
+                } catch (error) {
+                    // Fallback if locale/currency is invalid
+                    console.warn('Invalid currency settings, using fallback:', error);
+                    return `${currencySettings.currency_symbol || '$'}${amount.toFixed(2)}`;
+                }
+            }
+
+            formatDate(dateString) {
+                const locale = this.appSettings?.currency?.locale || 'en-US';
+                const timezone = this.appSettings?.currency?.timezone;
+                
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit'
+                };
+                
+                if (timezone) {
+                    options.timeZone = timezone;
+                }
+                
+                try {
+                    return new Date(dateString).toLocaleDateString(locale, options);
+                } catch (error) {
+                    // Fallback to default formatting
+                    return new Date(dateString).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: '2-digit'
+                    });
+                }
+            }
+
+            getProductTypeBadge(type) {
+                const badges = {
+                    'manufactured': '<span class="badge bg-primary">Manufactured</span>',
+                    'retail': '<span class="badge bg-warning">Retail</span>',
+                    'service': '<span class="badge bg-info">Service</span>'
+                };
+                return badges[type] || '<span class="badge bg-secondary">Unknown</span>';
+            }
+
+            // Public methods
+            async saveCogsEntry() {
+                try {
+                    const formData = this.collectFormData();
+                    
+                    if (!this.validateFormData(formData)) {
+                        return;
+                    }
+                    
+                    this.showLoading(this.editingEntryId ? 'Updating COGS entry...' : 'Saving COGS entry...');
+                    
+                    // Determine which API endpoint to use based on product type and edit mode
+                    let apiData, endpoint, method = 'POST';
+                    
+                    if (formData.product_type === 'manufactured') {
+                        // Save as manufacturing cost
+                        if (this.editingEntryId && this.editingEntryId.toString().startsWith('mfg_')) {
+                            method = 'PUT';
+                            const actualId = this.editingEntryId.toString().replace('mfg_', '');
+                            endpoint = `${this.apiBaseUrl}/manufacturing/${actualId}`;
+                        } else {
+                            endpoint = `${this.apiBaseUrl}/manufacturing/`;
+                        }
+                        
+                        apiData = {
+                            product_id: formData.product_id,
+                            batch_number: formData.batch_number || `BATCH-${Date.now()}`,
+                            batch_size: formData.quantity,
+                            date: formData.date,
+                            notes: formData.notes,
+                            material_entries: [{
+                                material_id: formData.product_id, // Using the same product as material
+                                quantity: formData.quantity,
+                                unit_cost: formData.material_cost / formData.quantity,
+                                total_cost: formData.material_cost,
+                                description: "Material cost"
+                            }],
+                            labor_entries: [{
+                                hours: formData.quantity, // Assuming 1 hour per unit
+                                rate: formData.labor_cost / formData.quantity,
+                                total_cost: formData.labor_cost,
+                                description: "Labor cost"
+                            }],
+                            overhead_entries: [{
+                                name: "Overhead",
+                                amount: formData.overhead_cost,
+                                description: "Overhead cost allocation"
+                            }]
+                        };
+                    } else {
+                        // Save as regular COGS entry
+                        if (this.editingEntryId && !this.editingEntryId.toString().startsWith('mfg_')) {
+                            method = 'PUT';
+                            endpoint = `${this.apiBaseUrl}/cogs/${this.editingEntryId}`;
+                        } else {
+                            endpoint = `${this.apiBaseUrl}/cogs/`;
+                        }
+                        
+                        const totalCost = formData.material_cost + formData.labor_cost + formData.overhead_cost;
+                        apiData = {
+                            product_id: formData.product_id,
+                            quantity: formData.quantity,
+                            unit_cost: totalCost / formData.quantity,
+                            total_cost: totalCost,
+                            description: formData.notes || `COGS entry for ${formData.product_type} product`,
+                            reference: formData.batch_number,
+                            date: formData.date
+                        };
+                    }
+                    
+                    const response = await fetch(endpoint, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(apiData)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const savedEntry = await response.json();
+                    console.log('✅ COGS entry saved:', savedEntry);
+                    
+                    // Close modal and refresh data
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addCOGSModal'));
+                    modal.hide();
+                    this.resetForm();
+                    await this.loadCOGSEntries();
+                    
+                    this.showSuccess(this.editingEntryId ? 'COGS entry updated successfully!' : 'COGS entry saved successfully!');
+                } catch (error) {
+                    console.error('❌ Error saving COGS entry:', error);
+                    this.showError('Error saving COGS entry: ' + error.message);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            collectFormData() {
+                return {
+                    product_id: document.getElementById('productSelect').value,
+                    product_type: document.getElementById('productType').value,
+                    date: document.getElementById('entryDate').value,
+                    cost_center: document.getElementById('costCenter').value,
+                    quantity: parseFloat(document.getElementById('quantity').value),
+                    material_cost: parseFloat(document.getElementById('materialCost').value) || 0,
+                    labor_cost: parseFloat(document.getElementById('laborCost').value) || 0,
+                    overhead_cost: parseFloat(document.getElementById('overheadCost').value) || 0,
+                    batch_number: document.getElementById('batchNumber').value,
+                    notes: document.getElementById('notes').value
+                };
+            }
+
+            validateFormData(data) {
+                if (!data.product_id) {
+                    alert('Please select a product');
+                    return false;
+                }
+                if (!data.product_type) {
+                    alert('Please select a product type');
+                    return false;
+                }
+                if (!data.quantity || data.quantity <= 0) {
+                    alert('Please enter a valid quantity');
+                    return false;
+                }
+                return true;
+            }
+
+            resetForm() {
+                document.getElementById('cogsForm').reset();
+                document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+                this.calculateTotal();
+                
+                // Reset modal to add mode
+                document.querySelector('#addCOGSModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add COGS Entry';
+                this.editingEntryId = null;
+            }
+
+            async editEntry(id) {
+                try {
+                    const entry = this.entries.find(e => e.id == id);
+                    if (!entry) {
+                        this.showError('Entry not found');
+                        return;
+                    }
+
+                    // Populate form with existing data
+                    document.getElementById('productSelect').value = entry.product_id;
+                    document.getElementById('productType').value = entry.product_type;
+                    document.getElementById('entryDate').value = entry.date;
+                    document.getElementById('quantity').value = entry.quantity;
+                    document.getElementById('materialCost').value = entry.material_cost;
+                    document.getElementById('laborCost').value = entry.labor_cost;
+                    document.getElementById('overheadCost').value = entry.overhead_cost;
+                    document.getElementById('batchNumber').value = entry.batch_number;
+                    document.getElementById('costCenter').value = entry.cost_center;
+                    
+                    this.calculateTotal();
+                    
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('addCOGSModal'));
+                    modal.show();
+                    
+                    // Change modal title and save button to indicate editing
+                    document.querySelector('#addCOGSModal .modal-title').innerHTML = '<i class="bi bi-pencil me-2"></i>Edit COGS Entry';
+                    
+                    // Store entry ID for updating
+                    this.editingEntryId = id;
+                } catch (error) {
+                    console.error('Error editing entry:', error);
+                    this.showError('Error loading entry for editing');
+                }
+            }
+
+            async viewBreakdown(id) {
+                try {
+                    const entry = this.entries.find(e => e.id == id);
+                    if (!entry) {
+                        this.showError('Entry not found');
+                        return;
+                    }
+
+                    const breakdown = `
+                        <div class="cost-breakdown-details">
+                            <h5>${entry.product_name} - Cost Breakdown</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Cost Components:</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Material Cost:</span>
+                                            <strong>₦${entry.material_cost.toFixed(2)}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Labor Cost:</span>
+                                            <strong>₦${entry.labor_cost.toFixed(2)}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Overhead Cost:</span>
+                                            <strong>₦${entry.overhead_cost.toFixed(2)}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between bg-light">
+                                            <span><strong>Total Cost:</strong></span>
+                                            <strong>₦${entry.actual_cost.toFixed(2)}</strong>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Additional Details:</h6>
+                                    <p><strong>Batch:</strong> ${entry.batch_number}</p>
+                                    <p><strong>Quantity:</strong> ${entry.quantity}</p>
+                                    <p><strong>Unit Cost:</strong> ₦${(entry.actual_cost / entry.quantity).toFixed(2)}</p>
+                                    <p><strong>Variance:</strong> <span class="${entry.variance >= 0 ? 'text-danger' : 'text-success'}">₦${entry.variance.toFixed(2)}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Create and show breakdown modal
+                    const modalDiv = document.createElement('div');
+                    modalDiv.className = 'modal fade';
+                    modalDiv.innerHTML = `
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Cost Breakdown</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ${breakdown}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modalDiv);
+                    const modal = new bootstrap.Modal(modalDiv);
+                    modal.show();
+                    
+                    // Remove modal from DOM when hidden
+                    modalDiv.addEventListener('hidden.bs.modal', () => {
+                        modalDiv.remove();
+                    });
+                } catch (error) {
+                    console.error('Error viewing breakdown:', error);
+                    this.showError('Error loading cost breakdown');
+                }
+            }
+
+            async deleteEntry(id) {
+                if (!confirm('Are you sure you want to delete this COGS entry? This action cannot be undone.')) {
+                    return;
+                }
+
+                try {
+                    this.showLoading('Deleting entry...');
+                    
+                    const entry = this.entries.find(e => e.id == id);
+                    if (!entry) {
+                        this.showError('Entry not found');
+                        return;
+                    }
+
+                    let endpoint;
+                    if (entry.source_type === 'manufacturing') {
+                        const actualId = id.toString().replace('mfg_', '');
+                        endpoint = `${this.apiBaseUrl}/manufacturing/${actualId}`;
+                    } else {
+                        endpoint = `${this.apiBaseUrl}/cogs/${id}`;
+                    }
+
+                    const response = await fetch(endpoint, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    console.log('✅ Entry deleted successfully');
+                    await this.loadCOGSEntries();
+                    this.showSuccess('COGS entry deleted successfully');
+                } catch (error) {
+                    console.error('❌ Error deleting entry:', error);
+                    this.showError('Error deleting entry: ' + error.message);
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            exportCOGSData() {
+                try {
+                    if (this.entries.length === 0) {
+                        this.showError('No data to export');
+                        return;
+                    }
+
+                    // Prepare CSV data
+                    const headers = [
+                        'Date', 'Product Name', 'Batch/Lot', 'Type', 'Quantity', 
+                        'Standard Cost', 'Actual Cost', 'Variance', 'Cost Center',
+                        'Material Cost', 'Labor Cost', 'Overhead Cost'
+                    ];
+
+                    const csvData = this.entries.map(entry => [
+                        entry.date,
+                        entry.product_name,
+                        entry.batch_number,
+                        entry.product_type,
+                        entry.quantity,
+                        entry.standard_cost.toFixed(2),
+                        entry.actual_cost.toFixed(2),
+                        entry.variance.toFixed(2),
+                        entry.cost_center,
+                        entry.material_cost.toFixed(2),
+                        entry.labor_cost.toFixed(2),
+                        entry.overhead_cost.toFixed(2)
+                    ]);
+
+                    // Create CSV content
+                    const csvContent = [headers, ...csvData]
+                        .map(row => row.map(field => `"${field}"`).join(','))
+                        .join('\n');
+
+                    // Create and download file
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `cogs_data_${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    this.showSuccess(`Exported ${this.entries.length} COGS entries to CSV`);
+                } catch (error) {
+                    console.error('Error exporting data:', error);
+                    this.showError('Error exporting data: ' + error.message);
+                }
+            }
+
+            viewBatchTracking() {
+                alert('Batch tracking will be implemented in phase 2');
+            }
+
+            formatCurrencyForChart(value) {
+                if (!this.appSettings?.currency) {
+                    return '$' + value.toFixed(0);
+                }
+                
+                const symbol = this.appSettings.currency.currency_symbol || '$';
+                return symbol + value.toFixed(0);
+            }
+
+            async refreshData() {
+                await this.loadAppSettings(); // Reload settings in case they changed
+                await this.loadCOGSEntries();
+                await this.loadAnalyticsData();
+            }
+
+            async checkIntegrations() {
+                try {
+                    this.showLoading('Checking system integrations...');
+                    
+                    // Check various system endpoints
+                    const checks = await Promise.allSettled([
+                        fetch(`${this.apiBaseUrl}/inventory/products`).then(r => r.ok),
+                        fetch(`${this.apiBaseUrl}/sales/`).then(r => r.ok),
+                        fetch(`${this.apiBaseUrl}/purchases/purchases`).then(r => r.ok),
+                        fetch(`${this.apiBaseUrl}/accounting/codes`).then(r => r.ok)
+                    ]);
+                    
+                    const [inventory, sales, purchases, accounting] = checks.map(c => 
+                        c.status === 'fulfilled' ? c.value : false
+                    );
+                    
+                    // Update status indicators
+                    const statusElements = document.querySelectorAll('.integration-status');
+                    if (statusElements.length >= 4) {
+                        statusElements[0].className = `integration-status ${inventory ? 'connected' : 'disconnected'}`;
+                        statusElements[1].className = `integration-status ${sales ? 'connected' : 'disconnected'}`;
+                        statusElements[2].className = `integration-status ${purchases ? 'connected' : 'disconnected'}`;
+                        statusElements[3].className = `integration-status ${accounting ? 'connected' : 'disconnected'}`;
+                    }
+                    
+                    const connectedCount = [inventory, sales, purchases, accounting].filter(Boolean).length;
+                    this.showSuccess(`Integration check complete: ${connectedCount}/4 systems connected`);
+                    
+                } catch (error) {
+                    console.error('Error checking integrations:', error);
+                    this.showError('Error checking system integrations');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            // UI Helper Methods
+            showLoading(message = 'Loading...') {
+                this.loading = true;
+                // You could add a loading spinner here
+                console.log('🔄 ' + message);
+            }
+
+            hideLoading() {
+                this.loading = false;
+            }
+
+            showError(message) {
+                console.error('❌ Error:', message);
+                // Create a temporary alert for errors
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+                alertDiv.innerHTML = `
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+
+            showSuccess(message) {
+                console.log('✅ Success:', message);
+                // Create a temporary alert for success
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+                alertDiv.innerHTML = `
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>Success:</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                // Auto-remove after 3 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 3000);
+            }
+
+            updateChartsWithRealData() {
+                try {
+                    if (this.entries.length === 0) {
+                        return;
+                    }
+
+                    // Update cost trends chart with real data
+                    this.updateCostTrendsChart();
+                    
+                    // Update cost breakdown chart with real data
+                    this.updateCostBreakdownChart();
+                } catch (error) {
+                    console.error('Error updating charts:', error);
+                }
+            }
+
+            updateCostTrendsChart() {
+                if (!this.charts.costTrends) return;
+
+                // Group entries by date and calculate daily totals
+                const dailyTotals = {};
+                this.entries.forEach(entry => {
+                    const date = entry.date;
+                    if (!dailyTotals[date]) {
+                        dailyTotals[date] = { standard: 0, actual: 0 };
+                    }
+                    dailyTotals[date].standard += entry.standard_cost * entry.quantity;
+                    dailyTotals[date].actual += entry.actual_cost;
+                });
+
+                // Sort dates and create chart data
+                const sortedDates = Object.keys(dailyTotals).sort();
+                const labels = sortedDates.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                const standardData = sortedDates.map(date => dailyTotals[date].standard);
+                const actualData = sortedDates.map(date => dailyTotals[date].actual);
+
+                this.charts.costTrends.data.labels = labels;
+                this.charts.costTrends.data.datasets[0].data = standardData;
+                this.charts.costTrends.data.datasets[1].data = actualData;
+                this.charts.costTrends.update();
+            }
+
+            updateCostBreakdownChart() {
+                if (!this.charts.costBreakdown) return;
+
+                const totalMaterial = this.entries.reduce((sum, entry) => sum + (entry.material_cost || 0), 0);
+                const totalLabor = this.entries.reduce((sum, entry) => sum + (entry.labor_cost || 0), 0);
+                const totalOverhead = this.entries.reduce((sum, entry) => sum + (entry.overhead_cost || 0), 0);
+
+                this.charts.costBreakdown.data.datasets[0].data = [totalMaterial, totalLabor, totalOverhead];
+                this.charts.costBreakdown.update();
+            }
+
+            // Analytics Integration Methods
+            async loadAnalyticsData() {
+                try {
+                    const currentDate = new Date();
+                    const currentYear = currentDate.getFullYear();
+                    const currentMonth = currentDate.getMonth() + 1;
+
+                    // Load current month and year data
+                    const [monthlyReport, trendAnalysis] = await Promise.all([
+                        this.loadMonthlyReport(currentYear, currentMonth),
+                        this.loadTrendAnalysis()
+                    ]);
+
+                    if (monthlyReport) {
+                        this.updateSummaryWithAnalytics(monthlyReport);
+                    }
+
+                    if (trendAnalysis) {
+                        this.updateChartsWithTrendData(trendAnalysis);
+                    }
+
+                } catch (error) {
+                    console.error('Error loading analytics data:', error);
+                    // Don't show error to user for analytics - it's supplementary data
+                }
+            }
+
+            async loadMonthlyReport(year, month) {
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/reports/cogs/monthly?year=${year}&month=${month}`);
+                    if (!response.ok) return null;
+                    
+                    const result = await response.json();
+                    return result.success ? result.data : null;
+                } catch (error) {
+                    console.error('Error loading monthly report:', error);
+                    return null;
+                }
+            }
+
+            async loadTrendAnalysis() {
+                try {
+                    const endDate = new Date();
+                    const startDate = new Date();
+                    startDate.setMonth(startDate.getMonth() - 12); // Last 12 months
+
+                    const response = await fetch(
+                        `${this.apiBaseUrl}/reports/cogs/trend-analysis?start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&period_type=monthly`
+                    );
+                    
+                    if (!response.ok) return null;
+                    
+                    const result = await response.json();
+                    return result.success ? result.data : null;
+                } catch (error) {
+                    console.error('Error loading trend analysis:', error);
+                    return null;
+                }
+            }
+
+            updateSummaryWithAnalytics(monthlyReport) {
+                try {
+                    const summary = monthlyReport.summary;
+                    
+                    // Update growth indicators with real comparison data
+                    const comparison = monthlyReport.comparison;
+                    if (comparison && comparison.change) {
+                        const growthElement = document.getElementById('cogsGrowth');
+                        if (growthElement) {
+                            const percentage = comparison.change.percentage.toFixed(1);
+                            const trend = comparison.change.trend;
+                            const icon = trend === 'increase' ? 'bi-graph-up' : trend === 'decrease' ? 'bi-graph-down' : 'bi-dash';
+                            const sign = percentage >= 0 ? '+' : '';
+                            
+                            growthElement.innerHTML = `<i class="bi ${icon} text-white"></i> ${sign}${percentage}%`;
+                        }
+                    }
+
+                    // Update manufacturing batches count
+                    const batchesElement = document.getElementById('mfgBatches');
+                    if (batchesElement && monthlyReport.product_breakdown) {
+                        const mfgProducts = monthlyReport.product_breakdown.filter(p => p.product_name.includes('manufactured')).length;
+                        batchesElement.textContent = mfgProducts || '0';
+                    }
+                } catch (error) {
+                    console.error('Error updating summary with analytics:', error);
+                }
+            }
+
+            updateChartsWithTrendData(trendAnalysis) {
+                try {
+                    if (!this.charts.costTrends || !trendAnalysis.trends) return;
+
+                    const trends = trendAnalysis.trends;
+                    const labels = trends.map(t => t.period_label);
+                    const actualData = trends.map(t => t.total_cogs);
+
+                    // Use trend data for standard cost (could be enhanced with actual vs standard data)
+                    const standardData = actualData.map(value => value * 0.95); // Assume 5% variance for demo
+
+                    this.charts.costTrends.data.labels = labels;
+                    this.charts.costTrends.data.datasets[0].data = standardData;
+                    this.charts.costTrends.data.datasets[1].data = actualData;
+                    this.charts.costTrends.update();
+                } catch (error) {
+                    console.error('Error updating charts with trend data:', error);
+                }
+            }
+        }
+
+        // Initialize the application
+        let cogsApp;
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 DOM loaded, initializing Enhanced COGS App...');
+            cogsApp = new EnhancedCOGSApp();
+        });
+
+        // Global function wrappers for onclick handlers
+        function saveCogsEntry() { cogsApp.saveCogsEntry(); }
+        function refreshData() { cogsApp.refreshData(); }
+        function exportCOGSData() { cogsApp.exportCOGSData(); }
+        function viewBatchTracking() { cogsApp.viewBatchTracking(); }
+        function checkIntegrations() { cogsApp.checkIntegrations(); }
+    </script>
+</body>
+</html>

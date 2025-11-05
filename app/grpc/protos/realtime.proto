@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package cnperp.realtime;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+
+// Real-time Data Streaming Service
+service RealtimeService {
+  // General real-time notifications
+  rpc Subscribe(SubscribeRequest) returns (stream NotificationUpdate);
+  rpc Unsubscribe(UnsubscribeRequest) returns (google.protobuf.Empty);
+  
+  // System-wide events
+  rpc StreamSystemEvents(google.protobuf.Empty) returns (stream SystemEvent);
+  rpc StreamUserNotifications(UserNotificationsRequest) returns (stream UserNotification);
+  
+  // Business events
+  rpc StreamTransactionEvents(TransactionEventsRequest) returns (stream TransactionEvent);
+  rpc StreamInventoryAlerts(InventoryAlertsRequest) returns (stream InventoryAlert);
+}
+
+// Subscription management
+message SubscribeRequest {
+  string user_id = 1;
+  string session_id = 2;
+  repeated string event_types = 3;  // What events to subscribe to
+  map<string, string> filters = 4;   // Additional filters
+}
+
+message UnsubscribeRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+// General notification update
+message NotificationUpdate {
+  string id = 1;
+  string type = 2;
+  string title = 3;
+  string message = 4;
+  string severity = 5;  // "INFO", "WARNING", "ERROR", "SUCCESS"
+  map<string, string> data = 6;
+  google.protobuf.Timestamp timestamp = 7;
+  string user_id = 8;
+}
+
+// System events
+message SystemEvent {
+  string event_id = 1;
+  string event_type = 2;  // "USER_LOGIN", "SYSTEM_ERROR", "SERVICE_RESTART", etc.
+  string source_service = 3;
+  string description = 4;
+  map<string, string> metadata = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  string severity = 7;
+}
+
+// User-specific notifications
+message UserNotificationsRequest {
+  string user_id = 1;
+  bool include_system = 2;
+}
+
+message UserNotification {
+  string notification_id = 1;
+  string user_id = 2;
+  string title = 3;
+  string message = 4;
+  string type = 5;  // "TASK", "ALERT", "INFO", "APPROVAL_REQUEST", etc.
+  string severity = 6;
+  bool is_read = 7;
+  string action_url = 8;
+  map<string, string> data = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+}
+
+// Transaction events
+message TransactionEventsRequest {
+  repeated string module_filters = 1;  // "PURCHASES", "SALES", etc.
+  repeated string event_types = 2;     // "CREATED", "UPDATED", "POSTED", etc.
+}
+
+message TransactionEvent {
+  string event_id = 1;
+  string transaction_id = 2;
+  string transaction_type = 3;  // "PURCHASE", "SALE", "JOURNAL_ENTRY", etc.
+  string event_type = 4;        // "CREATED", "UPDATED", "POSTED", "CANCELLED", etc.
+  string module = 5;
+  cnperp.common.MoneyAmount amount = 6;
+  string description = 7;
+  string user_id = 8;
+  map<string, string> details = 9;
+  google.protobuf.Timestamp timestamp = 10;
+}
+
+// Inventory alerts
+message InventoryAlertsRequest {
+  repeated string product_ids = 1;  // Empty = all products
+  bool low_stock_only = 2;
+}
+
+message InventoryAlert {
+  string alert_id = 1;
+  string product_id = 2;
+  string product_name = 3;
+  string alert_type = 4;  // "LOW_STOCK", "OUT_OF_STOCK", "OVERSTOCKED", "EXPIRING"
+  double current_stock = 5;
+  double threshold_level = 6;
+  string severity = 7;
+  string recommended_action = 8;
+  google.protobuf.Timestamp timestamp = 9;
+  google.protobuf.Timestamp last_movement = 10;
+}

@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart of Accounts - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/modern-styles.css" rel="stylesheet">
+    <!-- Auth bootstrap must load first to prevent auth race conditions -->
+    <script src="js/auth-bootstrap.js"></script>
+    <style>
+        .account-tree {
+            margin-left: 0;
+        }
+        .sub-account {
+            margin-left: 30px;
+            border-left: 2px solid #dee2e6;
+            padding-left: 15px;
+        }
+        .account-item {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        .parent-account {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+        .bank-account {
+            background-color: #e8f5e8;
+        }
+        .balance-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .balance-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .balance-zero {
+            color: #6c757d;
+        }
+        .account-code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .error {
+            color: #dc3545;
+            text-align: center;
+            padding: 20px;
+        }
+        .reporting-tag {
+            background-color: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+
+        /* Dark theme support */
+        body[data-theme="dark"] {
+            background-color: #212529;
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .card {
+            background-color: #343a40;
+            border-color: #495057;
+        }
+
+        body[data-theme="dark"] .account-item {
+            background-color: #495057;
+            border-color: #6c757d;
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .parent-account {
+            background-color: #1976d2;
+        }
+
+        body[data-theme="dark"] .bank-account {
+            background-color: #2e7d32;
+        }
+
+        body[data-theme="dark"] .form-control,
+        body[data-theme="dark"] .form-select {
+            background-color: #495057;
+            border-color: #6c757d;
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .modal-content {
+            background-color: #343a40;
+            color: #ffffff;
+        }
+
+        /* Navbar dark theme enhancements */
+        body[data-theme="dark"] .navbar-dark {
+            background-color: #1a1a1a !important;
+        }
+
+        body[data-theme="dark"] .dropdown-menu {
+            background-color: #343a40;
+            border-color: #6c757d;
+        }
+
+        body[data-theme="dark"] .dropdown-item {
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .dropdown-item:hover {
+            background-color: #495057;
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .dropdown-item.active {
+            background-color: #0d6efd;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                    <h1 class="h3 mb-0">Chart of Accounts</h1>
+                    <div>
+                        <button class="btn btn-primary" onclick="refreshAccounts()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+                        </button>
+                        <button class="btn btn-success" onclick="showAddAccountModal()">
+                            <i class="bi bi-plus-circle me-2"></i>Add Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Settings Info -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <div class="flex-grow-1">
+                        <strong>Application Settings:</strong> 
+                        Currency: <span id="appCurrency">-</span> | 
+                        Company: <span id="appCompany">-</span> | 
+                        Theme: <span id="appTheme">-</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-info" onclick="toggleSettingsDetails()">
+                        <i class="bi bi-gear"></i> Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Details (Hidden by default) -->
+        <div class="row mt-2" id="settingsDetails" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Application Settings Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Business Settings</h6>
+                                <p><strong>Company:</strong> <span id="detailCompany">-</span></p>
+                                <p><strong>Currency:</strong> <span id="detailCurrency">-</span></p>
+                                <p><strong>VAT Rate:</strong> <span id="detailVatRate">-</span>%</p>
+                                <p><strong>Country:</strong> <span id="detailCountry">-</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>System Settings</h6>
+                                <p><strong>Theme:</strong> <span id="detailTheme">-</span></p>
+                                <p><strong>Locale:</strong> <span id="detailLocale">-</span></p>
+                                <p><strong>Timezone:</strong> <span id="detailTimezone">-</span></p>
+                                <p><strong>Fiscal Year Start:</strong> <span id="detailFiscalYear">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Total Accounts</h5>
+                        <h2 class="mb-0" id="totalAccounts">-</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Total Assets</h5>
+                        <h2 class="mb-0" id="totalAssets">-</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-info">Bank Accounts</h5>
+                        <h2 class="mb-0" id="bankAccounts">-</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">Parent Accounts</h5>
+                        <h2 class="mb-0" id="parentAccounts">-</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Account Type</label>
+                                <select class="form-select" id="filterAccountType" onchange="applyFilters()">
+                                    <option value="">All Types</option>
+                                    <option value="Asset">Asset</option>
+                                    <option value="Liability">Liability</option>
+                                    <option value="Equity">Equity</option>
+                                    <option value="Revenue">Revenue</option>
+                                    <option value="Expense">Expense</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="filterCategory" onchange="applyFilters()">
+                                    <option value="">All Categories</option>
+                                    <option value="Bank">Bank</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Fixed Asset">Fixed Asset</option>
+                                    <option value="Current Asset">Current Asset</option>
+                                    <option value="Current Liability">Current Liability</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Show Zero Balances</label>
+                                <select class="form-select" id="filterZeroBalance" onchange="applyFilters()">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Search</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search accounts..." onkeyup="applyFilters()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounts Display -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Accounting Codes Structure</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingMessage" class="loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading accounting codes...</p>
+                        </div>
+                        <div id="errorMessage" class="error" style="display: none;"></div>
+                        <div id="accountsContainer" class="account-tree" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div class="modal fade" id="addAccountModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addAccountForm">
+                        <div class="mb-3">
+                            <label class="form-label">Account Code</label>
+                            <input type="text" class="form-control" name="code" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Account Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Account Type</label>
+                            <select class="form-select" name="account_type" required>
+                                <option value="Asset">Asset</option>
+                                <option value="Liability">Liability</option>
+                                <option value="Equity">Equity</option>
+                                <option value="Revenue">Revenue</option>
+                                <option value="Expense">Expense</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category" required>
+                                <option value="Bank">Bank</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Fixed Asset">Fixed Asset</option>
+                                <option value="Current Asset">Current Asset</option>
+                                <option value="Current Liability">Current Liability</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Parent Account</label>
+                            <select class="form-select" name="parent_id" id="parentAccountSelect">
+                                <option value="">None (Top Level)</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAccount()">Save Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Account Modal -->
+    <div class="modal fade" id="editAccountModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAccountForm">
+                        <input type="hidden" name="id" id="editAccountId">
+                        <div class="mb-3">
+                            <label class="form-label">Account Code</label>
+                            <input type="text" class="form-control" name="code" id="editAccountCode">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Account Name</label>
+                            <input type="text" class="form-control" name="name" id="editAccountName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Account Type</label>
+                            <select class="form-select" name="account_type" id="editAccountType">
+                                <option value="Asset">Asset</option>
+                                <option value="Liability">Liability</option>
+                                <option value="Equity">Equity</option>
+                                <option value="Revenue">Revenue</option>
+                                <option value="Expense">Expense</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category" id="editAccountCategory">
+                                <option value="Bank">Bank</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Fixed Asset">Fixed Asset</option>
+                                <option value="Current Asset">Current Asset</option>
+                                <option value="Current Liability">Current Liability</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateAccount()">Update Account</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteAccount()">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Details Modal -->
+    <div class="modal fade" id="accountDetailsModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-clipboard-data me-2"></i>
+                        Account Details - <span id="detailAccountName">Loading...</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Account Summary -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <h6>Account Information</h6>
+                                            <p><strong>Code:</strong> <span id="detailCode">-</span></p>
+                                            <p><strong>Type:</strong> <span id="detailType">-</span></p>
+                                            <p><strong>Category:</strong> <span id="detailCategory">-</span></p>
+                                            <p><strong>Currency:</strong> <span id="detailCurrencyDisplay">-</span></p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6>Current Balances</h6>
+                                            <p><strong>Current Balance:</strong> <span id="detailBalance" class="fw-bold">-</span></p>
+                                            <p><strong>Total Debits:</strong> <span id="detailDebits" class="text-success">-</span></p>
+                                            <p><strong>Total Credits:</strong> <span id="detailCredits" class="text-danger">-</span></p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6>Account Structure</h6>
+                                            <p><strong>Parent Account:</strong> <span id="detailParent">-</span></p>
+                                            <p><strong>Sub-accounts:</strong> <span id="detailSubCount">-</span></p>
+                                            <p><strong>Reporting Tag:</strong> <span id="detailReportingTag">-</span></p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6>Activity Summary</h6>
+                                            <p><strong>Transaction Count:</strong> <span id="detailTransactionCount">-</span></p>
+                                            <p><strong>Last Activity:</strong> <span id="detailLastActivity">-</span></p>
+                                            <p><strong>Created:</strong> <span id="detailCreated">-</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="accountDetailTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button" role="tab">
+                                <i class="bi bi-list-ul me-1"></i>Journal Entries
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="balance-analysis-tab" data-bs-toggle="tab" data-bs-target="#balance-analysis" type="button" role="tab">
+                                <i class="bi bi-graph-up me-1"></i>Balance Analysis
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="related-docs-tab" data-bs-toggle="tab" data-bs-target="#related-docs" type="button" role="tab">
+                                <i class="bi bi-file-earmark-text me-1"></i>Related Documents
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="sub-accounts-tab" data-bs-toggle="tab" data-bs-target="#sub-accounts" type="button" role="tab">
+                                <i class="bi bi-diagram-3 me-1"></i>Sub-accounts
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="accountDetailTabContent">
+                        <!-- Journal Entries Tab -->
+                        <div class="tab-pane fade show active" id="transactions" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Journal Entries</h6>
+                                <div class="d-flex gap-2">
+                                    <select class="form-select form-select-sm" id="transactionFilter" style="width: auto;">
+                                        <option value="">All Entries</option>
+                                        <option value="debit">Debits Only</option>
+                                        <option value="credit">Credits Only</option>
+                                        <option value="current_month">Current Month</option>
+                                        <option value="last_30_days">Last 30 Days</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="refreshTransactions()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+
+                                </div>
+                            </div>
+                            <div id="transactionsLoading" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading transactions...</span>
+                                </div>
+                                <p class="mt-2">Loading journal entries...</p>
+                            </div>
+                            <div id="transactionsError" class="alert alert-danger" style="display: none;"></div>
+                            <div id="transactionsTable" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Reference</th>
+                                                <th>Description</th>
+                                                <th>Debit</th>
+                                                <th>Credit</th>
+                                                <th>Balance</th>
+                                                <th>Source</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transactionsTableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div>
+                                        <strong>Total Entries:</strong> <span id="totalEntries">0</span> |
+                                        <strong>Total Debits:</strong> <span id="totalDebitsSum" class="text-success">-</span> |
+                                        <strong>Total Credits:</strong> <span id="totalCreditsSum" class="text-danger">-</span>
+                                    </div>
+                                    <nav>
+                                        <ul class="pagination pagination-sm mb-0" id="transactionsPagination">
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Balance Analysis Tab -->
+                        <div class="tab-pane fade" id="balance-analysis" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Monthly Balance Trend</h6>
+                                    <canvas id="balanceChart" width="400" height="200"></canvas>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Balance Composition</h6>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Opening Balance:</span>
+                                            <span id="openingBalance">-</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Total Debits:</span>
+                                            <span id="analysisDebits" class="text-success">-</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Total Credits:</span>
+                                            <span id="analysisCredits" class="text-danger">-</span>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between fw-bold">
+                                            <span>Current Balance:</span>
+                                            <span id="analysisCurrentBalance">-</span>
+                                        </div>
+                                    </div>
+                                    <h6>Recent Activity</h6>
+                                    <div id="recentActivity">
+                                        <div class="text-muted">Loading recent activity...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Related Documents Tab -->
+                        <div class="tab-pane fade" id="related-docs" role="tabpanel">
+                            <h6>Related Documents & Transactions</h6>
+                            <div id="relatedDocsContent">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Sales Invoices</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="relatedInvoices">Loading...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Purchase Orders</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="relatedPurchases">Loading...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Bank Transactions</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="relatedBankTransactions">Loading...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-accounts Tab -->
+                        <div class="tab-pane fade" id="sub-accounts" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Sub-accounts</h6>
+                                <button class="btn btn-sm btn-success" onclick="addSubAccount()">
+                                    <i class="bi bi-plus"></i> Add Sub-account
+                                </button>
+                            </div>
+                            <div id="subAccountsContent">
+                                <div class="text-muted">Loading sub-accounts...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" onclick="exportAccountData()">
+                        <i class="bi bi-download me-1"></i>Export Data
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="printAccountReport()">
+                        <i class="bi bi-printer me-1"></i>Print Report
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+        let allAccounts = [];
+        let filteredAccounts = [];
+        let appSettings = {};
+
+        // Load data on page load (this is handled in the combined event listener at the bottom)
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     loadAppSettings().then(() => {
+        //         loadAccountingCodes();
+        //     });
+        // });
+
+        async function loadAppSettings() {
+            try {
+                console.log('Loading application settings...');
+                const response = await fetch(`${API_BASE_URL}/app-setting/`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load app settings: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                appSettings = result.data;
+                
+                console.log('Loaded app settings:', appSettings);
+                
+                // Apply theme settings if available
+                if (appSettings.theme_mode === 'dark') {
+                    document.body.setAttribute('data-theme', 'dark');
+                }
+                
+                // Update page title with company name
+                if (appSettings.company_name) {
+                    document.title = `Chart of Accounts - ${appSettings.company_name}`;
+                    const headerTitle = document.querySelector('h1.h3');
+                    if (headerTitle) {
+                        headerTitle.textContent = `Chart of Accounts - ${appSettings.company_name}`;
+                    }
+                }
+                
+                // Update settings display
+                updateSettingsDisplay();
+                
+            } catch (error) {
+                console.error('Error loading app settings:', error);
+                // Use defaults if settings fail to load
+                appSettings = {
+                    currency: 'BWP',
+                    company_name: 'CNPERP',
+                    theme_mode: 'light'
+                };
+                updateSettingsDisplay();
+            }
+        }
+
+        function updateSettingsDisplay() {
+            // Update quick settings display
+            document.getElementById('appCurrency').textContent = (appSettings.currency && appSettings.currency.currency) || 'BWP';
+            document.getElementById('appCompany').textContent = appSettings.company_name || 'CNPERP';
+            document.getElementById('appTheme').textContent = appSettings.theme_mode || 'light';
+
+            // Update detailed settings display
+            document.getElementById('detailCompany').textContent = appSettings.company_name || 'CNPERP';
+            document.getElementById('detailCurrency').textContent = (appSettings.currency && appSettings.currency.currency) || 'BWP';
+            document.getElementById('detailVatRate').textContent = appSettings.vat_rate || '14.0';
+            document.getElementById('detailCountry').textContent = appSettings.country || 'BW';
+            document.getElementById('detailTheme').textContent = appSettings.theme_mode || 'light';
+            document.getElementById('detailLocale').textContent = (appSettings.currency && appSettings.currency.locale) || 'en';
+            document.getElementById('detailTimezone').textContent = appSettings.timezone || 'Africa/Gaborone';
+            document.getElementById('detailFiscalYear').textContent = appSettings.fiscal_year_start || '01-01';
+        }
+
+        function toggleSettingsDetails() {
+            const settingsDetails = document.getElementById('settingsDetails');
+            if (settingsDetails.style.display === 'none') {
+                settingsDetails.style.display = 'block';
+            } else {
+                settingsDetails.style.display = 'none';
+            }
+        }
+
+        async function loadAccountingCodes() {
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}/accounting-codes`);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                allAccounts = await response.json();
+                filteredAccounts = [...allAccounts];
+                
+                console.log('Loaded accounts:', allAccounts.length);
+                
+                renderAccounts();
+                updateSummaryCards();
+                populateParentAccountOptions();
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Error loading accounting codes:', error);
+                showError(`Failed to load accounting codes: ${error.message}`);
+            }
+        }
+
+        function renderAccounts() {
+            const container = document.getElementById('accountsContainer');
+            
+            if (filteredAccounts.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No accounts found.</p>';
+                return;
+            }
+
+            // Separate parent and sub accounts
+            const parentAccounts = filteredAccounts.filter(acc => acc.is_parent || !acc.parent_id);
+            const subAccounts = filteredAccounts.filter(acc => acc.parent_id && !acc.is_parent);
+
+            console.log('Parent accounts:', parentAccounts.length);
+            console.log('Sub accounts:', subAccounts.length);
+
+            let html = '';
+
+            // Render parent accounts with their children
+            parentAccounts.forEach(parent => {
+                html += renderAccountItem(parent, true);
+                
+                // Find and render children
+                const children = subAccounts.filter(acc => acc.parent_id === parent.id);
+                if (children.length > 0) {
+                    html += '<div class="sub-account">';
+                    children.forEach(child => {
+                        html += renderAccountItem(child, false);
+                    });
+                    html += '</div>';
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderAccountItem(account, isParent) {
+            const balance = parseFloat(account.balance || 0);
+            const totalDebits = parseFloat(account.total_debits || 0);
+            const totalCredits = parseFloat(account.total_credits || 0);
+            
+            let balanceClass = 'balance-zero';
+            let balanceDisplay = formatCurrency(balance);
+            
+            if (balance > 0) {
+                balanceClass = 'balance-positive';
+            } else if (balance < 0) {
+                balanceClass = 'balance-negative';
+            }
+
+            const accountClass = isParent ? 'parent-account' : 
+                                 account.category === 'Bank' ? 'bank-account' : '';
+
+            return `
+                <div class="account-item ${accountClass}" data-account-id="${account.id}">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <span class="account-code">${account.code}</span>
+                            ${account.reporting_tag ? `<span class="reporting-tag ms-2">${account.reporting_tag}</span>` : ''}
+                            ${account.currency ? `<br><small class="text-info"><i class="bi bi-currency-exchange"></i> ${account.currency}</small>` : ''}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>${account.name}</strong>
+                            <br>
+                            <small class="text-muted">${account.account_type} - ${account.category}</small>
+                            ${account.branch ? `<br><small class="text-secondary"><i class="bi bi-building"></i> ${account.branch.name}</small>` : ''}
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <div class="small text-muted">Debits</div>
+                            <div class="text-success">${formatCurrency(totalDebits)}</div>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <div class="small text-muted">Credits</div>
+                            <div class="text-danger">${formatCurrency(totalCredits)}</div>
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <div class="small text-muted">Balance</div>
+                            <div class="${balanceClass}">${balanceDisplay}</div>
+                            <div class="mt-1">
+                                <button class="btn btn-sm btn-outline-info me-1" onclick="viewAccountDetails('${account.id}')" title="View Account Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="editAccount('${account.id}')" title="Edit Account">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateSummaryCards() {
+            const totalAccounts = allAccounts.length;
+            const assetAccounts = allAccounts.filter(acc => acc.account_type === 'Asset');
+            const bankAccounts = allAccounts.filter(acc => acc.category === 'Bank');
+            const parentAccounts = allAccounts.filter(acc => acc.is_parent || !acc.parent_id);
+
+            document.getElementById('totalAccounts').textContent = totalAccounts;
+            document.getElementById('totalAssets').textContent = formatCurrency(
+                assetAccounts.reduce((sum, acc) => sum + parseFloat(acc.balance || 0), 0)
+            );
+            document.getElementById('bankAccounts').textContent = bankAccounts.length;
+            document.getElementById('parentAccounts').textContent = parentAccounts.length;
+        }
+
+        function applyFilters() {
+            const accountType = document.getElementById('filterAccountType').value;
+            const category = document.getElementById('filterCategory').value;
+            const showZeroBalance = document.getElementById('filterZeroBalance').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredAccounts = allAccounts.filter(account => {
+                // Account type filter
+                if (accountType && account.account_type !== accountType) return false;
+                
+                // Category filter
+                if (category && account.category !== category) return false;
+                
+                // Zero balance filter
+                if (showZeroBalance === 'false' && parseFloat(account.balance || 0) === 0) return false;
+                
+                // Search filter
+                if (searchTerm && 
+                    !account.code.toLowerCase().includes(searchTerm) && 
+                    !account.name.toLowerCase().includes(searchTerm)) return false;
+                
+                return true;
+            });
+
+            renderAccounts();
+        }
+
+        function populateParentAccountOptions() {
+            const select = document.getElementById('parentAccountSelect');
+            const parentAccounts = allAccounts.filter(acc => acc.is_parent || !acc.parent_id);
+            
+            // Clear existing options (keep the "None" option)
+            select.innerHTML = '<option value="">None (Top Level)</option>';
+            
+            parentAccounts.forEach(account => {
+                const option = document.createElement('option');
+                option.value = account.id;
+                option.textContent = `${account.code} - ${account.name}`;
+                select.appendChild(option);
+            });
+        }
+
+        function formatCurrency(amount) {
+            // Use currency from app settings, fallback to BWP
+            console.log('formatCurrency called with amount:', amount);
+            console.log('appSettings.currency:', appSettings.currency);
+            
+            const currency = (appSettings.currency && appSettings.currency.currency) || 'BWP';
+            const locale = (appSettings.currency && appSettings.currency.locale) || 'en-BW';
+            
+            console.log('Extracted currency:', currency, 'type:', typeof currency);
+            console.log('Extracted locale:', locale);
+            
+            // Special handling for BWP (Pula) since it's not widely supported in Intl.NumberFormat
+            if (currency === 'BWP') {
+                return `P${Number(amount).toLocaleString('en-BW', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`;
+            }
+            
+            // For other currencies, use standard formatting
+            try {
+                console.log('About to call Intl.NumberFormat with currency:', currency);
+                return new Intl.NumberFormat(locale, {
+                    style: 'currency',
+                    currency: currency,
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(amount);
+            } catch (error) {
+                // Fallback to simple formatting if Intl fails
+                console.warn('Currency formatting failed, using fallback:', error);
+                return `${currency} ${Number(amount).toLocaleString(locale, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`;
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('accountsContainer').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('accountsContainer').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('accountsContainer').style.display = 'none';
+        }
+
+        function refreshAccounts() {
+            loadAccountingCodes();
+        }
+
+        function showAddAccountModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addAccountModal'));
+            modal.show();
+        }
+
+        async function saveAccount() {
+            try {
+                const form = document.getElementById('addAccountForm');
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // Convert empty parent_id to null
+                if (!data.parent_id) {
+                    data.parent_id = null;
+                }
+
+                console.log('Creating account with data:', data);
+                console.log('Using currency from app settings:', appSettings.currency);
+
+                const response = await fetch(`${API_BASE_URL}/accounting-codes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `Failed to create account: ${response.status}`);
+                }
+
+                const createdAccount = await response.json();
+                console.log('Created account:', createdAccount);
+
+                // Close modal and refresh
+                bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
+                form.reset();
+                await loadAccountingCodes();
+                
+                alert(`Account created successfully!\nCurrency: ${createdAccount.currency || (appSettings.currency && appSettings.currency.currency) || 'BWP'}`);
+                
+            } catch (error) {
+                console.error('Error creating account:', error);
+                alert(`Failed to create account: ${error.message}`);
+            }
+        }
+
+        async function editAccount(accountId) {
+            try {
+                const account = allAccounts.find(acc => acc.id === accountId);
+                if (!account) return;
+
+                // Populate edit form
+                document.getElementById('editAccountId').value = account.id;
+                document.getElementById('editAccountCode').value = account.code;
+                document.getElementById('editAccountName').value = account.name;
+                document.getElementById('editAccountType').value = account.account_type;
+                document.getElementById('editAccountCategory').value = account.category;
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editAccountModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error editing account:', error);
+                alert(`Failed to edit account: ${error.message}`);
+            }
+        }
+
+        async function updateAccount() {
+            try {
+                const form = document.getElementById('editAccountForm');
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                const accountId = data.id;
+                delete data.id; // Remove id from data
+
+                const response = await fetch(`${API_BASE_URL}/accounting-codes/${accountId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to update account: ${response.status}`);
+                }
+
+                // Close modal and refresh
+                bootstrap.Modal.getInstance(document.getElementById('editAccountModal')).hide();
+                await loadAccountingCodes();
+                
+                alert('Account updated successfully!');
+                
+            } catch (error) {
+                console.error('Error updating account:', error);
+                alert(`Failed to update account: ${error.message}`);
+            }
+        }
+
+        async function deleteAccount() {
+            const accountId = document.getElementById('editAccountId').value;
+            
+            if (!confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/accounting-codes/${accountId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `Failed to delete account: ${response.status}`);
+                }
+
+                // Close modal and refresh
+                bootstrap.Modal.getInstance(document.getElementById('editAccountModal')).hide();
+                await loadAccountingCodes();
+                
+                alert('Account deleted successfully!');
+                
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert(`Failed to delete account: ${error.message}`);
+            }
+        }
+
+        // Enhanced logout function for navbar
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored data
+                localStorage.removeItem('theme');
+                sessionStorage.clear();
+                
+                // Show logout notification
+                alert('Logging out...');
+                
+                // Redirect to home page
+                setTimeout(() => {
+                    window.location.href = '/static/index.html';
+                }, 1000);
+            }
+        }
+
+        // Initialize navbar functionality when page loads
+        function initializeNavbar() {
+            // Theme switcher functionality
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                
+                // Check for saved theme preference or default to light mode
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                document.body.setAttribute('data-theme', currentTheme);
+                updateThemeIcon(currentTheme);
+                
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.body.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    document.body.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateThemeIcon(newTheme);
+                    
+                    // Update app settings to reflect the theme change
+                    appSettings.theme_mode = newTheme;
+                    updateSettingsDisplay();
+                });
+                
+                function updateThemeIcon(theme) {
+                    if (theme === 'dark') {
+                        icon.className = 'bi bi-sun-fill';
+                        themeToggle.title = 'Switch to Light Mode';
+                    } else {
+                        icon.className = 'bi bi-moon-fill';
+                        themeToggle.title = 'Switch to Dark Mode';
+                    }
+                }
+            }
+
+            // Initialize Bootstrap dropdowns if not already initialized
+            if (typeof bootstrap !== 'undefined') {
+                const dropdownElementList = document.querySelectorAll('.dropdown-toggle');
+                dropdownElementList.forEach(dropdownToggleEl => {
+                    new bootstrap.Dropdown(dropdownToggleEl);
+                });
+            }
+        }
+
+        // Global variables for account details
+        let currentAccountId = null;
+        let accountTransactions = [];
+        let balanceChart = null;
+
+        // View account details function
+        async function viewAccountDetails(accountId) {
+            currentAccountId = accountId;
+            const account = allAccounts.find(acc => acc.id === accountId);
+            
+            if (!account) {
+                alert('Account not found');
+                return;
+            }
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('accountDetailsModal'));
+            modal.show();
+
+            // Populate account summary
+            populateAccountSummary(account);
+
+            // Load account transactions
+            await loadAccountTransactions(accountId);
+            
+            // Load sub-accounts if any
+            await loadSubAccounts(accountId);
+            
+            // Load related documents
+            await loadRelatedDocuments(accountId);
+        }
+
+        function populateAccountSummary(account) {
+            document.getElementById('detailAccountName').textContent = account.name;
+            document.getElementById('detailCode').textContent = account.code;
+            document.getElementById('detailType').textContent = account.account_type;
+            document.getElementById('detailCategory').textContent = account.category;
+            document.getElementById('detailCurrencyDisplay').textContent = account.currency || (appSettings.currency && appSettings.currency.currency) || 'BWP';
+            
+            document.getElementById('detailBalance').textContent = formatCurrency(account.balance || 0);
+            document.getElementById('detailDebits').textContent = formatCurrency(account.total_debits || 0);
+            document.getElementById('detailCredits').textContent = formatCurrency(account.total_credits || 0);
+            
+            document.getElementById('detailParent').textContent = account.parent ? 
+                `${account.parent.code} - ${account.parent.name}` : 'None (Top Level)';
+            document.getElementById('detailSubCount').textContent = account.sub_accounts ? account.sub_accounts.length : 0;
+            document.getElementById('detailReportingTag').textContent = account.reporting_tag || 'None';
+            
+            // Format dates
+            const created = account.created_at ? new Date(account.created_at).toLocaleDateString() : 'Unknown';
+            document.getElementById('detailCreated').textContent = created;
+        }
+
+        async function loadAccountTransactions(accountId) {
+            try {
+                document.getElementById('transactionsLoading').style.display = 'block';
+                document.getElementById('transactionsError').style.display = 'none';
+                document.getElementById('transactionsTable').style.display = 'none';
+
+                // Try to fetch journal entries for this account
+                const response = await fetch(`${API_BASE_URL}/accounting/journal?accounting_code_id=${accountId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load transactions: ${response.status}`);
+                }
+
+                const transactions = await response.json();
+                accountTransactions = Array.isArray(transactions) ? transactions : [];
+                
+                // Transform API response to frontend format
+                accountTransactions = accountTransactions.map(t => ({
+                    id: t.id,
+                    date: t.date,
+                    reference: t.reference || 'N/A',
+                    description: t.description || t.narration || 'No description',
+                    debit: t.debit_amount || 0,
+                    credit: t.credit_amount || 0,
+                    balance: t.running_balance || 0,
+                    source: 'Journal Entry',
+                    entry_type: t.entry_type,
+                    accounting_code_name: t.accounting_code_name,
+                    accounting_code_code: t.accounting_code_code,
+                    created_at: t.date
+                }));
+                
+                console.log('Loaded transactions:', accountTransactions.length);
+                
+                // Show success message for real data
+                if (accountTransactions.length > 0) {
+                    document.getElementById('transactionsError').style.display = 'block';
+                    document.getElementById('transactionsError').className = 'alert alert-success';
+                    document.getElementById('transactionsError').innerHTML = 
+                        `<i class="bi bi-check-circle me-2"></i><strong>Real Data:</strong> Loaded ${accountTransactions.length} journal entries from the database.`;
+                    
+                    setTimeout(() => {
+                        document.getElementById('transactionsError').style.display = 'none';
+                    }, 3000);
+                } else {
+                    document.getElementById('transactionsError').style.display = 'block';
+                    document.getElementById('transactionsError').className = 'alert alert-info';
+                    document.getElementById('transactionsError').innerHTML = 
+                        `<i class="bi bi-info-circle me-2"></i><strong>No Transactions:</strong> No journal entries found for this account yet.`;
+                }
+                
+                renderTransactions();
+                updateTransactionSummary();
+                
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactionsLoading').style.display = 'none';
+                
+                if (error.message.includes('404')) {
+                    // Show no data message
+                    document.getElementById('transactionsError').style.display = 'block';
+                    document.getElementById('transactionsError').className = 'alert alert-info';
+                    document.getElementById('transactionsError').innerHTML = 
+                        `<i class="bi bi-info-circle me-2"></i><strong>No Data:</strong> No journal entries found for this account. Journal entries will appear here once created through the system.`;
+                    
+                    showNoTransactions();
+                } else {
+                    // Show actual error
+                    document.getElementById('transactionsError').style.display = 'block';
+                    document.getElementById('transactionsError').className = 'alert alert-danger';
+                    document.getElementById('transactionsError').textContent = 
+                        `Error loading transactions: ${error.message}`;
+                }
+            }
+        }
+
+        function showNoTransactions() {
+            accountTransactions = [];
+            renderTransactions();
+            updateTransactionSummary();
+            
+            document.getElementById('transactionsLoading').style.display = 'none';
+            document.getElementById('transactionsTable').style.display = 'block';
+            
+            showMessage('No transactions found for this account.', 'info');
+        }
+
+
+
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionsTableBody');
+            tbody.innerHTML = '';
+            
+            accountTransactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(transaction.date)}</td>
+                    <td>${transaction.reference || '-'}</td>
+                    <td>${transaction.description || 'No description'}</td>
+                    <td class="text-success">${transaction.debit ? formatCurrency(transaction.debit) : '-'}</td>
+                    <td class="text-danger">${transaction.credit ? formatCurrency(transaction.credit) : '-'}</td>
+                    <td class="fw-bold">${formatCurrency(transaction.balance || 0)}</td>
+                    <td><span class="badge bg-secondary">${transaction.source || 'System'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info" onclick="viewTransactionDetails('${transaction.id}')" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('transactionsLoading').style.display = 'none';
+            document.getElementById('transactionsTable').style.display = 'block';
+        }
+
+        function updateTransactionSummary() {
+            const totalEntries = accountTransactions.length;
+            const totalDebits = accountTransactions.reduce((sum, t) => sum + (t.debit || 0), 0);
+            const totalCredits = accountTransactions.reduce((sum, t) => sum + (t.credit || 0), 0);
+            
+            document.getElementById('detailTransactionCount').textContent = totalEntries;
+            document.getElementById('totalEntries').textContent = totalEntries;
+            document.getElementById('totalDebitsSum').textContent = formatCurrency(totalDebits);
+            document.getElementById('totalCreditsSum').textContent = formatCurrency(totalCredits);
+            
+            // Update analysis tab
+            document.getElementById('analysisDebits').textContent = formatCurrency(totalDebits);
+            document.getElementById('analysisCredits').textContent = formatCurrency(totalCredits);
+            document.getElementById('analysisCurrentBalance').textContent = formatCurrency(totalDebits - totalCredits);
+            
+            // Last activity
+            if (accountTransactions.length > 0) {
+                const lastActivity = formatDate(accountTransactions[0].date);
+                document.getElementById('detailLastActivity').textContent = lastActivity;
+            } else {
+                document.getElementById('detailLastActivity').textContent = 'No activity';
+            }
+        }
+
+        async function loadSubAccounts(accountId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/accounting-codes/${accountId}/sub-accounts`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load sub-accounts: ${response.status}`);
+                }
+
+                const subAccounts = await response.json();
+                renderSubAccounts(subAccounts);
+                
+            } catch (error) {
+                console.error('Error loading sub-accounts:', error);
+                document.getElementById('subAccountsContent').innerHTML = 
+                    '<div class="text-muted">No sub-accounts found or error loading sub-accounts.</div>';
+            }
+        }
+
+        function renderSubAccounts(subAccounts) {
+            const container = document.getElementById('subAccountsContent');
+            
+            if (!subAccounts || subAccounts.length === 0) {
+                container.innerHTML = '<div class="text-muted">No sub-accounts found.</div>';
+                return;
+            }
+            
+            let html = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Balance</th><th>Actions</th></tr></thead><tbody>';
+            
+            subAccounts.forEach(sub => {
+                html += `
+                    <tr>
+                        <td>${sub.code}</td>
+                        <td>${sub.name}</td>
+                        <td>${sub.account_type}</td>
+                        <td>${formatCurrency(sub.balance || 0)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" onclick="viewAccountDetails('${sub.id}')" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        async function loadRelatedDocuments(accountId) {
+            // Show empty state for related documents
+            document.getElementById('relatedInvoices').innerHTML = '<div class="text-muted">No invoices found</div>';
+            document.getElementById('relatedPurchases').innerHTML = '<div class="text-muted">No purchases found</div>';
+            document.getElementById('relatedBankTransactions').innerHTML = '<div class="text-muted">No bank transactions found</div>';
+        }
+
+        function refreshTransactions() {
+            if (currentAccountId) {
+                loadAccountTransactions(currentAccountId);
+            }
+        }
+
+        function viewTransactionDetails(transactionId) {
+            const transaction = accountTransactions.find(t => t.id === transactionId);
+            if (transaction) {
+                alert(`Transaction Details:\n\nID: ${transaction.id}\nDate: ${transaction.date}\nReference: ${transaction.reference}\nDescription: ${transaction.description}\nDebit: ${formatCurrency(transaction.debit || 0)}\nCredit: ${formatCurrency(transaction.credit || 0)}`);
+            }
+        }
+
+        function exportAccountData() {
+            if (!currentAccountId) return;
+            
+            const account = allAccounts.find(acc => acc.id === currentAccountId);
+            const data = {
+                account: account,
+                transactions: accountTransactions,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `account-${account.code}-export.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function printAccountReport() {
+            if (!currentAccountId) return;
+            
+            const account = allAccounts.find(acc => acc.id === currentAccountId);
+            const printWindow = window.open('', '_blank');
+            
+            const html = `
+                <html>
+                <head>
+                    <title>Account Report - ${account.code}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                        .summary { background: #f5f5f5; padding: 15px; margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Account Report</h1>
+                        <h2>${account.code} - ${account.name}</h2>
+                        <p>Generated: ${new Date().toLocaleString()}</p>
+                    </div>
+                    
+                    <div class="summary">
+                        <h3>Account Summary</h3>
+                        <p><strong>Type:</strong> ${account.account_type}</p>
+                        <p><strong>Category:</strong> ${account.category}</p>
+                        <p><strong>Current Balance:</strong> ${formatCurrency(account.balance || 0)}</p>
+                        <p><strong>Total Debits:</strong> ${formatCurrency(account.total_debits || 0)}</p>
+                        <p><strong>Total Credits:</strong> ${formatCurrency(account.total_credits || 0)}</p>
+                    </div>
+                    
+                    <h3>Transaction History</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Reference</th>
+                                <th>Description</th>
+                                <th>Debit</th>
+                                <th>Credit</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${accountTransactions.map(t => `
+                                <tr>
+                                    <td>${formatDate(t.date)}</td>
+                                    <td>${t.reference || '-'}</td>
+                                    <td>${t.description || '-'}</td>
+                                    <td>${t.debit ? formatCurrency(t.debit) : '-'}</td>
+                                    <td>${t.credit ? formatCurrency(t.credit) : '-'}</td>
+                                    <td>${formatCurrency(t.balance || 0)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </body>
+    <script src="/static/js/navbar.js"></script>
+    <script src="/static/js/navbar-loader.js"></script>
+                </html>
+            `;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function addSubAccount() {
+            if (!currentAccountId) return;
+            
+            // Close current modal and open add account modal with parent pre-filled
+            bootstrap.Modal.getInstance(document.getElementById('accountDetailsModal')).hide();
+            
+            setTimeout(() => {
+                const addModal = new bootstrap.Modal(document.getElementById('addAccountModal'));
+                addModal.show();
+                
+                // Pre-fill parent account
+                document.querySelector('#addAccountModal select[name="parent_id"]').value = currentAccountId;
+            }, 300);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+
+
+        // Initialize navbar when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeNavbar();
+            loadAppSettings().then(() => {
+                loadAccountingCodes();
+            });
+        });
+    </script>
+    
+    <!-- Navbar Loader Script -->
+    <script src="js/navbar-loader.js"></script>
+</body>
+</html>

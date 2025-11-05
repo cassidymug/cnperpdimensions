@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COGS Reports - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .report-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .trend-up {
+            color: #28a745;
+        }
+
+        .trend-down {
+            color: #dc3545;
+        }
+
+        .trend-stable {
+            color: #6c757d;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+
+        .variance-analysis {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .profitability-card {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .cost-efficiency-card {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            border: none;
+        }
+
+        .advanced-filter {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border: none;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+        }
+    </style>
+    
+    
+
+</head>
+<body>
+    <!-- Include Standardized Navbar -->
+    <div id="navbar-container"></div>
+    <script src="js/navbar.js?v=20250106001"></script>
+    <div style="height: 70px;"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 fw-bold">
+                            <i class="bi bi-graph-up text-primary me-3"></i>
+                            COGS Analytics & Reports
+                        </h1>
+                        <p class="lead text-muted">Comprehensive cost analysis and business intelligence</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-info" onclick="refreshData()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                        <button class="btn export-btn" onclick="generateComprehensiveReport()">
+                            <i class="bi bi-file-earmark-text me-2"></i>Generate Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Performance Indicators -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-currency-dollar fs-1 mb-2"></i>
+                        <h5>Total COGS</h5>
+                        <h3 id="totalCogs">₦0.00</h3>
+                        <small class="opacity-75">Current Period</small>
+                        <div class="mt-2">
+                            <span id="totalCogsTrend" class="trend-stable">
+                                <i class="bi bi-dash"></i> --
+                            </span>
+                            <small class="opacity-75 ms-1">vs last period</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card variance-analysis">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle fs-1 mb-2"></i>
+                        <h5>Cost Variance</h5>
+                        <h3 id="costVariance">₦0.00</h3>
+                        <small class="opacity-75">Budget vs Actual</small>
+                        <div class="mt-2">
+                            <span id="costVarianceTrend" class="text-warning">
+                                <i class="bi bi-dash"></i> --
+                            </span>
+                            <small class="opacity-75 ms-1">vs budget</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card profitability-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-percent fs-1 mb-2"></i>
+                        <h5>Gross Margin</h5>
+                        <h3 id="grossMargin">0%</h3>
+                        <small class="opacity-75">Revenue - COGS</small>
+                        <div class="mt-2">
+                            <span id="grossMarginTrend" class="text-light opacity-75">
+                                <i class="bi bi-dash"></i> --
+                            </span>
+                            <small class="opacity-75 ms-1">vs target</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card cost-efficiency-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-speedometer2 fs-1 mb-2"></i>
+                        <h5>Cost Efficiency</h5>
+                        <h3 id="costEfficiency">0%</h3>
+                        <small class="opacity-75">Optimization Score</small>
+                        <div class="mt-2">
+                            <span id="costEfficiencyTrend" class="text-light opacity-75">
+                                <i class="bi bi-dash"></i> --
+                            </span>
+                            <small class="opacity-75 ms-1">period change</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Filters -->
+        <div class="card advanced-filter mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">
+                    <i class="bi bi-funnel me-2"></i>Report Filters & Parameters
+                    <button class="btn btn-sm btn-outline-primary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </h5>
+            </div>
+            <div class="collapse show" id="filtersCollapse">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" id="dateRange">
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Cost Center</label>
+                            <select class="form-select" id="costCenterFilter">
+                                <option value="">All Centers</option>
+                                <option value="production">Production</option>
+                                <option value="warehouse">Warehouse</option>
+                                <option value="retail">Retail</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Product Category</label>
+                            <select class="form-select" id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="manufactured">Manufactured</option>
+                                <option value="retail">Retail</option>
+                                <option value="service">Service</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Analysis Type</label>
+                            <select class="form-select" id="analysisType">
+                                <option value="summary" selected>Summary</option>
+                                <option value="detailed">Detailed</option>
+                                <option value="variance">Variance</option>
+                                <option value="trend">Trend Analysis</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Comparison</label>
+                            <select class="form-select" id="comparisonType">
+                                <option value="none">No Comparison</option>
+                                <option value="previous">Previous Period</option>
+                                <option value="budget">Budget</option>
+                                <option value="yoy">Year over Year</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="applyFilters()">
+                                <i class="bi bi-search"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card report-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>Cost Trends & Variance Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="costTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card report-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pie-chart me-2"></i>Cost Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="costDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profitability Analysis -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card report-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bar-chart me-2"></i>Product Profitability
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="profitabilityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card report-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-speedometer2 me-2"></i>Cost Efficiency Metrics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="kpi-card p-3 mb-3">
+                                    <h4 id="materialEfficiencyMetric" class="text-primary">--</h4>
+                                    <small class="text-muted">Material Efficiency</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="kpi-card p-3 mb-3">
+                                    <h4 id="laborEfficiencyMetric" class="text-success">--</h4>
+                                    <small class="text-muted">Labor Efficiency</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="kpi-card p-3 mb-3">
+                                    <h4 id="overheadEfficiencyMetric" class="text-warning">--</h4>
+                                    <small class="text-muted">Overhead Efficiency</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Insights will appear once cost efficiency data is available.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Cost Analysis Table -->
+        <div class="card report-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table me-2"></i>Detailed Cost Analysis
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="exportToPDF()">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="scheduleReport()">
+                            <i class="bi bi-calendar-event"></i> Schedule
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Units Sold</th>
+                                <th>Standard Cost</th>
+                                <th>Actual Cost</th>
+                                <th>Variance</th>
+                                <th>Variance %</th>
+                                <th>Efficiency</th>
+                                <th>Profitability</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailedAnalysisBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details Modal -->
+    <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-labelledby="productDetailsTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productDetailsTitle">Product Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="productDetailsMeta" class="mb-3 text-muted small"></div>
+                    <div id="productDetailsBody"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- API Configuration -->
+    <script src="js/api-config.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <script src="js/branch-switcher.js"></script>
+    <script>
+        // Enhanced COGS Reports Application
+        class COGSReportsApp {
+            constructor() {
+                this.data = [];
+                this.trendData = [];
+                this.summary = null;
+                this.charts = {};
+                this.apiBaseUrl = API_CONFIG.BASE_URL;
+                this.currency = {
+                    code: 'NGN',
+                    symbol: '₦',
+                    locale: 'en-NG',
+                    decimalPlaces: 2,
+                    timezone: 'Africa/Lagos'
+                };
+                this.currencyFormatter = null;
+                this.numberFormatter = null;
+                this.settings = null;
+                this.companyName = null;
+                this.initializeFormatters();
+                this.init();
+            }
+
+            async init() {
+                try {
+                    console.log('🚀 Initializing COGS Reports App...');
+                    
+                    // Initialize navbar
+                    this.initializeNavbar();
+                    
+                    // Load application settings for currency/locale context
+                    await this.loadAppSettings();
+
+                    // Load data and initialize charts
+                    await this.loadReportData();
+                    this.initializeCharts();
+                    this.populateDetailedTable();
+                    this.updateKPIs();
+                    
+                    console.log('✅ COGS Reports App initialized successfully');
+                } catch (error) {
+                    console.error('❌ Failed to initialize app:', error);
+                }
+            }
+
+            initializeNavbar() {
+                if (typeof createNavbar === 'function') {
+                    createNavbar('cogs-reports');
+                } else {
+                    console.error('createNavbar function not found');
+                }
+            }
+
+            asNumber(value) {
+                if (value === null || value === undefined || value === '') {
+                    return null;
+                }
+                const parsed = Number(value);
+                return Number.isFinite(parsed) ? parsed : null;
+            }
+
+            averageNumeric(values) {
+                const finiteValues = values.filter(value => Number.isFinite(value));
+                if (!finiteValues.length) {
+                    return null;
+                }
+                const total = finiteValues.reduce((sum, value) => sum + value, 0);
+                return total / finiteValues.length;
+            }
+
+            setTrendIndicator(elementId, value) {
+                const el = document.getElementById(elementId);
+                if (!el) {
+                    return;
+                }
+
+                el.classList.remove('trend-up', 'trend-down', 'trend-stable');
+
+                if (!Number.isFinite(value)) {
+                    el.classList.add('trend-stable');
+                    el.innerHTML = '<i class="bi bi-dash"></i> --';
+                    return;
+                }
+
+                const directionClass = value > 0 ? 'trend-up' : value < 0 ? 'trend-down' : 'trend-stable';
+                const icon = value > 0 ? 'bi-arrow-up' : value < 0 ? 'bi-arrow-down' : 'bi-dash';
+                const formatted = `${value > 0 ? '+' : value < 0 ? '' : ''}${value.toFixed(1)}%`;
+
+                el.classList.add(directionClass);
+                el.innerHTML = `<i class="bi ${icon}"></i> ${formatted}`;
+            }
+
+            computePercentChange(series, accessor) {
+                if (!Array.isArray(series) || series.length < 2) {
+                    return null;
+                }
+
+                const latest = this.asNumber(accessor(series[series.length - 1]));
+                if (!Number.isFinite(latest)) {
+                    return null;
+                }
+
+                for (let index = series.length - 2; index >= 0; index--) {
+                    const previous = this.asNumber(accessor(series[index]));
+                    if (Number.isFinite(previous) && previous !== 0) {
+                        return ((latest - previous) / Math.abs(previous)) * 100;
+                    }
+                }
+
+                return null;
+            }
+
+            normalizeLocale(locale) {
+                if (!locale || typeof locale !== 'string') {
+                    return 'en-US';
+                }
+                return locale.replace(/_/g, '-');
+            }
+
+            deriveCurrencySymbol(code) {
+                if (!code || typeof code !== 'string') {
+                    return '';
+                }
+                const map = {
+                    BWP: 'P',
+                    USD: '$',
+                    EUR: '€',
+                    GBP: '£',
+                    ZAR: 'R',
+                    NAD: 'N$',
+                    ZMW: 'K',
+                    ZWL: 'Z$',
+                    MWK: 'MK',
+                    TZS: 'TSh',
+                    KES: 'KSh',
+                    NGN: '₦',
+                    GHS: '₵',
+                    CAD: '$',
+                    AUD: '$'
+                };
+                const normalized = code.toUpperCase();
+                return map[normalized] || normalized;
+            }
+
+            initializeFormatters() {
+                const locale = this.normalizeLocale(this.currency.locale || 'en-US');
+                const code = (this.currency.code || 'USD').toUpperCase();
+                const decimals = Number.isInteger(this.currency.decimalPlaces) ? this.currency.decimalPlaces : 2;
+
+                try {
+                    this.currencyFormatter = new Intl.NumberFormat(locale, {
+                        style: 'currency',
+                        currency: code,
+                        minimumFractionDigits: decimals,
+                        maximumFractionDigits: decimals
+                    });
+                } catch (error) {
+                    console.warn('Falling back to default currency formatter', error);
+                    this.currencyFormatter = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        minimumFractionDigits: decimals,
+                        maximumFractionDigits: decimals
+                    });
+                }
+
+                try {
+                    this.numberFormatter = new Intl.NumberFormat(locale, {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2
+                    });
+                } catch (error) {
+                    console.warn('Falling back to default number formatter', error);
+                    this.numberFormatter = new Intl.NumberFormat('en-US', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2
+                    });
+                }
+
+                if (!this.currency.symbol) {
+                    const formattedZero = this.currencyFormatter.format(0);
+                    const inferredSymbol = formattedZero.replace(/[-0-9.,\s\u00A0]/g, '').trim();
+                    this.currency.symbol = inferredSymbol || this.deriveCurrencySymbol(code);
+                }
+
+                this.updateSummaryPlaceholders();
+            }
+
+            applySettingsToDocument() {
+                if (this.companyName) {
+                    document.title = `${this.companyName} - COGS Analytics`;
+                }
+                this.updateSummaryPlaceholders();
+            }
+
+            updateSummaryPlaceholders() {
+                const summaryDefaults = [
+                    'totalCogs',
+                    'costVariance',
+                    'totalFloatValue',
+                    'totalExpectedValue',
+                    'totalCashCollectedValue',
+                    'totalVarianceValue'
+                ];
+
+                summaryDefaults.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = '--';
+                    }
+                });
+            }
+
+            async loadAppSettings() {
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/app-settings/`, {
+                        headers: window.auth?.authHeader?.() || {}
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to load application settings (${response.status})`);
+                    }
+
+                    const payload = await response.json().catch(() => null);
+                    this.settings = payload?.data || payload || null;
+                    if (!this.settings) {
+                        return;
+                    }
+
+                    const currencySettings = this.settings.currency || this.settings.currency_settings || {};
+                    const generalSettings = this.settings.general || {};
+                    const businessSettings = this.settings.business || {};
+
+                    const candidateLocale = currencySettings.locale || generalSettings.locale || this.currency.locale;
+                    const candidateCode = (currencySettings.currency_code || currencySettings.currency || this.currency.code || 'USD').toUpperCase();
+                    const candidateSymbol = currencySettings.currency_symbol || this.deriveCurrencySymbol(candidateCode);
+                    const candidateTimezone = currencySettings.timezone || generalSettings.timezone || this.currency.timezone;
+                    const candidateDecimals = Number.isInteger(currencySettings.decimal_places)
+                        ? currencySettings.decimal_places
+                        : Number.isInteger(generalSettings.decimal_places)
+                            ? generalSettings.decimal_places
+                            : this.currency.decimalPlaces;
+
+                    this.currency = {
+                        code: candidateCode,
+                        symbol: candidateSymbol,
+                        locale: this.normalizeLocale(candidateLocale),
+                        decimalPlaces: candidateDecimals,
+                        timezone: candidateTimezone || undefined
+                    };
+
+                    this.companyName = businessSettings.company_name
+                        || generalSettings.company_name
+                        || generalSettings.app_name
+                        || this.companyName;
+
+                    this.initializeFormatters();
+                    this.applySettingsToDocument();
+                } catch (error) {
+                    console.warn('Unable to load application settings, using defaults.', error);
+                    this.applySettingsToDocument();
+                }
+            }
+
+            applyCurrencyContextFromPayload(payload) {
+                if (!payload || typeof payload !== 'object') {
+                    return;
+                }
+
+                let changed = false;
+
+                if (payload.currency_symbol && payload.currency_symbol !== this.currency.symbol) {
+                    this.currency.symbol = payload.currency_symbol;
+                    changed = true;
+                }
+
+                const candidateCode = payload.currency_code || payload.currency;
+                if (candidateCode && candidateCode !== this.currency.code) {
+                    this.currency.code = String(candidateCode).toUpperCase();
+                    changed = true;
+                }
+
+                if (payload.locale) {
+                    const normalizedLocale = this.normalizeLocale(payload.locale);
+                    if (normalizedLocale !== this.currency.locale) {
+                        this.currency.locale = normalizedLocale;
+                        changed = true;
+                    }
+                }
+
+                if (payload.timezone && payload.timezone !== this.currency.timezone) {
+                    this.currency.timezone = payload.timezone;
+                    changed = true;
+                }
+
+                if (typeof payload.decimal_places === 'number' && payload.decimal_places !== this.currency.decimalPlaces) {
+                    this.currency.decimalPlaces = payload.decimal_places;
+                    changed = true;
+                }
+
+                if (changed) {
+                    if (!this.currency.symbol) {
+                        this.currency.symbol = this.deriveCurrencySymbol(this.currency.code);
+                    }
+                    this.initializeFormatters();
+                }
+            }
+
+            async loadReportData() {
+                try {
+                    // Get current date range from filters
+                    const dateRange = document.getElementById('dateRange').value;
+                    let startDate;
+                    let endDate;
+
+                    const now = new Date();
+                    switch (dateRange) {
+                        case 'today':
+                            startDate = endDate = now.toISOString().split('T')[0];
+                            break;
+                        case 'week':
+                            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                            endDate = now.toISOString().split('T')[0];
+                            break;
+                        case 'month':
+                            startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                            endDate = now.toISOString().split('T')[0];
+                            break;
+                        case 'quarter': {
+                            const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+                            startDate = quarterStart.toISOString().split('T')[0];
+                            endDate = now.toISOString().split('T')[0];
+                            break;
+                        }
+                        case 'year':
+                            startDate = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
+                            endDate = now.toISOString().split('T')[0];
+                            break;
+                        default:
+                            startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                            endDate = now.toISOString().split('T')[0];
+                    }
+
+                    // Call COGS trend analysis API for comprehensive data
+                    const trendResponse = await fetch(`${this.apiBaseUrl}/reports/cogs/trend-analysis?start_date=${startDate}&end_date=${endDate}&period_type=monthly`);
+                    if (!trendResponse.ok) {
+                        throw new Error(`Trend analysis API call failed: ${trendResponse.status}`);
+                    }
+
+                    const trendPayload = await trendResponse.json().catch(() => null);
+                    if (trendPayload) {
+                        this.applyCurrencyContextFromPayload(trendPayload?.meta || trendPayload?.data || trendPayload);
+                    }
+
+                    const trendItems = Array.isArray(trendPayload?.data)
+                        ? trendPayload.data
+                        : Array.isArray(trendPayload)
+                            ? trendPayload
+                            : [];
+                    this.trendData = trendItems
+                        .filter(item => item)
+                        .map(item => {
+                            const totalCogs = this.asNumber(item?.total_cogs ?? item?.actual_cost ?? item?.cost);
+                            return {
+                                ...item,
+                                total_cogs: totalCogs,
+                                actual_cost: this.asNumber(item?.actual_cost ?? item?.cost ?? totalCogs),
+                                cost: this.asNumber(item?.cost ?? item?.actual_cost ?? totalCogs),
+                                period: item?.period || item?.period_label || item?.month || item?.date || '',
+                                period_label: item?.period_label || item?.period || item?.month || item?.date || ''
+                            };
+                        });
+                    this.summary = trendPayload?.data?.summary || trendPayload?.summary || this.summary;
+
+                    // Call monthly COGS report for current period
+                    const currentDate = new Date();
+                    const monthlyResponse = await fetch(`${this.apiBaseUrl}/reports/cogs/monthly?year=${currentDate.getFullYear()}&month=${currentDate.getMonth() + 1}`);
+                    const monthlyPayload = monthlyResponse.ok ? await monthlyResponse.json().catch(() => null) : null;
+                    if (monthlyPayload) {
+                        this.applyCurrencyContextFromPayload(monthlyPayload?.meta || monthlyPayload?.data || monthlyPayload);
+                        this.summary = monthlyPayload?.data?.summary || monthlyPayload?.summary || this.summary;
+                    }
+
+                    // Transform API data to match expected format
+                    this.data = this.transformApiData(this.trendData, monthlyPayload);
+                } catch (error) {
+                    console.error('Error loading report data from API:', error);
+                    this.trendData = [];
+                    this.data = [];
+                    this.summary = null;
+                }
+            }
+
+            transformApiData(trendData, monthlyPayload) {
+                const products = [];
+                const sourceProducts = monthlyPayload?.data?.products
+                    || monthlyPayload?.products
+                    || [];
+                const summary = monthlyPayload?.data?.summary || monthlyPayload?.summary || this.summary;
+
+                if (Array.isArray(sourceProducts)) {
+                    sourceProducts.forEach((product, index) => {
+                        const standardCost = this.asNumber(product.standard_cost ?? product.standardCost ?? product.cost_standard ?? product.cost);
+                        const actualCost = this.asNumber(product.actual_cost ?? product.actualCost ?? product.cost_actual ?? product.cost);
+                        const units = this.asNumber(product.units_sold ?? product.unitsSold ?? product.quantity ?? product.units);
+                        const variance = Number.isFinite(actualCost) && Number.isFinite(standardCost)
+                            ? actualCost - standardCost
+                            : null;
+                        const variancePercent = Number.isFinite(variance) && Number.isFinite(standardCost) && standardCost !== 0
+                            ? (variance / standardCost) * 100
+                            : null;
+                        const profitability = this.asNumber(product.profitability ?? product.gross_margin ?? product.margin);
+                        const efficiency = this.asNumber(product.efficiency ?? product.cost_efficiency ?? product.costEfficiency);
+                        const materialEfficiency = this.asNumber(product.material_efficiency ?? product.materialEfficiency);
+                        const laborEfficiency = this.asNumber(product.labor_efficiency ?? product.laborEfficiency);
+                        const overheadEfficiency = this.asNumber(product.overhead_efficiency ?? product.overheadEfficiency);
+                        const materialCost = this.asNumber(product.material_cost ?? product.materialCost);
+                        const laborCost = this.asNumber(product.labor_cost ?? product.laborCost);
+                        const overheadCost = this.asNumber(product.overhead_cost ?? product.overheadCost);
+
+                        products.push({
+                            id: product.id ?? product.product_id ?? `product-${index + 1}`,
+                            name: product.name ?? product.product_name ?? `Product ${index + 1}`,
+                            category: product.category ?? product.product_category ?? 'Uncategorized',
+                            units: Number.isFinite(units) ? units : null,
+                            standardCost: Number.isFinite(standardCost) ? standardCost : null,
+                            actualCost: Number.isFinite(actualCost) ? actualCost : null,
+                            variance: Number.isFinite(variance) ? variance : null,
+                            variancePercent: Number.isFinite(variancePercent) ? variancePercent : null,
+                            efficiency: Number.isFinite(efficiency) ? efficiency : null,
+                            profitability: Number.isFinite(profitability) ? profitability : null,
+                            materialEfficiency: Number.isFinite(materialEfficiency) ? materialEfficiency : null,
+                            laborEfficiency: Number.isFinite(laborEfficiency) ? laborEfficiency : null,
+                            overheadEfficiency: Number.isFinite(overheadEfficiency) ? overheadEfficiency : null,
+                            materialCost: Number.isFinite(materialCost) ? materialCost : null,
+                            laborCost: Number.isFinite(laborCost) ? laborCost : null,
+                            overheadCost: Number.isFinite(overheadCost) ? overheadCost : null,
+                            notes: product.notes ?? null,
+                            recommendations: product.recommendations ?? null
+                        });
+                    });
+                }
+
+                if (!products.length && summary) {
+                    const ledgerTotal = this.asNumber(summary.total_cogs ?? summary.direct_cogs ?? summary.journal_cogs);
+                    if (Number.isFinite(ledgerTotal) && ledgerTotal !== 0) {
+                        products.push({
+                            id: 'ledger-cogs',
+                            name: 'Ledger COGS Adjustments',
+                            category: 'Summary',
+                            units: null,
+                            standardCost: null,
+                            actualCost: ledgerTotal,
+                            variance: null,
+                            variancePercent: null,
+                            efficiency: null,
+                            profitability: null,
+                            materialEfficiency: null,
+                            laborEfficiency: null,
+                            overheadEfficiency: null,
+                            materialCost: ledgerTotal,
+                            laborCost: 0,
+                            overheadCost: 0,
+                            notes: 'Aggregated from cost-of-goods journal entries',
+                            recommendations: null
+                        });
+                    }
+                }
+
+                return products;
+            }
+
+            initializeCharts() {
+                this.initializeCostTrendsChart();
+                this.initializeCostDistributionChart();
+                this.initializeProfitabilityChart();
+            }
+
+            initializeCostTrendsChart() {
+                const ctx = document.getElementById('costTrendsChart').getContext('2d');
+                const formatCurrency = this.formatCurrency.bind(this);
+
+                const labels = [];
+                const standardData = [];
+                const actualData = [];
+                const budgetData = [];
+
+                if (Array.isArray(this.trendData) && this.trendData.length > 0) {
+                    this.trendData.forEach(item => {
+                        labels.push(item?.period_label || item?.period || item?.month || item?.date || '');
+                        const standardValue = this.asNumber(item?.standard_cost ?? item?.budget_cost ?? item?.budget ?? item?.target);
+                        const actualValue = this.asNumber(item?.actual_cost ?? item?.cost ?? item?.total_cogs);
+                        const budgetValue = this.asNumber(item?.budget_cost ?? item?.target);
+
+                        standardData.push(Number.isFinite(standardValue) ? standardValue : null);
+                        actualData.push(Number.isFinite(actualValue) ? actualValue : null);
+                        budgetData.push(Number.isFinite(budgetValue) ? budgetValue : null);
+                    });
+                }
+                
+                this.charts.costTrends = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Standard Cost',
+                            data: standardData,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        }, {
+                            label: 'Actual Cost',
+                            data: actualData,
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        }, {
+                            label: 'Budget',
+                            data: budgetData,
+                            borderColor: '#ffc107',
+                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            borderDash: [5, 5]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (context.parsed.y == null || !Number.isFinite(context.parsed.y)) {
+                                            return `${context.dataset.label}: --`;
+                                        }
+                                        return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        if (!Number.isFinite(value)) {
+                                            return '--';
+                                        }
+                                        return formatCurrency(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            initializeCostDistributionChart() {
+                const ctx = document.getElementById('costDistributionChart').getContext('2d');
+                const formatCurrency = this.formatCurrency.bind(this);
+                
+                const totalMaterial = this.data.reduce((sum, item) => sum + (Number.isFinite(item.materialCost) ? item.materialCost : 0), 0);
+                const totalLabor = this.data.reduce((sum, item) => sum + (Number.isFinite(item.laborCost) ? item.laborCost : 0), 0);
+                const totalOverhead = this.data.reduce((sum, item) => sum + (Number.isFinite(item.overheadCost) ? item.overheadCost : 0), 0);
+                const aggregateTotal = totalMaterial + totalLabor + totalOverhead;
+                
+                this.charts.costDistribution = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Material Costs', 'Labor Costs', 'Overhead Costs'],
+                        datasets: [{
+                            data: [totalMaterial, totalLabor, totalOverhead],
+                            backgroundColor: [
+                                '#0d6efd',
+                                '#198754',
+                                '#ffc107'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (!Number.isFinite(context.parsed) || aggregateTotal <= 0) {
+                                            return `${context.label}: --`;
+                                        }
+                                        const percentage = ((context.parsed / aggregateTotal) * 100).toFixed(1);
+                                        return `${context.label}: ${formatCurrency(context.parsed)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            initializeProfitabilityChart() {
+                const ctx = document.getElementById('profitabilityChart').getContext('2d');
+                
+                const labels = this.data.map(item => item.name || '');
+                const profitabilityData = this.data.map(item => Number.isFinite(item.profitability) ? Number(item.profitability) : null);
+                const efficiencyData = this.data.map(item => Number.isFinite(item.efficiency) ? Number(item.efficiency) : null);
+                
+                this.charts.profitability = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Profitability (%)',
+                            data: profitabilityData,
+                            backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                            borderColor: '#198754',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Cost Efficiency (%)',
+                            data: efficiencyData,
+                            backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                            borderColor: '#0d6efd',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateKPIs() {
+                const totalCogsEl = document.getElementById('totalCogs');
+                const costVarianceEl = document.getElementById('costVariance');
+                const grossMarginEl = document.getElementById('grossMargin');
+                const costEfficiencyEl = document.getElementById('costEfficiency');
+                const materialEfficiencyEl = document.getElementById('materialEfficiencyMetric');
+                const laborEfficiencyEl = document.getElementById('laborEfficiencyMetric');
+                const overheadEfficiencyEl = document.getElementById('overheadEfficiencyMetric');
+
+                if (!totalCogsEl || !costVarianceEl || !grossMarginEl || !costEfficiencyEl) {
+                    return;
+                }
+
+                const trendSeries = Array.isArray(this.trendData) ? this.trendData : [];
+                const productSeries = Array.isArray(this.data) ? this.data : [];
+
+                let totalCogsValue = null;
+                let totalBudgetValue = null;
+
+                if (trendSeries.length) {
+                    let cogsContributors = 0;
+                    let budgetContributors = 0;
+
+                    totalCogsValue = trendSeries.reduce((sum, item) => {
+                        const value = this.asNumber(item?.actual_cost ?? item?.cost ?? item?.total_cogs);
+                        if (Number.isFinite(value)) {
+                            cogsContributors += 1;
+                            return sum + value;
+                        }
+                        return sum;
+                    }, 0);
+                    if (!cogsContributors) {
+                        totalCogsValue = null;
+                    }
+
+                    totalBudgetValue = trendSeries.reduce((sum, item) => {
+                        const value = this.asNumber(item?.budget_cost ?? item?.target);
+                        if (Number.isFinite(value)) {
+                            budgetContributors += 1;
+                            return sum + value;
+                        }
+                        return sum;
+                    }, 0);
+                    if (!budgetContributors) {
+                        totalBudgetValue = null;
+                    }
+                }
+
+                if (!Number.isFinite(totalCogsValue) && productSeries.length) {
+                    let cogsContributors = 0;
+                    totalCogsValue = productSeries.reduce((sum, item) => {
+                        if (Number.isFinite(item.actualCost) && Number.isFinite(item.units)) {
+                            cogsContributors += 1;
+                            return sum + (item.actualCost * item.units);
+                        }
+                        return sum;
+                    }, 0);
+                    if (!cogsContributors) {
+                        totalCogsValue = null;
+                    }
+                }
+
+                if (!Number.isFinite(totalCogsValue) && this.summary) {
+                    const summaryValue = this.asNumber(this.summary.total_cogs ?? this.summary.direct_cogs ?? this.summary.journal_cogs);
+                    if (Number.isFinite(summaryValue)) {
+                        totalCogsValue = summaryValue;
+                    }
+                }
+
+                const costVarianceValue = Number.isFinite(totalCogsValue) && Number.isFinite(totalBudgetValue)
+                    ? totalCogsValue - totalBudgetValue
+                    : null;
+
+                const profitabilityAverage = this.averageNumeric(productSeries.map(item => Number.isFinite(item.profitability) ? item.profitability : null));
+                const efficiencyAverage = this.averageNumeric(productSeries.map(item => Number.isFinite(item.efficiency) ? item.efficiency : null));
+
+                totalCogsEl.textContent = Number.isFinite(totalCogsValue) ? this.formatCurrency(totalCogsValue) : '--';
+                costVarianceEl.textContent = Number.isFinite(costVarianceValue) ? this.formatCurrency(Math.abs(costVarianceValue)) : '--';
+                grossMarginEl.textContent = Number.isFinite(profitabilityAverage) ? `${profitabilityAverage.toFixed(1)}%` : '--';
+                costEfficiencyEl.textContent = Number.isFinite(efficiencyAverage) ? `${efficiencyAverage.toFixed(0)}%` : '--';
+
+                const materialEfficiency = this.averageNumeric(productSeries.map(item => Number.isFinite(item.materialEfficiency) ? item.materialEfficiency : null));
+                const laborEfficiency = this.averageNumeric(productSeries.map(item => Number.isFinite(item.laborEfficiency) ? item.laborEfficiency : null));
+                const overheadEfficiency = this.averageNumeric(productSeries.map(item => Number.isFinite(item.overheadEfficiency) ? item.overheadEfficiency : null));
+
+                if (materialEfficiencyEl) {
+                    materialEfficiencyEl.textContent = Number.isFinite(materialEfficiency) ? `${materialEfficiency.toFixed(0)}%` : '--';
+                }
+                if (laborEfficiencyEl) {
+                    laborEfficiencyEl.textContent = Number.isFinite(laborEfficiency) ? `${laborEfficiency.toFixed(0)}%` : '--';
+                }
+                if (overheadEfficiencyEl) {
+                    overheadEfficiencyEl.textContent = Number.isFinite(overheadEfficiency) ? `${overheadEfficiency.toFixed(0)}%` : '--';
+                }
+
+                const totalCogsChange = this.computePercentChange(trendSeries, item => item?.actual_cost ?? item?.cost ?? item?.total_cogs);
+                const costVarianceChange = this.computePercentChange(trendSeries, item => {
+                    const actual = this.asNumber(item?.actual_cost ?? item?.cost ?? item?.total_cogs);
+                    const budget = this.asNumber(item?.budget_cost ?? item?.target);
+                    if (!Number.isFinite(actual) || !Number.isFinite(budget)) {
+                        return null;
+                    }
+                    return actual - budget;
+                });
+
+                this.setTrendIndicator('totalCogsTrend', totalCogsChange);
+                this.setTrendIndicator('costVarianceTrend', costVarianceChange);
+                this.setTrendIndicator('grossMarginTrend', null);
+                this.setTrendIndicator('costEfficiencyTrend', null);
+            }
+
+            populateDetailedTable() {
+                const tbody = document.getElementById('detailedAnalysisBody');
+                tbody.innerHTML = '';
+                
+                if (!Array.isArray(this.data) || this.data.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `
+                        <td colspan="10" class="text-center text-muted py-4">
+                            No report data available for the selected filters.
+                        </td>
+                    `;
+                    tbody.appendChild(emptyRow);
+                    return;
+                }
+
+                this.data.forEach(item => {
+                    const row = document.createElement('tr');
+
+                    const varianceValue = Number.isFinite(item.variance) ? item.variance : null;
+                    const varianceClass = Number.isFinite(varianceValue)
+                        ? (varianceValue > 0 ? 'text-danger' : varianceValue < 0 ? 'text-success' : 'text-muted')
+                        : 'text-muted';
+                    const varianceIcon = Number.isFinite(varianceValue)
+                        ? (varianceValue > 0 ? 'bi-arrow-up' : varianceValue < 0 ? 'bi-arrow-down' : 'bi-dash')
+                        : 'bi-dash';
+                    const efficiencyValue = Number.isFinite(item.efficiency) ? item.efficiency : null;
+                    const profitabilityValue = Number.isFinite(item.profitability) ? item.profitability : null;
+
+                    const efficiencyClass = Number.isFinite(efficiencyValue)
+                        ? efficiencyValue >= 90 ? 'text-success' : efficiencyValue >= 70 ? 'text-warning' : 'text-danger'
+                        : 'text-muted';
+                    const profitabilityClass = Number.isFinite(profitabilityValue)
+                        ? profitabilityValue >= 80 ? 'text-success' : profitabilityValue >= 60 ? 'text-warning' : 'text-danger'
+                        : 'text-muted';
+
+                    const formattedUnits = Number.isFinite(item.units) ? this.formatNumber(item.units, { maximumFractionDigits: 0 }) : '--';
+                    const formattedStandardCost = Number.isFinite(item.standardCost) ? this.formatCurrency(item.standardCost) : '--';
+                    const formattedActualCost = Number.isFinite(item.actualCost) ? this.formatCurrency(item.actualCost) : '--';
+                    const formattedVariance = Number.isFinite(varianceValue) ? this.formatCurrency(Math.abs(varianceValue)) : '--';
+                    const variancePercent = Number.isFinite(item.variancePercent) ? `${item.variancePercent.toFixed(1)}%` : '--';
+                    const efficiencyDisplay = Number.isFinite(efficiencyValue) ? `${efficiencyValue.toFixed(0)}%` : '--';
+                    const profitabilityDisplay = Number.isFinite(profitabilityValue) ? `${profitabilityValue.toFixed(1)}%` : '--';
+
+                    row.innerHTML = `
+                        <td><strong>${item.name || 'Unnamed Product'}</strong></td>
+                        <td><span class="badge bg-secondary">${item.category || 'Uncategorized'}</span></td>
+                        <td>${formattedUnits}</td>
+                        <td>${formattedStandardCost}</td>
+                        <td>${formattedActualCost}</td>
+                        <td class="${varianceClass}">
+                            <i class="bi ${varianceIcon}"></i>
+                            ${formattedVariance}
+                        </td>
+                        <td class="${varianceClass}">${variancePercent}</td>
+                        <td class="${efficiencyClass}">
+                            <strong>${efficiencyDisplay}</strong>
+                        </td>
+                        <td class="${profitabilityClass}">
+                            <strong>${profitabilityDisplay}</strong>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="reportsApp.drillDown('${item.id}')" title="Drill Down">
+                                    <i class="bi bi-zoom-in"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="reportsApp.viewDetails('${item.id}')" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Utility methods
+            formatCurrency(amount, options = {}) {
+                if (amount === null || amount === undefined || amount === '') {
+                    return '--';
+                }
+
+                const value = Number(amount);
+                if (!Number.isFinite(value)) {
+                    return '--';
+                }
+                const decimals = Number.isInteger(options.minimumFractionDigits)
+                    ? options.minimumFractionDigits
+                    : Number.isInteger(this.currency.decimalPlaces)
+                        ? this.currency.decimalPlaces
+                        : 2;
+
+                try {
+                    if (!this.currencyFormatter) {
+                        this.initializeFormatters();
+                    }
+
+                    if (options.minimumFractionDigits !== undefined || options.maximumFractionDigits !== undefined) {
+                        const locale = this.normalizeLocale(this.currency.locale || 'en-US');
+                        const code = (this.currency.code || 'USD').toUpperCase();
+                        return new Intl.NumberFormat(locale, {
+                            style: 'currency',
+                            currency: code,
+                            minimumFractionDigits: options.minimumFractionDigits ?? decimals,
+                            maximumFractionDigits: options.maximumFractionDigits ?? options.minimumFractionDigits ?? decimals
+                        }).format(value);
+                    }
+
+                    return this.currencyFormatter.format(value);
+                } catch (error) {
+                    const symbol = this.currency.symbol || this.deriveCurrencySymbol(this.currency.code);
+                    return `${symbol}${value.toFixed(options.maximumFractionDigits ?? decimals)}`;
+                }
+            }
+
+            formatNumber(value, options = {}) {
+                if (value === null || value === undefined || value === '') {
+                    return '--';
+                }
+
+                const number = Number(value);
+                if (!Number.isFinite(number)) {
+                    return '--';
+                }
+                const locale = this.normalizeLocale(this.currency.locale || 'en-US');
+                try {
+                    return new Intl.NumberFormat(locale, options).format(number);
+                } catch (error) {
+                    return number.toLocaleString('en-US', options);
+                }
+            }
+
+            formatDateTime(value) {
+                if (!value) return '-';
+                try {
+                    const date = new Date(value);
+                    if (Number.isNaN(date.getTime())) {
+                        return value;
+                    }
+                    const options = {
+                        dateStyle: 'medium',
+                        timeStyle: 'short'
+                    };
+                    if (this.currency.timezone) {
+                        options.timeZone = this.currency.timezone;
+                    }
+                    const locale = this.normalizeLocale(this.currency.locale || 'en-US');
+                    return new Intl.DateTimeFormat(locale, options).format(date);
+                } catch (error) {
+                    return new Date(value).toLocaleString();
+                }
+            }
+
+            // Public methods
+            refreshData() {
+                console.log('Refreshing report data...');
+                this.loadReportData().then(() => {
+                    this.updateKPIs();
+                    this.populateDetailedTable();
+                    // Refresh charts
+                    Object.values(this.charts).forEach(chart => {
+                        chart.destroy();
+                    });
+                    this.initializeCharts();
+                });
+            }
+
+            applyFilters() {
+                console.log('Applying filters...');
+                // Filter logic would go here
+                this.populateDetailedTable();
+            }
+
+            generateComprehensiveReport() {
+                console.log('Generating comprehensive report...');
+                alert('Comprehensive report generation will be implemented in phase 2');
+            }
+
+            exportToExcel() {
+                console.log('Exporting to Excel...');
+                alert('Excel export will be implemented in phase 2');
+            }
+
+            exportToPDF() {
+                console.log('Exporting to PDF...');
+                alert('PDF export will be implemented in phase 2');
+            }
+
+            scheduleReport() {
+                console.log('Scheduling report...');
+                alert('Report scheduling will be implemented in phase 2');
+            }
+
+            drillDown(id) {
+                console.log('Drilling down into item:', id);
+                alert('Drill down functionality will be implemented in phase 2');
+            }
+
+            viewDetails(id) {
+                console.log('Viewing details for item:', id);
+
+                if (!this.data || !Array.isArray(this.data)) {
+                    alert('Product details are unavailable at the moment.');
+                    return;
+                }
+
+                const record = this.data.find(item => String(item.id) === String(id));
+                if (!record) {
+                    alert('Unable to locate this product in the current dataset.');
+                    return;
+                }
+
+                const titleEl = document.getElementById('productDetailsTitle');
+                const metaEl = document.getElementById('productDetailsMeta');
+                const bodyEl = document.getElementById('productDetailsBody');
+
+                if (!titleEl || !metaEl || !bodyEl) {
+                    console.warn('Product details modal elements are missing.');
+                    return;
+                }
+
+                titleEl.textContent = `${record.name || 'Product Details'}`;
+
+                const varianceRaw = Number.isFinite(record.variance) ? record.variance : null;
+                const varianceValue = Number.isFinite(varianceRaw) ? this.formatCurrency(Math.abs(varianceRaw)) : '--';
+                const varianceDirection = Number.isFinite(varianceRaw)
+                    ? varianceRaw > 0
+                        ? 'Unfavourable variance'
+                        : varianceRaw < 0
+                            ? 'Favourable variance'
+                            : 'On target'
+                    : 'Variance unavailable';
+                const varianceBadgeClass = Number.isFinite(varianceRaw)
+                    ? varianceRaw > 0
+                        ? 'bg-danger'
+                        : varianceRaw < 0
+                            ? 'bg-success'
+                            : 'bg-secondary'
+                    : 'bg-secondary';
+
+                const unitsSold = Number.isFinite(record.units)
+                    ? this.formatNumber(record.units, { maximumFractionDigits: 0 })
+                    : '--';
+                const profitability = Number.isFinite(record.profitability) ? `${record.profitability.toFixed(1)}%` : 'N/A';
+                const efficiency = Number.isFinite(record.efficiency) ? `${record.efficiency.toFixed(0)}%` : 'N/A';
+
+                metaEl.innerHTML = `
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <span class="badge bg-primary"><i class="bi bi-tag me-1"></i>${record.category || 'Uncategorized'}</span>
+                        <span><i class="bi bi-box-seam me-1"></i>${unitsSold} units sold</span>
+                        <span><i class="bi bi-graph-up me-1"></i>Profitability: <strong>${profitability}</strong></span>
+                        <span><i class="bi bi-speedometer2 me-1"></i>Efficiency: <strong>${efficiency}</strong></span>
+                        <span class="badge ${varianceBadgeClass}"><i class="bi bi-arrow-left-right me-1"></i>${varianceDirection}</span>
+                    </div>
+                `;
+
+                const materialCost = Number.isFinite(record.materialCost) ? record.materialCost : null;
+                const laborCost = Number.isFinite(record.laborCost) ? record.laborCost : null;
+                const overheadCost = Number.isFinite(record.overheadCost) ? record.overheadCost : null;
+                const totalActual = Number.isFinite(record.actualCost) ? record.actualCost : null;
+                const standardCost = Number.isFinite(record.standardCost) ? record.standardCost : null;
+                const variancePercent = Number.isFinite(record.variancePercent) ? `${record.variancePercent.toFixed(1)}%` : '';
+
+                const breakdownRows = [
+                    {
+                        label: 'Standard Cost',
+                        value: Number.isFinite(standardCost) ? this.formatCurrency(standardCost) : '--'
+                    },
+                    {
+                        label: 'Actual Cost',
+                        value: Number.isFinite(totalActual) ? this.formatCurrency(totalActual) : '--'
+                    },
+                    {
+                        label: 'Variance',
+                        value: Number.isFinite(varianceRaw)
+                            ? `${varianceRaw > 0 ? '+' : varianceRaw < 0 ? '-' : ''}${varianceValue}`
+                            : varianceValue,
+                        extra: variancePercent ? `(${variancePercent})` : ''
+                    }
+                ];
+
+                if (materialCost != null || laborCost != null || overheadCost != null) {
+                    breakdownRows.push({ isDivider: true });
+                    breakdownRows.push({ label: 'Material Cost', value: this.formatCurrency(materialCost ?? 0) });
+                    breakdownRows.push({ label: 'Labor Cost', value: this.formatCurrency(laborCost ?? 0) });
+                    breakdownRows.push({ label: 'Overhead Cost', value: this.formatCurrency(overheadCost ?? 0) });
+                }
+
+                const notes = record.notes || record.recommendations || null;
+
+                bodyEl.innerHTML = `
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="fw-semibold text-secondary mb-3">Cost Breakdown</h6>
+                                <dl class="row mb-0">
+                                    ${breakdownRows.map(row => {
+                                        if (row.isDivider) {
+                                            return '<div class="col-12"><hr class="my-3"></div>';
+                                        }
+                                        return `
+                                            <dt class="col-6">${row.label}</dt>
+                                            <dd class="col-6 text-end mb-0">${row.value} ${row.extra || ''}</dd>
+                                        `;
+                                    }).join('')}
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="border rounded p-3 h-100">
+                                <h6 class="fw-semibold text-secondary mb-3">Operational Insights</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Variance status: <strong>${varianceDirection}</strong></li>
+                                    <li class="mb-2"><i class="bi bi-bar-chart-line text-primary me-2"></i>Profitability: <strong>${profitability}</strong></li>
+                                    <li class="mb-2"><i class="bi bi-speedometer text-info me-2"></i>Efficiency score: <strong>${efficiency}</strong></li>
+                                    <li class="mb-2"><i class="bi bi-currency-dollar text-warning me-2"></i>Cost per unit: <strong>${Number.isFinite(totalActual) && Number.isFinite(record.units) && record.units !== 0 ? this.formatCurrency(totalActual / record.units) : '--'}</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    ${notes ? `<div class="alert alert-info mt-4"><i class="bi bi-lightbulb me-2"></i>${notes}</div>` : ''}
+                `;
+
+                const modalEl = document.getElementById('productDetailsModal');
+                if (!modalEl) {
+                    return;
+                }
+
+                if (window.bootstrap?.Modal) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                } else {
+                    console.warn('Bootstrap modal library is unavailable, cannot open product details modal.');
+                }
+            }
+        }
+
+        // Initialize the application
+        let reportsApp;
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 DOM loaded, initializing COGS Reports App...');
+            reportsApp = new COGSReportsApp();
+        });
+
+        // Global function wrappers
+        function refreshData() { reportsApp.refreshData(); }
+        function applyFilters() { reportsApp.applyFilters(); }
+        function generateComprehensiveReport() { reportsApp.generateComprehensiveReport(); }
+        function exportToExcel() { reportsApp.exportToExcel(); }
+        function exportToPDF() { reportsApp.exportToPDF(); }
+        function scheduleReport() { reportsApp.scheduleReport(); }
+    </script>
+</body>
+</html>

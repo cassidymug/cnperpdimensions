@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Notes Button Diagnostics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .diagnostic-box {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .status-ok { color: #28a745; font-weight: bold; }
+        .status-missing { color: #dc3545; font-weight: bold; }
+        .code-block {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">🔍 Credit Notes Button Diagnostics</h1>
+        
+        <div class="alert alert-info">
+            <strong>Purpose:</strong> This page helps diagnose why the Create Credit Note button is disabled.
+        </div>
+
+        <div class="diagnostic-box">
+            <h3>Test 1: Check if Elements Exist</h3>
+            <button class="btn btn-primary" onclick="test1()">Run Test 1</button>
+            <div id="test1-result" class="mt-3"></div>
+        </div>
+
+        <div class="diagnostic-box">
+            <h3>Test 2: Check Current Form State</h3>
+            <button class="btn btn-primary" onclick="test2()">Run Test 2</button>
+            <div id="test2-result" class="mt-3"></div>
+        </div>
+
+        <div class="diagnostic-box">
+            <h3>Test 3: Simulate Button Enable</h3>
+            <button class="btn btn-primary" onclick="test3()">Run Test 3</button>
+            <div id="test3-result" class="mt-3"></div>
+        </div>
+
+        <div class="diagnostic-box">
+            <h3>Test 4: Open Actual Modal</h3>
+            <a href="/credit-notes.html" class="btn btn-success">Go to Credit Notes Page</a>
+            <div class="mt-3">
+                <p><strong>Instructions:</strong></p>
+                <ol>
+                    <li>Click the button above to go to the credit notes page</li>
+                    <li>Press <kbd>F12</kbd> to open Developer Tools</li>
+                    <li>Go to Console tab</li>
+                    <li>Click "+ Create Credit Note" button</li>
+                    <li>Follow these steps in order:
+                        <ol type="a">
+                            <li>Select a document from dropdown (e.g., "INV-20251014-0001")</li>
+                            <li><strong>Click "Load Items" button</strong> ← Critical!</li>
+                            <li>Check at least one item checkbox</li>
+                            <li>Select "Return Reason"</li>
+                            <li>Select "Refund Method"</li>
+                        </ol>
+                    </li>
+                    <li>Watch the help text at bottom of modal update</li>
+                    <li>Button should turn from grayed out to bright green</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="diagnostic-box bg-light">
+            <h3>📋 Quick Checklist</h3>
+            <p>The Create Credit Note button requires ALL of these:</p>
+            <ul>
+                <li>✓ Document selected from dropdown</li>
+                <li>✓ "Load Items" button clicked</li>
+                <li>✓ At least one item checkbox checked</li>
+                <li>✓ Return Reason selected</li>
+                <li>✓ Refund Method selected</li>
+            </ul>
+            <p class="mt-3"><strong>Common mistake:</strong> Forgetting to click "Load Items" after selecting a document!</p>
+        </div>
+    </div>
+
+    <script>
+        function test1() {
+            const result = document.getElementById('test1-result');
+            let html = '<h5>Element Check Results:</h5>';
+            
+            // Open the credit notes page in iframe to check
+            const elements = [
+                'createCreditNoteBtn',
+                'returnReason',
+                'refundMethod',
+                'documentSelect',
+                'createCreditNoteForm'
+            ];
+            
+            html += '<div class="code-block">';
+            html += 'Note: Elements must be checked on the actual credit-notes.html page.<br>';
+            html += 'Click "Go to Credit Notes Page" button in Test 4 and run this in the console:<br><br>';
+            html += '<code>';
+            html += 'console.log("Return Reason:", document.getElementById("returnReason"));<br>';
+            html += 'console.log("Refund Method:", document.getElementById("refundMethod"));<br>';
+            html += 'console.log("Create Button:", document.getElementById("createCreditNoteBtn"));<br>';
+            html += '</code>';
+            html += '</div>';
+            
+            result.innerHTML = html;
+        }
+
+        function test2() {
+            const result = document.getElementById('test2-result');
+            let html = '<h5>Form State Check:</h5>';
+            
+            html += '<div class="code-block">';
+            html += 'Run this in the browser console on credit-notes.html page:<br><br>';
+            html += '<code>';
+            html += 'console.log({<br>';
+            html += '  returnReason: document.getElementById("returnReason")?.value,<br>';
+            html += '  refundMethod: document.getElementById("refundMethod")?.value,<br>';
+            html += '  hasSelectedItems: document.querySelectorAll(".item-checkbox:checked").length,<br>';
+            html += '  currentDocumentData: window.currentDocumentData,<br>';
+            html += '  buttonDisabled: document.getElementById("createCreditNoteBtn")?.disabled<br>';
+            html += '});<br>';
+            html += '</code>';
+            html += '</div>';
+            
+            html += '<p class="mt-3"><strong>Expected output when button should be enabled:</strong></p>';
+            html += '<div class="code-block">';
+            html += '{ returnReason: "faulty_product", refundMethod: "cash", hasSelectedItems: 1, currentDocumentData: {...}, buttonDisabled: false }';
+            html += '</div>';
+            
+            result.innerHTML = html;
+        }
+
+        function test3() {
+            const result = document.getElementById('test3-result');
+            let html = '<h5>Force Enable Button (Testing):</h5>';
+            
+            html += '<div class="alert alert-warning">';
+            html += '<strong>Warning:</strong> This bypasses validation. Use only for testing if the button function works.';
+            html += '</div>';
+            
+            html += '<div class="code-block">';
+            html += 'Run this in console on credit-notes.html after opening the modal:<br><br>';
+            html += '<code>';
+            html += 'document.getElementById("createCreditNoteBtn").disabled = false;<br>';
+            html += 'console.log("Button force-enabled. Try clicking it now.");';
+            html += '</code>';
+            html += '</div>';
+            
+            html += '<p class="mt-3">If clicking the button works after force-enabling it, the problem is just with validation conditions not being met.</p>';
+            
+            result.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Components - CN PERP Dimensions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        /* Workflow Status Badge Styles */
+        .workflow-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            gap: 0.5rem;
+        }
+
+        .workflow-status-draft {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+
+        .workflow-status-submitted {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .workflow-status-pending_approval {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .workflow-status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .workflow-status-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .workflow-status-cancelled {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .workflow-status-completed {
+            background-color: #a7f3d0;
+            color: #047857;
+        }
+
+        /* Workflow Timeline Styles */
+        .workflow-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .workflow-timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .workflow-timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .workflow-timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.5rem;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+            background-color: #3b82f6;
+            z-index: 2;
+        }
+
+        .workflow-timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -1.625rem;
+            top: 1.25rem;
+            width: 2px;
+            height: calc(100% - 0.5rem);
+            background-color: #e5e7eb;
+            z-index: 1;
+        }
+
+        .workflow-timeline-item:last-child::after {
+            display: none;
+        }
+
+        .workflow-timeline-item.approved::before {
+            background-color: #10b981;
+        }
+
+        .workflow-timeline-item.rejected::before {
+            background-color: #ef4444;
+        }
+
+        .workflow-timeline-item.pending::before {
+            background-color: #f59e0b;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Workflow Action Buttons */
+        .workflow-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .workflow-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .workflow-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Workflow State Progress */
+        .workflow-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .workflow-progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .workflow-progress-step-circle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .workflow-progress-step.active .workflow-progress-step-circle {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .workflow-progress-step.completed .workflow-progress-step-circle {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .workflow-progress-step.rejected .workflow-progress-step-circle {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .workflow-progress-line {
+            position: absolute;
+            top: 1.25rem;
+            left: 50%;
+            right: -50%;
+            height: 2px;
+            background-color: #e5e7eb;
+            z-index: 1;
+        }
+
+        .workflow-progress-step.completed .workflow-progress-line {
+            background-color: #10b981;
+        }
+
+        .workflow-progress-step:last-child .workflow-progress-line {
+            display: none;
+        }
+
+        /* Workflow Card */
+        .workflow-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            background-color: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .workflow-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .workflow-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+
+        .workflow-card-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .workflow-card-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid py-4">
+        <h1 class="mb-4">
+            <i class="bi bi-diagram-3 me-2"></i>Workflow Components Library
+        </h1>
+
+        <!-- Component 1: Workflow Status Badge -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-badge me-2"></i>Workflow Status Badges</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="workflow-status workflow-status-draft">
+                        <i class="bi bi-file-earmark"></i> Draft
+                    </span>
+                    <span class="workflow-status workflow-status-submitted">
+                        <i class="bi bi-send"></i> Submitted
+                    </span>
+                    <span class="workflow-status workflow-status-pending_approval">
+                        <i class="bi bi-clock"></i> Pending Approval
+                    </span>
+                    <span class="workflow-status workflow-status-approved">
+                        <i class="bi bi-check-circle"></i> Approved
+                    </span>
+                    <span class="workflow-status workflow-status-rejected">
+                        <i class="bi bi-x-circle"></i> Rejected
+                    </span>
+                    <span class="workflow-status workflow-status-completed">
+                        <i class="bi bi-check-all"></i> Completed
+                    </span>
+                    <span class="workflow-status workflow-status-cancelled">
+                        <i class="bi bi-slash-circle"></i> Cancelled
+                    </span>
+                </div>
+
+                <hr class="my-4">
+
+                <h6>JavaScript Function:</h6>
+                <pre class="bg-light p-3 rounded"><code>function getWorkflowStatusBadge(status) {
+    const statusConfig = {
+        'draft': { icon: 'file-earmark', label: 'Draft' },
+        'submitted': { icon: 'send', label: 'Submitted' },
+        'pending_approval': { icon: 'clock', label: 'Pending Approval' },
+        'approved': { icon: 'check-circle', label: 'Approved' },
+        'rejected': { icon: 'x-circle', label: 'Rejected' },
+        'completed': { icon: 'check-all', label: 'Completed' },
+        'cancelled': { icon: 'slash-circle', label: 'Cancelled' }
+    };
+
+    const config = statusConfig[status] || statusConfig['draft'];
+    return `<span class="workflow-status workflow-status-${status}">
+        <i class="bi bi-${config.icon}"></i> ${config.label}
+    </span>`;
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Component 2: Workflow Progress Tracker -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-arrow-right-circle me-2"></i>Workflow Progress Tracker</h5>
+            </div>
+            <div class="card-body">
+                <div class="workflow-progress">
+                    <div class="workflow-progress-step completed">
+                        <div class="workflow-progress-step-circle">
+                            <i class="bi bi-check"></i>
+                        </div>
+                        <div class="workflow-progress-line"></div>
+                        <small class="d-block text-muted">Draft</small>
+                    </div>
+                    <div class="workflow-progress-step completed">
+                        <div class="workflow-progress-step-circle">
+                            <i class="bi bi-check"></i>
+                        </div>
+                        <div class="workflow-progress-line"></div>
+                        <small class="d-block text-muted">Submitted</small>
+                    </div>
+                    <div class="workflow-progress-step active">
+                        <div class="workflow-progress-step-circle">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <div class="workflow-progress-line"></div>
+                        <small class="d-block text-muted">Manager Approval</small>
+                    </div>
+                    <div class="workflow-progress-step">
+                        <div class="workflow-progress-step-circle">3</div>
+                        <div class="workflow-progress-line"></div>
+                        <small class="d-block text-muted">Finance Approval</small>
+                    </div>
+                    <div class="workflow-progress-step">
+                        <div class="workflow-progress-step-circle">4</div>
+                        <small class="d-block text-muted">Approved</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Component 3: Workflow Timeline -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-clock-history me-2"></i>Workflow Timeline/History</h5>
+            </div>
+            <div class="card-body">
+                <div class="workflow-timeline">
+                    <div class="workflow-timeline-item approved">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">Purchase Order Submitted</h6>
+                                <p class="mb-1 text-muted small">
+                                    Submitted by <strong>John Doe</strong>
+                                </p>
+                                <p class="mb-0 text-muted small">
+                                    <i class="bi bi-calendar me-1"></i>Jan 15, 2025 10:30 AM
+                                </p>
+                            </div>
+                            <span class="badge bg-primary">Submit</span>
+                        </div>
+                    </div>
+
+                    <div class="workflow-timeline-item approved">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">Manager Approved</h6>
+                                <p class="mb-1 text-muted small">
+                                    Approved by <strong>Jane Smith</strong>
+                                </p>
+                                <p class="mb-1"><small class="text-success"><i class="bi bi-chat-quote me-1"></i>"Budget
+                                        approved for Q1"</small></p>
+                                <p class="mb-0 text-muted small">
+                                    <i class="bi bi-calendar me-1"></i>Jan 15, 2025 2:45 PM
+                                </p>
+                            </div>
+                            <span class="badge bg-success">Approve</span>
+                        </div>
+                    </div>
+
+                    <div class="workflow-timeline-item pending">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">Pending Finance Approval</h6>
+                                <p class="mb-1 text-muted small">
+                                    Assigned to <strong>Bob Johnson</strong> (Finance Director)
+                                </p>
+                                <p class="mb-0 text-muted small">
+                                    <i class="bi bi-clock me-1"></i>Waiting for 2 hours
+                                </p>
+                            </div>
+                            <span class="badge bg-warning">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Component 4: Workflow Action Buttons -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-hand-thumbs-up me-2"></i>Workflow Action Buttons</h5>
+            </div>
+            <div class="card-body">
+                <div class="workflow-actions">
+                    <button class="workflow-action-btn btn btn-success" onclick="alert('Approve action')">
+                        <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                    <button class="workflow-action-btn btn btn-danger" onclick="alert('Reject action')">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                    <button class="workflow-action-btn btn btn-primary" onclick="alert('Submit action')">
+                        <i class="bi bi-send"></i> Submit
+                    </button>
+                    <button class="workflow-action-btn btn btn-warning" onclick="alert('Hold action')">
+                        <i class="bi bi-pause-circle"></i> Put on Hold
+                    </button>
+                    <button class="workflow-action-btn btn btn-info" onclick="alert('Reassign action')">
+                        <i class="bi bi-person-check"></i> Reassign
+                    </button>
+                    <button class="workflow-action-btn btn btn-secondary" onclick="alert('Cancel action')">
+                        <i class="bi bi-slash-circle"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Component 5: Full Workflow Card Example -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-card-text me-2"></i>Full Workflow Card Example</h5>
+            </div>
+            <div class="card-body">
+                <div class="workflow-card">
+                    <div class="workflow-card-header">
+                        <div>
+                            <h5 class="workflow-card-title">Purchase Order #PO-2025-001</h5>
+                            <div class="workflow-card-meta">
+                                <div class="workflow-card-meta-item">
+                                    <i class="bi bi-person"></i>
+                                    <span>Submitted by John Doe</span>
+                                </div>
+                                <div class="workflow-card-meta-item">
+                                    <i class="bi bi-calendar"></i>
+                                    <span>Jan 15, 2025</span>
+                                </div>
+                                <div class="workflow-card-meta-item">
+                                    <i class="bi bi-cash"></i>
+                                    <span>$12,500.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="workflow-status workflow-status-pending_approval">
+                            <i class="bi bi-clock"></i> Pending Finance Approval
+                        </span>
+                    </div>
+
+                    <div class="workflow-progress mb-3">
+                        <div class="workflow-progress-step completed">
+                            <div class="workflow-progress-step-circle">
+                                <i class="bi bi-check"></i>
+                            </div>
+                            <div class="workflow-progress-line"></div>
+                            <small class="d-block text-muted">Draft</small>
+                        </div>
+                        <div class="workflow-progress-step completed">
+                            <div class="workflow-progress-step-circle">
+                                <i class="bi bi-check"></i>
+                            </div>
+                            <div class="workflow-progress-line"></div>
+                            <small class="d-block text-muted">Manager</small>
+                        </div>
+                        <div class="workflow-progress-step active">
+                            <div class="workflow-progress-step-circle">
+                                <i class="bi bi-clock"></i>
+                            </div>
+                            <div class="workflow-progress-line"></div>
+                            <small class="d-block text-muted">Finance</small>
+                        </div>
+                        <div class="workflow-progress-step">
+                            <div class="workflow-progress-step-circle">4</div>
+                            <small class="d-block text-muted">Complete</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Current Assignee:</strong> Bob Johnson (Finance Director)<br>
+                        <small>Waiting for approval for 2 hours</small>
+                    </div>
+
+                    <div class="workflow-actions">
+                        <button class="workflow-action-btn btn btn-success">
+                            <i class="bi bi-check-circle"></i> Approve
+                        </button>
+                        <button class="workflow-action-btn btn btn-danger">
+                            <i class="bi bi-x-circle"></i> Reject
+                        </button>
+                        <button class="workflow-action-btn btn btn-info">
+                            <i class="bi bi-eye"></i> View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Component 6: JavaScript Workflow Widget Class -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="bi bi-code-square me-2"></i>JavaScript Workflow Widget Class</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code>/**
+ * WorkflowWidget - Reusable workflow component
+ *
+ * Usage:
+ *   const widget = new WorkflowWidget('myContainer', {
+ *       instanceId: 'workflow-123',
+ *       apiBaseUrl: '/api/v1/workflows'
+ *   });
+ */
+class WorkflowWidget {
+    constructor(containerId, options = {}) {
+        this.container = document.getElementById(containerId);
+        this.options = {
+            apiBaseUrl: options.apiBaseUrl || '/api/v1/workflows',
+            instanceId: options.instanceId,
+            showTimeline: options.showTimeline !== false,
+            showProgress: options.showProgress !== false,
+            showActions: options.showActions !== false,
+            onAction: options.onAction || this.defaultActionHandler.bind(this)
+        };
+
+        this.instance = null;
+        this.availableActions = [];
+
+        if (this.options.instanceId) {
+            this.load();
+        }
+    }
+
+    async load() {
+        try {
+            // Load workflow instance
+            const response = await fetch(
+                `${this.options.apiBaseUrl}/instances/${this.options.instanceId}`
+            );
+            this.instance = await response.json();
+
+            // Load available actions
+            const actionsResponse = await fetch(
+                `${this.options.apiBaseUrl}/instances/${this.options.instanceId}/available-actions`
+            );
+            this.availableActions = await actionsResponse.json();
+
+            // Load history
+            const historyResponse = await fetch(
+                `${this.options.apiBaseUrl}/instances/${this.options.instanceId}/history`
+            );
+            this.history = await historyResponse.json();
+
+            this.render();
+        } catch (error) {
+            console.error('Error loading workflow:', error);
+            this.renderError(error);
+        }
+    }
+
+    render() {
+        if (!this.instance) return;
+
+        let html = '<div class="workflow-widget">';
+
+        // Header
+        html += this.renderHeader();
+
+        // Progress tracker
+        if (this.options.showProgress) {
+            html += this.renderProgress();
+        }
+
+        // Timeline
+        if (this.options.showTimeline) {
+            html += this.renderTimeline();
+        }
+
+        // Actions
+        if (this.options.showActions && this.availableActions.length > 0) {
+            html += this.renderActions();
+        }
+
+        html += '</div>';
+
+        this.container.innerHTML = html;
+        this.attachEventListeners();
+    }
+
+    renderHeader() {
+        return `
+            <div class="workflow-card-header">
+                <div>
+                    <h5 class="workflow-card-title">${this.instance.entity_type} #${this.instance.entity_id}</h5>
+                </div>
+                ${this.getStatusBadge(this.instance.status)}
+            </div>
+        `;
+    }
+
+    renderActions() {
+        let html = '<div class="workflow-actions mt-3">';
+
+        this.availableActions.forEach(action => {
+            html += `
+                <button class="workflow-action-btn btn btn-${action.color}"
+                        data-action="${action.action}"
+                        data-transition-id="${action.transition_id}">
+                    <i class="bi bi-${this.getActionIcon(action.action)}"></i>
+                    ${action.label}
+                </button>
+            `;
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    renderTimeline() {
+        if (!this.history || this.history.length === 0) return '';
+
+        let html = '<div class="workflow-timeline mt-4">';
+
+        this.history.forEach((action, index) => {
+            const statusClass = this.getTimelineStatusClass(action.action);
+            html += `
+                <div class="workflow-timeline-item ${statusClass}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${action.to_state.name}</h6>
+                            <p class="mb-1 text-muted small">
+                                ${action.action} by <strong>${action.performed_by_user.username}</strong>
+                            </p>
+                            ${action.comment ? `<p class="mb-1"><small class="text-muted"><i class="bi bi-chat-quote me-1"></i>"${action.comment}"</small></p>` : ''}
+                            <p class="mb-0 text-muted small">
+                                <i class="bi bi-calendar me-1"></i>${new Date(action.action_date).toLocaleString()}
+                            </p>
+                        </div>
+                        <span class="badge bg-${this.getActionBadgeColor(action.action)}">${action.action}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    getStatusBadge(status) {
+        return `<span class="workflow-status workflow-status-${status}">
+            <i class="bi bi-${this.getStatusIcon(status)}"></i> ${status.replace('_', ' ')}
+        </span>`;
+    }
+
+    getStatusIcon(status) {
+        const icons = {
+            'draft': 'file-earmark',
+            'submitted': 'send',
+            'pending_approval': 'clock',
+            'approved': 'check-circle',
+            'rejected': 'x-circle',
+            'completed': 'check-all',
+            'cancelled': 'slash-circle'
+        };
+        return icons[status] || 'circle';
+    }
+
+    getActionIcon(action) {
+        const icons = {
+            'submit': 'send',
+            'approve': 'check-circle',
+            'reject': 'x-circle',
+            'cancel': 'slash-circle',
+            'reassign': 'person-check',
+            'hold': 'pause-circle',
+            'resume': 'play-circle',
+            'revise': 'pencil-square'
+        };
+        return icons[action] || 'circle';
+    }
+
+    attachEventListeners() {
+        // Attach click handlers to action buttons
+        this.container.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = e.currentTarget.dataset.action;
+                const transitionId = e.currentTarget.dataset.transitionId;
+                this.handleAction(action, transitionId);
+            });
+        });
+    }
+
+    async handleAction(action, transitionId) {
+        const actionData = this.availableActions.find(a => a.transition_id === transitionId);
+
+        // Show comment modal if required
+        if (actionData && actionData.requires_comment) {
+            this.showCommentModal(action, transitionId, actionData);
+        } else {
+            await this.executeAction(action, transitionId);
+        }
+    }
+
+    async executeAction(action, transitionId, comment = null) {
+        try {
+            const response = await fetch(
+                `${this.options.apiBaseUrl}/instances/${this.options.instanceId}/${action}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comment })
+                }
+            );
+
+            if (response.ok) {
+                await this.load(); // Reload
+                this.options.onAction(action, true);
+            } else {
+                throw new Error('Action failed');
+            }
+        } catch (error) {
+            console.error('Error executing action:', error);
+            this.options.onAction(action, false, error);
+        }
+    }
+
+    defaultActionHandler(action, success, error) {
+        if (success) {
+            alert(`Action "${action}" completed successfully!`);
+        } else {
+            alert(`Action "${action}" failed: ${error}`);
+        }
+    }
+}
+</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

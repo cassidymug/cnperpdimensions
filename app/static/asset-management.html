@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Asset Management - CNPERP</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+	<script src="/static/js/auth-bootstrap.js"></script>
+	<script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+	<style>
+		:root {
+			--primary-color: #0d6efd;
+			--success-color: #198754;
+			--danger-color: #dc3545;
+			--warning-color: #ffc107;
+			--info-color: #0dcaf0;
+			--dark-color: #212529;
+			--light-color: #f8f9fa;
+		}
+
+		.light-mode {
+			--bg-primary: #ffffff;
+			--bg-secondary: #f8f9fa;
+			--text-primary: #212529;
+			--text-secondary: #6c757d;
+			--border-color: #dee2e6;
+		}
+
+		.dark-mode {
+			--bg-primary: #212529;
+			--bg-secondary: #343a40;
+			--text-primary: #ffffff;
+			--text-secondary: #adb5bd;
+			--border-color: #495057;
+		}
+
+		body {
+			background-color: var(--bg-secondary);
+			color: var(--text-primary);
+			transition: all 0.3s ease;
+		}
+
+		/* Make all tab text purple */
+		.nav-tabs .nav-link {
+			color: purple !important;
+		}
+
+		.nav-tabs .nav-link:hover {
+			color: #5a32a3 !important;
+		}
+
+		.nav-tabs .nav-link:focus {
+			color: purple !important;
+		}
+
+		.nav-tabs .nav-link.active {
+			color: purple !important;
+			border-bottom-color: purple !important;
+			font-weight: bold;
+		}
+
+		.card {
+			background-color: var(--bg-primary);
+			border-color: var(--border-color);
+			transition: all 0.3s ease;
+		}
+
+		/* .navbar custom styles removed to enforce standard navbar */
+
+		.entry-card {
+			border-radius: 15px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			transition: transform 0.2s ease;
+			cursor: pointer;
+		}
+
+		.entry-card:hover {
+			transform: translateY(-2px);
+		}
+
+		.status-badge {
+			font-size: 0.8rem;
+			padding: 0.25rem 0.5rem;
+		}
+
+		.debit-amount {
+			color: var(--danger-color);
+			font-weight: bold;
+		}
+
+		.credit-amount {
+			color: var(--success-color);
+			font-weight: bold;
+		}
+
+		.filter-section {
+			background-color: var(--bg-primary);
+			border-radius: 10px;
+			padding: 20px;
+			margin-bottom: 20px;
+		}
+
+		.stats-card {
+			background: linear-gradient(135deg, var(--primary-color), #0056b3);
+			color: white;
+			border-radius: 15px;
+			padding: 20px;
+		}
+
+		.modal-content {
+			background-color: var(--bg-primary);
+			color: var(--text-primary);
+		}
+
+		.journal-line {
+			background-color: var(--bg-secondary);
+			padding: 15px;
+			border-radius: 8px;
+			margin-bottom: 10px;
+			border: 1px solid var(--border-color);
+		}
+
+		.balance-indicator {
+			font-weight: bold;
+			padding: 5px 10px;
+			border-radius: 4px;
+		}
+
+		.balance-balanced {
+			background-color: var(--success-color);
+			color: white;
+		}
+
+		.balance-unbalanced {
+			background-color: var(--danger-color);
+			color: white;
+		}
+
+		.accounting-code-option {
+			font-weight: 500;
+		}
+
+		.accounting-code-option.sub-account {
+			padding-left: 20px;
+			font-style: italic;
+		}
+
+		.accounting-code-option.parent-account {
+			font-weight: bold;
+			color: var(--primary-color);
+		}
+
+		/* Scrollable dropdown styles */
+		.dropdown-menu.scrollable-dropdown {
+			max-height: 400px;
+			overflow-y: auto;
+			width: 350px;
+		}
+
+		.dropdown-menu.scrollable-dropdown .dropdown-header {
+			background-color: #f8f9fa;
+			border-bottom: 1px solid #dee2e6;
+			font-weight: 600;
+			position: sticky;
+			top: 0;
+			z-index: 1020;
+		}
+
+		.dropdown-menu.scrollable-dropdown .dropdown-item {
+			white-space: nowrap;
+		}
+
+		.dropdown-menu.scrollable-dropdown .dropdown-item i {
+			width: 16px;
+			text-align: center;
+		}
+
+		/* Dark theme for scrollable dropdown */
+		body[data-theme="dark"] .dropdown-menu.scrollable-dropdown {
+			background-color: #343a40;
+			border-color: #495057;
+		}
+
+		body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-header {
+			background-color: #495057;
+			border-bottom-color: #6c757d;
+			color: #ffffff;
+		}
+
+		body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-item {
+			color: #ffffff;
+		}
+
+		body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-item:hover {
+			background-color: #495057;
+			color: #ffffff;
+		}
+	</style>
+</head>
+
+<body>
+	<!-- Navigation Bar Container -->
+	<div id="navbar-container"></div>
+	<script src="js/navbar.js?v=20250106001"></script>
+
+	<!-- Spacer to prevent content from being hidden under fixed navbar -->
+	<div style="height: 70px;"></div>
+
+	<div class="container py-4">
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<h3 class="mb-0">Asset Management</h3>
+			<div class="d-flex gap-2">
+				<button class="btn btn-primary" id="btnRefresh">Refresh</button>
+				<button class="btn btn-success" id="btnNewAsset">New Asset</button>
+			</div>
+		</div>
+
+		<!-- Tabs for overview -->
+		<ul class="nav nav-tabs" id="assetsTabs" role="tablist">
+			<li class="nav-item" role="presentation">
+				<button class="nav-link active" id="tab-all-assets-tab" data-bs-toggle="tab"
+					data-bs-target="#tab-all-assets" type="button" role="tab" aria-controls="tab-all-assets"
+					aria-selected="true">
+					<i class="bi bi-list-ul"></i> All Assets
+				</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="tab-furniture-tab" data-bs-toggle="tab" data-bs-target="#tab-furniture"
+					type="button" role="tab" aria-controls="tab-furniture" aria-selected="false">
+					<i class="bi bi-grid"></i> Furniture & Fixtures
+				</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="tab-electronics-tab" data-bs-toggle="tab" data-bs-target="#tab-electronics"
+					type="button" role="tab" aria-controls="tab-electronics" aria-selected="false">
+					<i class="bi bi-laptop"></i> Electronics & IT
+				</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="tab-vehicles-tab" data-bs-toggle="tab" data-bs-target="#tab-vehicles"
+					type="button" role="tab" aria-controls="tab-vehicles" aria-selected="false">
+					<i class="bi bi-truck"></i> Motor Vehicles
+				</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="tab-tools-tab" data-bs-toggle="tab" data-bs-target="#tab-tools"
+					type="button" role="tab" aria-controls="tab-tools" aria-selected="false">
+					<i class="bi bi-wrench"></i> Tools & Equipment
+				</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="tab-software-tab" data-bs-toggle="tab" data-bs-target="#tab-software"
+					type="button" role="tab" aria-controls="tab-software" aria-selected="false">
+					<i class="bi bi-file-earmark-code"></i> Software & Licenses
+				</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="tab-inventory-tab" data-bs-toggle="tab" data-bs-target="#tab-inventory"
+					type="button" role="tab" aria-controls="tab-inventory" aria-selected="false">
+					<i class="bi bi-box-seam"></i> Inventory
+				</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link" id="tab-bank-tab" data-bs-toggle="tab" data-bs-target="#tab-bank" type="button"
+					role="tab" aria-controls="tab-bank" aria-selected="false">
+					<i class="bi bi-cash-coin"></i> Cash & Bank
+				</button>
+			</li>
+		</ul>
+
+		<div class="tab-content pt-3" id="assetsTabsContent">
+			<!-- All Assets Tab -->
+			<div class="tab-pane fade show active" id="tab-all-assets" role="tabpanel"
+				aria-labelledby="tab-all-assets-tab">
+
+				<div class="card">
+					<div class="card-body">
+						<div class="row g-2 mb-3">
+							<div class="col-md-3">
+								<input type="text" id="search" class="form-control" placeholder="Search assets...">
+							</div>
+							<div class="col-md-2">
+								<select id="category" class="form-select">
+									<option value="">All Categories</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<select id="status" class="form-select">
+									<option value="">All Statuses</option>
+									<option value="ACTIVE">Active</option>
+									<option value="INACTIVE">Inactive</option>
+									<option value="DISPOSED">Disposed</option>
+									<option value="SOLD">Sold</option>
+								</select>
+							</div>
+							<div class="col-md-5 text-end">
+								<div class="btn-group">
+									<button class="btn btn-outline-secondary" id="btnFilter">
+										<i class="bi bi-funnel"></i> Filter
+									</button>
+									<button class="btn btn-outline-primary" id="btnPrintRegister">
+										<i class="bi bi-printer"></i> Print Register
+									</button>
+									<button class="btn btn-outline-success" id="btnExportRegister">
+										<i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+									</button>
+								</div>
+							</div>
+						</div>
+						<div class="table-responsive">
+							<table class="table table-striped align-middle" id="assetsTable">
+								<thead>
+									<tr>
+										<th>Code</th>
+										<th>Name</th>
+										<th>Category</th>
+										<th>Status</th>
+										<th>Serial/Reg</th>
+										<th>Purchase Cost</th>
+										<th>Book Value</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Furniture & Fixtures Tab -->
+			<div class="tab-pane fade" id="tab-furniture" role="tabpanel" aria-labelledby="tab-furniture-tab">
+				<div class="card">
+					<div class="card-body">
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<h5 class="mb-0"><i class="bi bi-grid"></i> Furniture & Fixtures</h5>
+							<div class="btn-group">
+								<button class="btn btn-success btn-sm" onclick="addNewAsset('Furniture')">
+									<i class="bi bi-plus-lg"></i> Add Furniture
+								</button>
+								<button class="btn btn-primary btn-sm" onclick="filterAssetsByCategory('FURNITURE')">
+									<i class="bi bi-funnel"></i> View All
+								</button>
+							</div>
+						</div>
+						<p class="text-muted">Manage office furniture, fixtures, and fittings including desks, chairs,
+							cabinets, shelving, and partitions.</p>
+						<div class="table-responsive">
+							<table class="table table-striped align-middle" id="furnitureTable">
+								<thead>
+									<tr>
+										<th>Code</th>
+										<th>Description</th>
+										<th>Location</th>
+										<th>Status</th>
+										<th>Purchase Date</th>
+										<th class="text-end">Purchase Cost</th>
+										<th class="text-end">Book Value</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody id="furnitureTableBody">
+									<tr>
+										<td colspan="8" class="text-center text-muted">Loading furniture assets...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Electronics & IT Tab -->
+			<div class="tab-pane fade" id="tab-electronics" role="tabpanel" aria-labelledby="tab-electronics-tab">
+				<div class="card">
+					<div class="card-body">
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<h5 class="mb-0"><i class="bi bi-laptop"></i> Electronics & IT Equipment</h5>
+							<div class="btn-group">
+								<button class="btn btn-success btn-sm" onclick="addNewAsset('Electronics')">
+									<i class="bi bi-plus-lg"></i> Add Electronics
+								</button>
+								<button class="btn btn-primary btn-sm" onclick="filterAssetsByCategory('COMPUTER')">
+									<i class="bi bi-funnel"></i> View All
+								</button>
+							</div>
+						</div>
+						<p class="text-muted">Track computers, laptops, servers, printers, networking equipment, and
+							other IT hardware.</p>
+						<div class="table-responsive">
+							<table class="table table-striped align-middle" id="electronicsTable">
+								<thead>
+									<tr>
+										<th>Code</th>
+										<th>Description</th>
+										<th>Serial Number</th>
+										<th>Status</th>
+										<th>Purchase Date</th>
+										<th class="text-end">Purchase Cost</th>
+										<th class="text-end">Book Value</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody id="electronicsTableBody">
+									<tr>
+										<td colspan="8" class="text-center text-muted">Loading electronics assets...
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Motor Vehicles Tab -->
+			<div class="tab-pane fade" id="tab-vehicles" role="tabpanel" aria-labelledby="tab-vehicles-tab">
+				<div class="card">
+					<div class="card-body">
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<h5 class="mb-0"><i class="bi bi-truck"></i> Motor Vehicles</h5>
+							<div class="btn-group">
+								<button class="btn btn-success btn-sm" onclick="addNewAsset('Vehicle')">
+									<i class="bi bi-plus-lg"></i> Add Vehicle
+								</button>
+								<button class="btn btn-primary btn-sm" onclick="filterAssetsByCategory('VEHICLE')">
+									<i class="bi bi-funnel"></i> View All
+								</button>
+							</div>
+						</div>
+						<p class="text-muted">Monitor company vehicles including cars, trucks, vans, and motorcycles
+							with registration and maintenance tracking.</p>
+						<div class="table-responsive">
+							<table class="table table-striped align-middle" id="vehiclesTable">
+								<thead>
+									<tr>
+										<th>Code</th>
+										<th>Description</th>
+										<th>Registration No.</th>
+										<th>Status</th>
+										<th>Purchase Date</th>
+										<th class="text-end">Purchase Cost</th>
+										<th class="text-end">Book Value</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody id="vehiclesTableBody">
+									<tr>
+										<td colspan="8" class="text-center text-muted">Loading vehicle assets...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Tools & Equipment Tab -->
+			<div class="tab-pane fade" id="tab-tools" role="tabpanel" aria-labelledby="tab-tools-tab">
+				<div class="card">
+					<div class="card-body">
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<h5 class="mb-0"><i class="bi bi-wrench"></i> Tools & Equipment</h5>
+							<div class="btn-group">
+								<button class="btn btn-success btn-sm" onclick="addNewAsset('Equipment')">
+									<i class="bi bi-plus-lg"></i> Add Equipment
+								</button>
+								<button class="btn btn-primary btn-sm" onclick="filterAssetsByCategory('EQUIPMENT')">
+									<i class="bi bi-funnel"></i> View All
+								</button>
+							</div>
+						</div>
+						<p class="text-muted">Manage machinery, tools, workshop equipment, and specialized instruments
+							used in operations.</p>
+						<div class="table-responsive">
+							<table class="table table-striped align-middle" id="toolsTable">
+								<thead>
+									<tr>
+										<th>Code</th>
+										<th>Description</th>
+										<th>Serial/Asset No.</th>
+										<th>Status</th>
+										<th>Purchase Date</th>
+										<th class="text-end">Purchase Cost</th>
+										<th class="text-end">Book Value</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody id="toolsTableBody">
+									<tr>
+										<td colspan="8" class="text-center text-muted">Loading tools & equipment...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Software & Licenses Tab -->
+			<div class="tab-pane fade" id="tab-software" role="tabpanel" aria-labelledby="tab-software-tab">
+				<div class="card">
+					<div class="card-body">
+						<div class="d-flex justify-content-between align-items-center mb-3">
+							<h5 class="mb-0"><i class="bi bi-file-earmark-code"></i> Software & Licenses</h5>
+							<div class="btn-group">
+								<button class="btn btn-success btn-sm" onclick="addNewAsset('Software')">
+									<i class="bi bi-plus-lg"></i> Add License
+								</button>
+								<button class="btn btn-primary btn-sm" onclick="filterAssetsByCategory('SOFTWARE')">
+									<i class="bi bi-funnel"></i> View All
+								</button>
+							</div>
+						</div>
+						<p class="text-muted">Track software licenses, subscriptions, concessions, rights, and other
+							intangible assets.</p>
+						<div class="table-responsive">
+							<table class="table table-striped align-middle" id="softwareTable">
+								<thead>
+									<tr>
+										<th>Code</th>
+										<th>Software/License Name</th>
+										<th>License Key</th>
+										<th>Expiry Date</th>
+										<th>Status</th>
+										<th class="text-end">Purchase Cost</th>
+										<th class="text-end">Book Value</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody id="softwareTableBody">
+									<tr>
+										<td colspan="8" class="text-center text-muted">Loading software licenses...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Inventory Tab -->
+			<div class="tab-pane fade" id="tab-inventory" role="tabpanel" aria-labelledby="tab-inventory-tab">
+				<div class="card">
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-striped align-middle" id="inventoryTable">
+								<thead>
+									<tr>
+										<th>Product</th>
+										<th>SKU</th>
+										<th class="text-end">Quantity</th>
+										<th class="text-end">Unit Cost</th>
+										<th class="text-end">Value</th>
+									</tr>
+								</thead>
+								<tbody id="inventoryTableBody"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Cash & Bank Tab -->
+			<div class="tab-pane fade" id="tab-bank" role="tabpanel" aria-labelledby="tab-bank-tab">
+				<div class="card">
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-striped align-middle" id="bankTable">
+								<thead>
+									<tr>
+										<th>Account</th>
+										<th>Type</th>
+										<th class="text-end">Balance</th>
+									</tr>
+								</thead>
+								<tbody id="bankTableBody"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Create Asset Modal -->
+	<div class="modal fade" id="assetModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Create Asset</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="row g-3">
+						<div class="col-md-6">
+							<label class="form-label">Name</label>
+							<input type="text" id="assetName" class="form-control" required>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">Category</label>
+							<select id="assetCategory" class="form-select" required></select>
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Purchase Date</label>
+							<input type="date" id="purchaseDate" class="form-control" required>
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Purchase Cost</label>
+							<input type="number" step="0.01" id="purchaseCost" class="form-control" required>
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Serial Number</label>
+							<input type="text" id="serialNumber" class="form-control">
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">Depreciation Method</label>
+							<select id="deprMethod" class="form-select"></select>
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Useful Life (years)</label>
+							<input type="number" id="usefulLife" class="form-control" value="5">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Salvage Value</label>
+							<input type="number" step="0.01" id="salvageValue" class="form-control" value="0">
+						</div>
+					</div>
+
+					<!-- Vehicle Specific Fields (shown when category is vehicle) -->
+					<div id="vehicleFields" class="row g-3 mt-3" style="display: none;">
+						<div class="col-12">
+							<h6 class="border-bottom pb-2">Vehicle Information</h6>
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Registration Number</label>
+							<input type="text" id="vehicleRegistration" class="form-control"
+								placeholder="e.g., ABC-123">
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Engine Number</label>
+							<input type="text" id="engineNumber" class="form-control" placeholder="Engine number">
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Chassis Number</label>
+							<input type="text" id="chassisNumber" class="form-control" placeholder="Chassis number">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Vehicle Make</label>
+							<input type="text" id="vehicleMake" class="form-control" placeholder="e.g., Toyota">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Vehicle Model</label>
+							<input type="text" id="vehicleModel" class="form-control" placeholder="e.g., Camry">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Vehicle Year</label>
+							<input type="number" id="vehicleYear" class="form-control" placeholder="e.g., 2023"
+								min="1900" max="2030">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Color</label>
+							<input type="text" id="vehicleColor" class="form-control" placeholder="e.g., Red">
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Fuel Type</label>
+							<select id="fuelType" class="form-select">
+								<option value="">Select Fuel Type</option>
+								<option value="petrol">Petrol</option>
+								<option value="diesel">Diesel</option>
+								<option value="electric">Electric</option>
+								<option value="hybrid">Hybrid</option>
+								<option value="lpg">LPG</option>
+								<option value="cng">CNG</option>
+							</select>
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Transmission Type</label>
+							<select id="transmissionType" class="form-select">
+								<option value="">Select Transmission</option>
+								<option value="manual">Manual</option>
+								<option value="automatic">Automatic</option>
+								<option value="cvt">CVT</option>
+								<option value="semi_automatic">Semi-Automatic</option>
+							</select>
+						</div>
+						<div class="col-md-4">
+							<label class="form-label">Mileage (km)</label>
+							<input type="number" id="mileage" class="form-control" placeholder="Current mileage">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Insurance Expiry</label>
+							<input type="date" id="insuranceExpiry" class="form-control">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">License Expiry</label>
+							<input type="date" id="licenseExpiry" class="form-control">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Last Service Date</label>
+							<input type="date" id="lastServiceDate" class="form-control">
+						</div>
+						<div class="col-md-3">
+							<label class="form-label">Next Service Date</label>
+							<input type="date" id="nextServiceDate" class="form-control">
+						</div>
+					</div>
+
+					<!-- Inventory Specific Fields (shown when category is inventory) -->
+					<div id="inventoryFields" class="row g-3 mt-3" style="display: none;">
+						<div class="col-12">
+							<h6 class="border-bottom pb-2">Inventory Item Information</h6>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">Select Inventory Item</label>
+							<select id="inventoryItem" class="form-select">
+								<option value="">Select an inventory item...</option>
+							</select>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">Quantity</label>
+							<input type="number" id="inventoryQuantity" class="form-control" value="1" min="1">
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">SKU</label>
+							<input type="text" id="inventorySku" class="form-control" readonly>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">Current Stock Level</label>
+							<input type="number" id="inventoryStockLevel" class="form-control" readonly>
+						</div>
+						<div class="col-md-12">
+							<label class="form-label">Description</label>
+							<textarea id="inventoryDescription" class="form-control" rows="2" readonly></textarea>
+						</div>
+					</div>
+
+					<!-- IFRS Category and Accounting Dimensions -->
+					<div class="row g-3 mt-3">
+						<div class="col-12">
+							<h6 class="border-bottom pb-2">Accounting & Compliance</h6>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">IFRS Category (optional)</label>
+							<select id="ifrsCategory" class="form-select">
+								<option value="">Select IFRS Category...</option>
+								<option value="PPE_IAS_16">IAS 16 - Property, Plant & Equipment</option>
+								<option value="INVESTMENT_PROPERTY_IAS_40">IAS 40 - Investment Property</option>
+								<option value="INVENTORY_IAS_2">IAS 2 - Inventory</option>
+								<option value="INTANGIBLE_ASSET_IAS_38">IAS 38 - Intangible Assets</option>
+								<option value="FINANCIAL_INSTRUMENT_IFRS_9">IFRS 9 - Financial Instruments</option>
+								<option value="ASSET_HELD_FOR_SALE_IFRS_5">IFRS 5 - Assets Held for Sale</option>
+								<option value="LEASE_ASSET_IFRS_16">IFRS 16 - Leases</option>
+							</select>
+							<small class="form-text text-muted">Select the applicable IFRS standard for this
+								asset</small>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">Cost Center (optional)</label>
+							<select id="assetCostCenter" class="form-select">
+								<option value="">Select Cost Center...</option>
+							</select>
+							<small class="form-text text-muted">Assign to a cost center for dimensional tracking</small>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">Project (optional)</label>
+							<select id="assetProject" class="form-select">
+								<option value="">Select Project...</option>
+							</select>
+							<small class="form-text text-muted">Link to a specific project</small>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label">Department (optional)</label>
+							<select id="assetDepartment" class="form-select">
+								<option value="">Select Department...</option>
+							</select>
+							<small class="form-text text-muted">Assign to a department</small>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary" id="btnSaveAsset">Save</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="/static/js/asset-export.js"></script>
+	<script>
+		const apiBase = '/api/v1/asset-management';
+		let currencySymbol = 'P';
+		let currencyCode = 'BWP';
+
+		async function loadSettings() {
+			try {
+				const res = await fetch('/api/v1/settings/');
+				const json = await res.json();
+				const currency = json?.data?.currency || {};
+				currencyCode = currency.currency || currency.currency_code || 'BWP';
+				currencySymbol = currency.currency_symbol || (currencyCode === 'USD' ? '$' : currencyCode === 'ZAR' ? 'R' : 'P');
+			} catch (e) {
+				console.warn('Failed to load settings, using defaults');
+			}
+		}
+
+		async function loadCategories() {
+			const res = await fetch(`${apiBase}/categories`);
+			const json = await res.json();
+			const sel = document.getElementById('category');
+			(json.data || []).forEach(c => {
+				const opt = document.createElement('option');
+				opt.value = c; opt.textContent = c.replaceAll('_', ' ').toUpperCase();
+				sel.appendChild(opt);
+			});
+
+			// Add special categories for inventory and bank accounts in the filter dropdown
+			const inventoryOpt = document.createElement('option');
+			inventoryOpt.value = 'INVENTORY';
+			inventoryOpt.textContent = 'INVENTORY';
+			sel.appendChild(inventoryOpt);
+
+			const bankOpt = document.createElement('option');
+			bankOpt.value = 'CASH_BANK';
+			bankOpt.textContent = 'CASH & BANK';
+			sel.appendChild(bankOpt);
+
+			// Modal category (only fixed asset categories - don't add inventory/bank)
+			const msel = document.getElementById('assetCategory');
+			msel.innerHTML = '';
+			(json.data || []).forEach(c => {
+				const opt = document.createElement('option');
+				opt.value = c;
+				opt.textContent = c.replaceAll('_', ' ').toUpperCase();
+				msel.appendChild(opt);
+			});
+		} async function loadDepreciationMethods() {
+			const res = await fetch(`${apiBase}/depreciation-methods`);
+			const json = await res.json();
+			const sel = document.getElementById('deprMethod');
+			sel.innerHTML = '';
+			(json.data || []).forEach(m => {
+				const opt = document.createElement('option');
+				opt.value = m; opt.textContent = m.replaceAll('_', ' ').toUpperCase();
+				sel.appendChild(opt);
+			});
+		}
+
+		async function loadInventoryItems() {
+			try {
+				const res = await fetch('/api/v1/inventory/products?active_only=true');
+				const json = await res.json();
+				const products = json.value || json.data || json; // Handle different response formats
+				const sel = document.getElementById('inventoryItem');
+				sel.innerHTML = '<option value="">Select an inventory item...</option>';
+				products.forEach(p => {
+					const opt = document.createElement('option');
+					opt.value = p.id;
+					opt.textContent = `${p.name} (${p.sku || 'No SKU'}) - Stock: ${p.quantity || 0}`;
+					opt.dataset.product = JSON.stringify(p);
+					sel.appendChild(opt);
+				});
+			} catch (error) {
+				console.error('Error loading inventory items:', error);
+			}
+		}
+
+		function formatCurrency(n) {
+			try {
+				return new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode }).format(Number(n || 0));
+			} catch {
+				return `${currencySymbol} ${Number(n || 0).toFixed(2)}`;
+			}
+		}
+
+		async function loadAssets() {
+			try {
+				// Load all three types of assets in parallel
+				const [fixedAssetsRes, inventoryRes, bankRes] = await Promise.all([
+					fetch(`${apiBase}/assets/?limit=1000`),
+					fetch('/api/v1/inventory/products'),
+					fetch('/api/v1/banking/accounts')
+				]);
+
+				const fixedAssets = fixedAssetsRes.ok ? (await fixedAssetsRes.json()).data || [] : [];
+				const inventoryData = inventoryRes.ok ? await inventoryRes.json() : { data: [] };
+				const bankData = bankRes.ok ? await bankRes.json() : { data: [] };
+
+				const inventory = inventoryData.data || inventoryData.value || inventoryData || [];
+				const bankAccounts = bankData.data || bankData.value || bankData || [];
+
+				// Combine all assets into a unified array with normalized structure
+				const allAssets = [
+					// Fixed assets (vehicles, computers, furniture, etc.)
+					...fixedAssets.map(a => ({
+						id: a.id,
+						asset_code: a.asset_code,
+						name: a.name,
+						category: (a.category || '').toString().toUpperCase(),
+						status: (a.status || 'ACTIVE').toString().toUpperCase(),
+						serial_number: a.serial_number || a.vehicle_registration || '',
+						purchase_cost: a.purchase_cost || 0,
+						current_value: a.current_value || 0,
+						asset_type: 'FIXED_ASSET'
+					})),
+					// Inventory items
+					...inventory.map(p => ({
+						id: p.id,
+						asset_code: p.sku || p.product_code || 'N/A',
+						name: p.name || p.product_name || 'Unknown Product',
+						category: 'INVENTORY',
+						status: (p.active || p.is_active) ? 'ACTIVE' : 'INACTIVE',
+						serial_number: p.sku || '',
+						purchase_cost: (Number(p.quantity || 0) * Number(p.cost_price || 0)),
+						current_value: (Number(p.quantity || 0) * Number(p.cost_price || 0)),
+						asset_type: 'INVENTORY'
+					})),
+					// Bank accounts (cash & bank balances)
+					...bankAccounts.map(b => ({
+						id: b.id,
+						asset_code: b.account_number || 'N/A',
+						name: b.name || b.account_name || 'Unknown Account',
+						category: 'CASH_BANK',
+						status: 'ACTIVE',
+						serial_number: b.account_number || '',
+						purchase_cost: b.balance || b.current_balance || 0,
+						current_value: b.balance || b.current_balance || 0,
+						asset_type: 'BANK_ACCOUNT'
+					}))
+				];
+
+				// Apply filters
+				const search = document.getElementById('search').value.trim().toLowerCase();
+				const categoryFilter = document.getElementById('category').value;
+				const statusFilter = document.getElementById('status').value;
+
+				let filtered = allAssets;
+				if (search) {
+					filtered = filtered.filter(a =>
+						(a.name || '').toLowerCase().includes(search) ||
+						(a.asset_code || '').toLowerCase().includes(search) ||
+						(a.serial_number || '').toLowerCase().includes(search)
+					);
+				}
+				if (categoryFilter) {
+					filtered = filtered.filter(a => a.category === categoryFilter);
+				}
+				if (statusFilter) {
+					filtered = filtered.filter(a => a.status === statusFilter);
+				}
+
+				// Store data for export/print functions
+				window.currentAssetData = filtered;
+
+				console.log('Loaded total assets:', allAssets.length, '(Fixed:', fixedAssets.length, 'Inventory:', inventory.length, 'Bank:', bankAccounts.length, ')');
+				renderAssets(filtered);
+			} catch (error) {
+				console.error('Error loading assets:', error);
+				const tbody = document.querySelector('#assetsTable tbody');
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading assets. Please try again.</td></tr>';
+			}
+		}
+
+		function renderAssets(items) {
+			const tbody = document.querySelector('#assetsTable tbody');
+			tbody.innerHTML = '';
+			if (items.length === 0) {
+				const tr = document.createElement('tr');
+				tr.innerHTML = `<td colspan="8" class="text-center text-muted">No assets found</td>`;
+				tbody.appendChild(tr);
+				return;
+			}
+			for (const a of items) {
+				const tr = document.createElement('tr');
+				// Show vehicle registration for vehicles (case-insensitive), otherwise show serial number
+				const serialOrReg = (String(a.category || '').toUpperCase() === 'VEHICLE') && a.vehicle_registration
+					? a.vehicle_registration
+					: a.serial_number || '';
+
+				// Determine action buttons based on asset type
+				let actionButtons = '';
+				if (a.asset_type === 'FIXED_ASSET') {
+					// Fixed assets can be viewed and depreciated
+					actionButtons = `
+					<div class="btn-group">
+						<button class="btn btn-sm btn-outline-primary" onclick="viewAsset('${a.id}')">View</button>
+						<button class="btn btn-sm btn-outline-secondary" onclick="depreciateAsset('${a.id}')">Depreciate</button>
+					</div>
+				`;
+				} else if (a.asset_type === 'INVENTORY') {
+					// Inventory items - link to inventory management
+					actionButtons = `
+					<a href="/static/inventory.html" class="btn btn-sm btn-outline-primary">Manage</a>
+				`;
+				} else if (a.asset_type === 'BANK_ACCOUNT') {
+					// Bank accounts - link to banking module
+					actionButtons = `
+					<a href="/static/bank-accounts.html" class="btn btn-sm btn-outline-primary">View</a>
+				`;
+				}
+
+				tr.innerHTML = `
+				<td>${a.asset_code || ''}</td>
+				<td>${a.name || ''}</td>
+				<td>${(a.category || '').toString().toUpperCase()}</td>
+				<td>${(a.status || '').toString().toUpperCase()}</td>
+				<td>${serialOrReg}</td>
+				<td class="text-end">${formatCurrency(a.purchase_cost)}</td>
+				<td class="text-end">${formatCurrency(a.current_value)}</td>
+				<td class="text-end">
+					${actionButtons}
+				</td>
+			`;
+				tbody.appendChild(tr);
+			}
+		} function extractData(json) {
+			return (json && (json.data || json.value || json.results)) || json || [];
+		}
+
+		async function loadInventoryOverview() {
+			try {
+				const res = await fetch('/api/v1/inventory/products');
+				const json = await res.json();
+				const products = extractData(json) || [];
+				const tbody = document.getElementById('inventoryTableBody');
+				tbody.innerHTML = '';
+				for (const p of products) {
+					const qty = Number(p.quantity || 0);
+					const cost = Number(p.cost_price || 0);
+					const val = qty * cost;
+					const tr = document.createElement('tr');
+					tr.innerHTML = `
+						<td>${p.name || ''}</td>
+						<td>${p.sku || ''}</td>
+						<td class="text-end">${qty.toLocaleString()}</td>
+						<td class="text-end">${formatCurrency(cost)}</td>
+						<td class="text-end">${formatCurrency(val)}</td>
+					`;
+					tbody.appendChild(tr);
+				}
+			} catch (e) { console.error('Failed to load inventory', e); }
+		}
+
+		async function loadBankOverview() {
+			try {
+				const res = await fetch('/api/v1/banking/accounts');
+				const json = await res.json();
+				const accounts = extractData(json) || [];
+				const tbody = document.getElementById('bankTableBody');
+				tbody.innerHTML = '';
+				for (const a of accounts) {
+					const tr = document.createElement('tr');
+					tr.innerHTML = `
+						<td>${a.name || a.account_name || ''}</td>
+						<td>${a.type || a.account_type || ''}</td>
+						<td class="text-end">${formatCurrency(a.balance || a.current_balance || 0)}</td>
+					`;
+					tbody.appendChild(tr);
+				}
+			} catch (e) { console.error('Failed to load bank accounts', e); }
+		}
+
+		function viewAsset(id) {
+			window.location.href = `/static/asset.html?id=${id}`;
+		}
+
+		document.getElementById('btnRefresh').addEventListener('click', loadAssets);
+		document.getElementById('btnFilter').addEventListener('click', loadAssets);
+		// Show/hide vehicle and inventory fields based on category selection
+		document.getElementById('assetCategory').addEventListener('change', function () {
+			const vehicleFields = document.getElementById('vehicleFields');
+			const inventoryFields = document.getElementById('inventoryFields');
+
+			// Hide all category-specific fields first
+			vehicleFields.style.display = 'none';
+			inventoryFields.style.display = 'none';
+
+			// Clear all category-specific fields
+			clearVehicleFields();
+			clearInventoryFields();
+
+			// Show relevant fields based on category (values are uppercase from API)
+			if (this.value === 'VEHICLE') {
+				vehicleFields.style.display = 'block';
+			} else if (this.value === 'INVENTORY') {
+				inventoryFields.style.display = 'block';
+				loadInventoryItems(); // Load inventory items when inventory category is selected
+			}
+		});
+
+		// Function to clear vehicle fields
+		function clearVehicleFields() {
+			document.getElementById('vehicleRegistration').value = '';
+			document.getElementById('engineNumber').value = '';
+			document.getElementById('chassisNumber').value = '';
+			document.getElementById('vehicleMake').value = '';
+			document.getElementById('vehicleModel').value = '';
+			document.getElementById('vehicleYear').value = '';
+			document.getElementById('vehicleColor').value = '';
+			document.getElementById('fuelType').value = '';
+			document.getElementById('transmissionType').value = '';
+			document.getElementById('mileage').value = '';
+			document.getElementById('insuranceExpiry').value = '';
+			document.getElementById('licenseExpiry').value = '';
+			document.getElementById('lastServiceDate').value = '';
+			document.getElementById('nextServiceDate').value = '';
+		}
+
+		// Function to clear inventory fields
+		function clearInventoryFields() {
+			document.getElementById('inventoryItem').value = '';
+			document.getElementById('inventoryQuantity').value = '1';
+			document.getElementById('inventorySku').value = '';
+			document.getElementById('inventoryStockLevel').value = '';
+			document.getElementById('inventoryDescription').value = '';
+		}
+
+		// Handle inventory item selection
+		document.getElementById('inventoryItem').addEventListener('change', function () {
+			if (this.value) {
+				const product = JSON.parse(this.selectedOptions[0].dataset.product);
+				document.getElementById('inventorySku').value = product.sku || '';
+				document.getElementById('inventoryStockLevel').value = product.quantity || 0;
+				document.getElementById('inventoryDescription').value = product.description || '';
+
+				// Auto-populate asset name and cost from inventory item
+				document.getElementById('assetName').value = product.name;
+				document.getElementById('purchaseCost').value = product.cost_price || 0;
+			} else {
+				clearInventoryFields();
+			}
+		});
+
+		// Function to add new asset with pre-filled category
+		function addNewAsset(category = '') {
+			// Clear all form fields
+			document.getElementById('assetName').value = '';
+			document.getElementById('assetCategory').value = category; // Pre-fill category
+			document.getElementById('purchaseDate').value = '';
+			document.getElementById('purchaseCost').value = '';
+			document.getElementById('serialNumber').value = '';
+			document.getElementById('deprMethod').value = '';
+			document.getElementById('usefulLife').value = '5';
+			document.getElementById('salvageValue').value = '0';
+			clearVehicleFields();
+			clearInventoryFields();
+
+			// Show/hide category-specific fields based on category
+			if (category.toUpperCase() === 'VEHICLE') {
+				document.getElementById('vehicleFields').style.display = 'block';
+				document.getElementById('inventoryFields').style.display = 'none';
+			} else {
+				document.getElementById('vehicleFields').style.display = 'none';
+				document.getElementById('inventoryFields').style.display = 'none';
+			}
+
+			// Trigger category change to update fields
+			const event = new Event('change');
+			document.getElementById('assetCategory').dispatchEvent(event);
+
+			const modal = new bootstrap.Modal(document.getElementById('assetModal'));
+			modal.show();
+		}
+
+		document.getElementById('btnNewAsset').addEventListener('click', () => {
+			addNewAsset(''); // Call with empty category for general new asset
+		});
+
+		document.getElementById('btnSaveAsset').addEventListener('click', async () => {
+			const payload = {
+				name: document.getElementById('assetName').value.trim(),
+				category: document.getElementById('assetCategory').value,
+				purchase_date: document.getElementById('purchaseDate').value,
+				purchase_cost: parseFloat(document.getElementById('purchaseCost').value || '0'),
+				serial_number: document.getElementById('serialNumber').value.trim(),
+				depreciation_method: document.getElementById('deprMethod').value,
+				useful_life_years: parseInt(document.getElementById('usefulLife').value || '5'),
+				salvage_value: parseFloat(document.getElementById('salvageValue').value || '0')
+			};
+
+			// Add vehicle-specific fields if category is vehicle
+			if (document.getElementById('assetCategory').value === 'VEHICLE') {
+				payload.vehicle_registration = document.getElementById('vehicleRegistration').value.trim();
+				payload.engine_number = document.getElementById('engineNumber').value.trim();
+				payload.chassis_number = document.getElementById('chassisNumber').value.trim();
+				payload.vehicle_make = document.getElementById('vehicleMake').value.trim();
+				payload.vehicle_model = document.getElementById('vehicleModel').value.trim();
+				payload.vehicle_year = parseInt(document.getElementById('vehicleYear').value || '0');
+				payload.vehicle_color = document.getElementById('vehicleColor').value.trim();
+				payload.fuel_type = document.getElementById('fuelType').value;
+				payload.transmission_type = document.getElementById('transmissionType').value;
+				payload.mileage = parseInt(document.getElementById('mileage').value || '0');
+				payload.insurance_expiry = document.getElementById('insuranceExpiry').value || null;
+				payload.license_expiry = document.getElementById('licenseExpiry').value || null;
+				payload.last_service_date = document.getElementById('lastServiceDate').value || null;
+				payload.next_service_date = document.getElementById('nextServiceDate').value || null;
+			}
+
+			// Add inventory-specific fields if category is inventory
+			if (document.getElementById('assetCategory').value === 'INVENTORY') {
+				const inventoryItemId = document.getElementById('inventoryItem').value;
+				if (inventoryItemId) {
+					payload.inventory_item_id = inventoryItemId;
+					payload.inventory_quantity = parseInt(document.getElementById('inventoryQuantity').value || '1');
+					payload.serial_number = document.getElementById('inventorySku').value.trim();
+				}
+			}
+
+			// Add IFRS category
+			const ifrsCategory = document.getElementById('ifrsCategory').value;
+			if (ifrsCategory) {
+				payload.ifrs_category = ifrsCategory;
+			}
+
+			// Add accounting dimensions
+			const costCenter = document.getElementById('assetCostCenter').value;
+			if (costCenter) {
+				payload.cost_center_id = costCenter;
+			}
+
+			const project = document.getElementById('assetProject').value;
+			if (project) {
+				payload.project_id = project;
+			}
+
+			const department = document.getElementById('assetDepartment').value;
+			if (department) {
+				payload.department_id = department;
+			}
+
+			if (!payload.name || !payload.category || !payload.purchase_date) {
+				alert('Please fill in required fields');
+				return;
+			}
+			const res = await fetch(`${apiBase}/assets/`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+			const json = await res.json();
+			if (!res.ok || !json.success) {
+				alert('Failed to create asset: ' + (json.detail || res.statusText));
+				return;
+			}
+			bootstrap.Modal.getInstance(document.getElementById('assetModal')).hide();
+			await loadAssets();
+		});
+
+		async function depreciateAsset(id) {
+			const confirmRun = confirm('Record depreciation as of today for this asset?');
+			if (!confirmRun) return;
+			const today = new Date().toISOString().slice(0, 10);
+			const res = await fetch(`${apiBase}/assets/${id}/depreciation?depreciation_date=${today}`, { method: 'POST' });
+			const json = await res.json();
+			if (!res.ok || !json.success) {
+				// Show the actual error message from the API
+				const errorMsg = json.message || json.detail || json.error || 'Failed to record depreciation';
+				alert(errorMsg);
+				return;
+			}
+			alert(`Depreciation recorded successfully!\nAmount: P${json.data.depreciation_amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+			await loadAssets();
+		}
+
+		// ==================== CATEGORY-SPECIFIC FUNCTIONS ====================
+
+		async function filterAssetsByCategory(category) {
+			const params = new URLSearchParams();
+			params.set('category', category);
+			params.set('limit', '1000');
+
+			const res = await fetch(`${apiBase}/assets/?${params.toString()}`);
+			if (!res.ok) throw new Error('Failed to load assets');
+			const json = await res.json();
+			return json.data || [];
+		}
+
+		async function loadFurnitureAssets() {
+			const tbody = document.getElementById('furnitureTableBody');
+			tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
+
+			try {
+				const assets = await filterAssetsByCategory('FURNITURE');
+				renderCategoryTable(assets, tbody);
+			} catch (error) {
+				console.error('Error loading furniture:', error);
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading furniture assets</td></tr>';
+			}
+		}
+
+		async function loadElectronicsAssets() {
+			const tbody = document.getElementById('electronicsTableBody');
+			tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
+
+			try {
+				const assets = await filterAssetsByCategory('COMPUTER');
+				renderCategoryTable(assets, tbody);
+			} catch (error) {
+				console.error('Error loading electronics:', error);
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading electronics assets</td></tr>';
+			}
+		}
+
+		async function loadVehicleAssets() {
+			const tbody = document.getElementById('vehiclesTableBody');
+			tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
+
+			try {
+				const assets = await filterAssetsByCategory('VEHICLE');
+				renderCategoryTable(assets, tbody, true); // true = show registration
+			} catch (error) {
+				console.error('Error loading vehicles:', error);
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading vehicle assets</td></tr>';
+			}
+		}
+
+		async function loadToolsAssets() {
+			const tbody = document.getElementById('toolsTableBody');
+			tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
+
+			try {
+				const assets = await filterAssetsByCategory('EQUIPMENT');
+				renderCategoryTable(assets, tbody);
+			} catch (error) {
+				console.error('Error loading tools:', error);
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading tools & equipment</td></tr>';
+			}
+		}
+
+		async function loadSoftwareAssets() {
+			const tbody = document.getElementById('softwareTableBody');
+			tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
+
+			try {
+				const assets = await filterAssetsByCategory('SOFTWARE');
+				renderSoftwareTable(assets, tbody);
+			} catch (error) {
+				console.error('Error loading software:', error);
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading software assets</td></tr>';
+			}
+		}
+
+		function renderCategoryTable(items, tbody, showRegistration = false) {
+			tbody.innerHTML = '';
+
+			if (items.length === 0) {
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No assets found in this category</td></tr>';
+				return;
+			}
+
+			for (const a of items) {
+				const serialOrReg = showRegistration && a.vehicle_registration
+					? a.vehicle_registration
+					: a.serial_number || 'N/A';
+
+				const tr = document.createElement('tr');
+				tr.innerHTML = `
+					<td><strong>${a.asset_code || ''}</strong></td>
+					<td>${a.name || ''}</td>
+					<td>${serialOrReg}</td>
+					<td><span class="badge bg-${getStatusColor(a.status)}">${(a.status || '').toUpperCase()}</span></td>
+					<td>${formatDate(a.purchase_date)}</td>
+					<td class="text-end">${formatCurrency(a.purchase_cost)}</td>
+					<td class="text-end"><strong>${formatCurrency(a.current_value)}</strong></td>
+					<td>
+						<div class="btn-group btn-group-sm">
+							<button class="btn btn-outline-primary" onclick="viewAsset('${a.id}')" title="View Details">
+								<i class="bi bi-eye"></i>
+							</button>
+							<button class="btn btn-outline-secondary" onclick="depreciateAsset('${a.id}')" title="Depreciate">
+								<i class="bi bi-calculator"></i>
+							</button>
+						</div>
+					</td>
+				`;
+				tbody.appendChild(tr);
+			}
+		}
+
+		function renderSoftwareTable(items, tbody) {
+			tbody.innerHTML = '';
+
+			if (items.length === 0) {
+				tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No software licenses found</td></tr>';
+				return;
+			}
+
+			for (const a of items) {
+				const tr = document.createElement('tr');
+				const expiryDate = a.expiry_date || a.warranty_expiry || 'N/A';
+				const licenseKey = a.serial_number || a.license_key || 'N/A';
+
+				tr.innerHTML = `
+					<td><strong>${a.asset_code || ''}</strong></td>
+					<td>${a.name || ''}</td>
+					<td><small>${licenseKey}</small></td>
+					<td>${formatDate(expiryDate)}</td>
+					<td><span class="badge bg-${getStatusColor(a.status)}">${(a.status || '').toUpperCase()}</span></td>
+					<td class="text-end">${formatCurrency(a.purchase_cost)}</td>
+					<td class="text-end"><strong>${formatCurrency(a.current_value)}</strong></td>
+					<td>
+						<div class="btn-group btn-group-sm">
+							<button class="btn btn-outline-primary" onclick="viewAsset('${a.id}')" title="View Details">
+								<i class="bi bi-eye"></i>
+							</button>
+							<button class="btn btn-outline-secondary" onclick="depreciateAsset('${a.id}')" title="Depreciate">
+								<i class="bi bi-calculator"></i>
+							</button>
+						</div>
+					</td>
+				`;
+				tbody.appendChild(tr);
+			}
+		}
+
+		function getStatusColor(status) {
+			const statusMap = {
+				'ACTIVE': 'success',
+				'INACTIVE': 'warning',
+				'DISPOSED': 'danger',
+				'SOLD': 'info',
+				'MAINTENANCE': 'secondary'
+			};
+			return statusMap[status?.toUpperCase()] || 'secondary';
+		}
+
+		function formatDate(dateStr) {
+			if (!dateStr || dateStr === 'N/A') return 'N/A';
+			try {
+				const date = new Date(dateStr);
+				return date.toLocaleDateString('en-GB');
+			} catch {
+				return dateStr;
+			}
+		}
+
+		// Load accounting dimensions for asset tracking
+		let costCenters = [];
+		let projects = [];
+		let departments = [];
+
+		async function loadAccountingDimensions() {
+			try {
+				console.log('Loading accounting dimensions...');
+				const res = await fetch('/api/v1/accounting/dimensions?include_values=true');
+				const json = await res.json();
+				const dimensions = json.data || [];
+
+				// Filter Cost Centers
+				const costCenterDimension = dimensions.find(d => d.dimension_type === 'functional' || d.code === 'DEPT');
+				if (costCenterDimension && costCenterDimension.dimension_values) {
+					costCenters = costCenterDimension.dimension_values.filter(v => v.is_active);
+					console.log('Cost Centers loaded:', costCenters.length);
+				}
+
+				// Filter Projects
+				const projectDimension = dimensions.find(d => d.dimension_type === 'project' || d.code === 'PROJ');
+				if (projectDimension && projectDimension.dimension_values) {
+					projects = projectDimension.dimension_values.filter(v => v.is_active);
+					console.log('Projects loaded:', projects.length);
+				}
+
+				// Filter Departments
+				const departmentDimension = dimensions.find(d => d.dimension_type === 'department' || d.code === 'DEPT' || d.name?.toLowerCase().includes('department'));
+				if (departmentDimension && departmentDimension.dimension_values) {
+					departments = departmentDimension.dimension_values.filter(v => v.is_active);
+					console.log('Departments loaded:', departments.length);
+				} else {
+					departments = [];
+				}
+
+				populateAssetDimensionDropdowns();
+
+			} catch (error) {
+				console.error('Error loading accounting dimensions:', error);
+			}
+		}
+
+		function populateAssetDimensionDropdowns() {
+			// Populate Cost Center dropdown
+			const costCenterSelect = document.getElementById('assetCostCenter');
+			if (costCenterSelect) {
+				costCenterSelect.innerHTML = '<option value="">Select Cost Center...</option>';
+				costCenters.forEach(cc => {
+					const option = document.createElement('option');
+					option.value = cc.id;
+					option.textContent = `${cc.code} - ${cc.name}`;
+					costCenterSelect.appendChild(option);
+				});
+			}
+
+			// Populate Project dropdown
+			const projectSelect = document.getElementById('assetProject');
+			if (projectSelect) {
+				projectSelect.innerHTML = '<option value="">Select Project...</option>';
+				projects.forEach(proj => {
+					const option = document.createElement('option');
+					option.value = proj.id;
+					option.textContent = `${proj.code} - ${proj.name}`;
+					projectSelect.appendChild(option);
+				});
+			}
+
+			// Populate Department dropdown
+			const departmentSelect = document.getElementById('assetDepartment');
+			if (departmentSelect) {
+				departmentSelect.innerHTML = '<option value="">Select Department...</option>';
+				departments.forEach(dept => {
+					const option = document.createElement('option');
+					option.value = dept.id;
+					option.textContent = `${dept.code} - ${dept.name}`;
+					departmentSelect.appendChild(option);
+				});
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			await loadSettings();
+			await Promise.all([loadCategories(), loadDepreciationMethods(), loadAccountingDimensions()]);
+			await loadAssets();
+			// Preload others in background
+			loadInventoryOverview();
+			loadBankOverview();
+
+			// Wire export/print buttons
+			document.getElementById('btnPrintRegister').addEventListener('click', () => {
+				if (window.printAssetRegister) {
+					window.printAssetRegister();
+				} else {
+					alert('Print function not loaded. Please refresh the page.');
+				}
+			});
+
+			document.getElementById('btnExportRegister').addEventListener('click', () => {
+				if (window.exportAssetRegisterCSV) {
+					window.exportAssetRegisterCSV();
+				} else {
+					alert('Export function not loaded. Please refresh the page.');
+				}
+			});
+
+			// Wire tab switch - load category-specific data
+			document.getElementById('assetsTabs').addEventListener('shown.bs.tab', (e) => {
+				const target = e.target.getAttribute('data-bs-target');
+				if (target === '#tab-inventory') loadInventoryOverview();
+				if (target === '#tab-bank') loadBankOverview();
+				if (target === '#tab-furniture') loadFurnitureAssets();
+				if (target === '#tab-electronics') loadElectronicsAssets();
+				if (target === '#tab-vehicles') loadVehicleAssets();
+				if (target === '#tab-tools') loadToolsAssets();
+				if (target === '#tab-software') loadSoftwareAssets();
+			});
+		});
+	</script>
+</body>
+
+</html>

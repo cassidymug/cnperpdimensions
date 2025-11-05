@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Purchase Orders</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Fallback CSS for offline/CDN issues -->
+    <style>
+        /* Bootstrap fallback styles */
+        .container-fluid { width: 100%; padding-right: 15px; padding-left: 15px; margin-right: auto; margin-left: auto; }
+        .row { display: flex; flex-wrap: wrap; margin-right: -15px; margin-left: -15px; }
+        .col-md-3 { flex: 0 0 25%; max-width: 25%; position: relative; width: 100%; padding-right: 15px; padding-left: 15px; }
+        .col-12 { flex: 0 0 100%; max-width: 100%; position: relative; width: 100%; padding-right: 15px; padding-left: 15px; }
+        .btn { display: inline-block; font-weight: 400; text-align: center; white-space: nowrap; vertical-align: middle; user-select: none; border: 1px solid transparent; padding: 0.375rem 0.75rem; font-size: 1rem; line-height: 1.5; border-radius: 0.25rem; transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
+        .btn-primary { color: #fff; background-color: #007bff; border-color: #007bff; }
+        .btn-primary:hover { color: #fff; background-color: #0056b3; border-color: #004085; }
+        .d-flex { display: flex !important; }
+        .justify-content-between { justify-content: space-between !important; }
+        .align-items-center { align-items: center !important; }
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-1 { margin-bottom: 0.25rem !important; }
+        .mb-4 { margin-bottom: 1.5rem !important; }
+        .mt-4 { margin-top: 1.5rem !important; }
+        .text-primary { color: #007bff !important; }
+        .text-muted { color: #6c757d !important; }
+        .h3 { font-size: 1.75rem; }
+        @media (max-width: 767.98px) {
+            .col-md-3 { flex: 0 0 100%; max-width: 100%; }
+        }
+    </style>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Modern Styles -->
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+    <!-- Navbar Scripts -->
+    <script src="js/navbar.js?v=20250106001"></script>
+    
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+    
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-file-earmark-text text-primary"></i> Purchase Orders
+                        </h1>
+                        <p class="text-muted mb-0">Manage purchase orders and procurement workflow</p>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPOModal">
+                        <i class="bi bi-plus"></i> New Purchase Order
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total POs</h6>
+                            <h3 class="mb-0" id="totalPOs">-</h3>
+                        </div>
+                        <i class="bi bi-file-earmark-text fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Pending Approval</h6>
+                            <h3 class="mb-0" id="pendingPOs">-</h3>
+                        </div>
+                        <i class="bi bi-clock fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Value</h6>
+                            <h3 class="mb-0" id="totalValue">-</h3>
+                        </div>
+                        <i class="bi bi-currency-Pula fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">This Month</h6>
+                            <h3 class="mb-0" id="monthlyPOs">-</h3>
+                        </div>
+                        <i class="bi bi-calendar-event fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="pending">Pending Approval</option>
+                        <option value="approved">Approved</option>
+                        <option value="ordered">Ordered</option>
+                        <option value="received">Received</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Supplier</label>
+                    <select class="form-select" id="supplierFilter">
+                        <option value="">All Suppliers</option>
+                        <!-- Suppliers will be loaded dynamically -->
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="fromDateFilter">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="toDateFilter">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Search POs...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                            <i class="bi bi-arrow-clockwise"></i> Clear
+                        </button>
+                        <button class="btn btn-outline-info" onclick="exportPOs()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase Orders Table -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Purchase Orders</h5>
+                    <div>
+                        <button class="btn btn-outline-success btn-sm me-2" onclick="bulkApprove()">
+                            <i class="bi bi-check-circle"></i> Approve Selected
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="generatePOReport()">
+                            <i class="bi bi-file-earmark-text"></i> Generate Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th>PO Number</th>
+                                <th>Supplier</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Expected Delivery</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchaseOrdersTable">
+                            <!-- Purchase orders will be dynamically generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Purchase Order Modal -->
+    <div class="modal fade" id="createPOModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Create Purchase Order
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createPOForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="poNumber" class="form-label">PO Number *</label>
+                                    <input type="text" class="form-control" id="poNumber" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplierSelect" class="form-label">Supplier *</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="supplierSelect" onchange="handleSupplierSelection()">
+                                            <option value="">-- Select from list --</option>
+                                            <option value="__custom__">✏️ Type custom supplier</option>
+                                            <!-- Suppliers will be loaded dynamically -->
+                                        </select>
+                                        <input type="text" class="form-control d-none" id="supplierCustom" placeholder="Type supplier name">
+                                    </div>
+                                    <small class="text-muted">Select from list or type a custom supplier name</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="orderDate" class="form-label">Order Date *</label>
+                                    <input type="date" class="form-control" id="orderDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="expectedDelivery" class="form-label">Expected Delivery</label>
+                                    <input type="date" class="form-control" id="expectedDelivery">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="poNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="poNotes" rows="2"></textarea>
+                        </div>
+                        
+                        <hr class="my-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-box-seam"></i> Order Items
+                        </h6>
+                        <div id="poItems">
+                            <div class="row po-item mb-3 border rounded p-3 bg-light">
+                                <div class="col-md-12 mb-3">
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Item mode selection">
+                                        <input type="radio" class="btn-check item-mode" name="itemMode0" id="inventory0" value="inventory" checked onchange="toggleItemMode(this)">
+                                        <label class="btn btn-outline-primary" for="inventory0">
+                                            <i class="bi bi-box-seam"></i> Select from Inventory
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check item-mode" name="itemMode0" id="custom0" value="custom" onchange="toggleItemMode(this)">
+                                        <label class="btn btn-outline-primary" for="custom0">
+                                            <i class="bi bi-pencil"></i> Type Custom Item
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Product *</label>
+                                    <select class="form-select product-select" onchange="handleProductSelection(this)">
+                                        <option value="">Select Product</option>
+                                        <!-- Products will be loaded dynamically -->
+                                    </select>
+                                    <input type="text" class="form-control product-custom d-none" placeholder="Type item description">
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Quantity *</label>
+                                    <input type="number" class="form-control quantity-input" min="1" value="1" required onchange="calculateItemTotal(this)">
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Unit Cost</label>
+                                    <input type="number" class="form-control unit-cost-input" step="0.01" placeholder="0.00" onchange="calculateItemTotal(this)">
+                                    <small class="text-muted d-block">Optional</small>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">VAT %</label>
+                                    <input type="number" class="form-control vat-input" step="0.01" placeholder="0" value="0" onchange="calculateItemTotal(this)">
+                                    <small class="text-muted d-block">Optional</small>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Total</label>
+                                    <input type="number" class="form-control item-total bg-white" readonly placeholder="0.00">
+                                    <small class="text-muted d-block">Auto-calc</small>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addPOItem()">
+                            <i class="bi bi-plus-circle"></i> Add Another Item
+                        </button>
+                        
+                        <hr class="my-4">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="poSubtotal" class="form-label fw-bold">Subtotal</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control bg-light" id="poSubtotal" readonly>
+                                </div>
+                                <small class="text-muted d-block mt-1">Automatically calculated from items</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="poTotalVAT" class="form-label fw-bold">Total VAT</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control bg-light" id="poTotalVAT" readonly>
+                                </div>
+                                <small class="text-muted d-block mt-1">Sum of all VAT amounts</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="poTotal" class="form-label fw-bold text-primary">Total Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-primary text-white">$</span>
+                                    <input type="number" class="form-control bg-light fw-bold fs-5" id="poTotal" readonly>
+                                </div>
+                                <small class="text-muted d-block mt-1">Subtotal + VAT</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="alert alert-info d-flex align-items-center mb-0" role="alert">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <div>
+                                        <strong>Note:</strong> Prices and VAT are optional. Leave blank if not available yet (for quotes or draft orders).
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createPO()">
+                        <i class="bi bi-plus"></i> Create Purchase Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Purchase Order Details Modal -->
+    <div class="modal fade" id="poDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-eye"></i> Purchase Order Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <p><strong>PO Number:</strong> <span id="poDetailsNumber"></span></p>
+                            <p><strong>Supplier:</strong> <span id="poDetailsSupplier"></span></p>
+                            <p><strong>Date:</strong> <span id="poDetailsDate"></span></p>
+                            <p><strong>Due Date:</strong> <span id="poDetailsDueDate"></span></p>
+                            <p><strong>Status:</strong> <span id="poDetailsStatus"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Financial Details</h6>
+                            <p><strong>Total Amount:</strong> <span id="poDetailsTotal"></span></p>
+                            <p><strong>Amount Paid:</strong> <span id="poDetailsPaid"></span></p>
+                            <p><strong>Balance:</strong> <span id="poDetailsBalance"></span></p>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Order Items</h6>
+                    <div id="poDetailsItems">
+                        <!-- Items will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
+    <!-- Bootstrap fallback check and basic functionality -->
+    <script>
+        // Check if Bootstrap loaded properly
+        if (typeof bootstrap === 'undefined') {
+            console.warn('Bootstrap JS failed to load from CDN, adding basic functionality');
+            
+            // Add basic dropdown functionality
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('[data-bs-toggle="dropdown"]')) {
+                    e.preventDefault();
+                    const dropdown = e.target.nextElementSibling;
+                    if (dropdown && dropdown.classList.contains('dropdown-menu')) {
+                        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    }
+                }
+                
+                // Close dropdowns when clicking outside
+                if (!e.target.closest('.dropdown')) {
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.style.display = 'none';
+                    });
+                }
+            });
+            
+            // Add basic modal functionality
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('[data-bs-toggle="modal"]')) {
+                    e.preventDefault();
+                    const targetId = e.target.getAttribute('data-bs-target');
+                    const modal = document.querySelector(targetId);
+                    if (modal) {
+                        modal.style.display = 'block';
+                        modal.classList.add('show');
+                    }
+                }
+                
+                if (e.target.matches('[data-bs-dismiss="modal"]') || e.target.closest('.modal-backdrop')) {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.style.display = 'none';
+                        modal.classList.remove('show');
+                    });
+                }
+            });
+        }
+    </script>
+    
+    
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    
+    <script>
+        // Global data storage
+        let purchaseOrders = [];
+        let suppliers = [];
+        let products = [];
+        let loading = false;
+
+        // Currency settings
+        let currentCurrency = 'BWP';
+        let currencySymbol = 'P';
+        let currencyCode = 'BWP';
+
+        // API endpoints
+        const API_BASE = '/api/v1';
+        const PURCHASES_ENDPOINT = `${API_BASE}/purchases`;
+        const PURCHASE_ORDERS_ENDPOINT = `${PURCHASES_ENDPOINT}/purchase-orders`;
+        const SUPPLIERS_ENDPOINT = `${PURCHASES_ENDPOINT}/suppliers`;
+        const PRODUCTS_ENDPOINT = `${API_BASE}/inventory/products`;
+
+        // Counter for item IDs
+        let itemCounter = 1;
+
+        // Load settings and currency
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/v1/settings/currency');
+                if (response.ok) {
+                    const settings = await response.json();
+                    currentCurrency = settings.data.currency || 'BWP';
+                    currencySymbol = settings.data.currency_symbol || 'P';
+                    currencyCode = settings.data.currency || 'BWP';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Format currency amount
+        function formatCurrency(amount) {
+            return `${currencySymbol}${parseFloat(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Fetch purchase orders from database
+        async function fetchPurchaseOrders() {
+            try {
+                loading = true;
+                showLoadingState();
+                
+                const params = new URLSearchParams();
+                const statusFilter = document.getElementById('statusFilter').value;
+                const supplierFilter = document.getElementById('supplierFilter').value;
+                const fromDateFilter = document.getElementById('fromDateFilter').value;
+                const toDateFilter = document.getElementById('toDateFilter').value;
+                const searchFilter = document.getElementById('searchFilter').value;
+
+                if (statusFilter) params.append('status', statusFilter);
+                if (supplierFilter) params.append('supplier_id', supplierFilter);
+                if (fromDateFilter) params.append('from_date', fromDateFilter);
+                if (toDateFilter) params.append('to_date', toDateFilter);
+                if (searchFilter) params.append('search', searchFilter);
+
+                const response = await fetch(`${PURCHASE_ORDERS_ENDPOINT}?${params}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                purchaseOrders = data.map(po => ({
+                    id: po.id,
+                    poNumber: po.po_number || `PO-${po.id.slice(-6)}`,
+                    supplier: po.supplier_name || 'Unknown Supplier',
+                    supplierId: po.supplier_id,
+                    date: po.date || new Date().toISOString().split('T')[0],
+                    dueDate: po.due_date || new Date().toISOString().split('T')[0],
+                    status: po.status || 'draft',
+                    totalAmount: po.total_amount || 0,
+                    amountPaid: po.amount_paid || 0,
+                    vatAmount: po.vat_amount || 0,
+                    notes: po.notes || '',
+                    created_at: po.created_at || new Date().toISOString().split('T')[0]
+                }));
+
+                renderPurchaseOrders();
+                updateStatistics();
+                
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Purchase orders loaded successfully', 'success');
+                }
+            } catch (error) {
+                console.error('Error fetching purchase orders:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load purchase orders', 'error');
+                }
+                // Show empty state
+                purchaseOrders = [];
+                renderPurchaseOrders();
+                updateStatistics();
+            } finally {
+                loading = false;
+                hideLoadingState();
+            }
+        }
+
+        // Fetch suppliers for dropdown
+        async function fetchSuppliers() {
+            try {
+                const response = await fetch(SUPPLIERS_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                suppliers = data;
+                
+                // Populate supplier dropdown in modal
+                const supplierSelect = document.getElementById('supplierSelect');
+                if (supplierSelect) {
+                    // Keep first two options, then add suppliers
+                    const defaultOptions = `
+                        <option value="">-- Select from list --</option>
+                        <option value="__custom__">✏️ Type custom supplier</option>
+                    `;
+                    supplierSelect.innerHTML = defaultOptions;
+                    suppliers.forEach(supplier => {
+                        const option = document.createElement('option');
+                        option.value = supplier.id;
+                        option.textContent = supplier.name;
+                        supplierSelect.appendChild(option);
+                    });
+                }
+                
+                // Populate supplier filter dropdown
+                const supplierFilter = document.getElementById('supplierFilter');
+                if (supplierFilter) {
+                    supplierFilter.innerHTML = '<option value="">All Suppliers</option>';
+                    suppliers.forEach(supplier => {
+                        const option = document.createElement('option');
+                        option.value = supplier.id;
+                        option.textContent = supplier.name;
+                        supplierFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching suppliers:', error);
+            }
+        }
+
+        // Fetch products from inventory
+        async function fetchProducts() {
+            try {
+                const response = await fetch(PRODUCTS_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                products = data;
+                
+                // Populate all product dropdowns
+                populateProductDropdowns();
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                // Continue even if products can't be loaded - user can still type custom items
+            }
+        }
+
+        // Populate product dropdowns
+        function populateProductDropdowns() {
+            document.querySelectorAll('.product-select').forEach(select => {
+                select.innerHTML = '<option value="">-- Select from inventory --</option>';
+                products.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = `${product.name} ${product.sku ? '(' + product.sku + ')' : ''}`;
+                    option.dataset.price = product.cost_price || '';
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Handle supplier selection mode
+        function handleSupplierSelection() {
+            const select = document.getElementById('supplierSelect');
+            const customInput = document.getElementById('supplierCustom');
+            
+            if (select.value === '__custom__') {
+                select.classList.add('d-none');
+                customInput.classList.remove('d-none');
+                customInput.focus();
+                customInput.required = true;
+                select.required = false;
+            } else {
+                select.classList.remove('d-none');
+                customInput.classList.add('d-none');
+                customInput.required = false;
+                select.required = true;
+            }
+        }
+
+        // Handle product selection - auto-fill price if available
+        function handleProductSelection(select) {
+            const selectedOption = select.options[select.selectedIndex];
+            if (selectedOption && selectedOption.dataset.price) {
+                const itemRow = select.closest('.po-item');
+                const unitCostInput = itemRow.querySelector('.unit-cost-input');
+                unitCostInput.value = selectedOption.dataset.price;
+                calculateItemTotal(unitCostInput);
+            }
+        }
+
+        // Toggle between inventory selection and custom item input
+        function toggleItemMode(radio) {
+            const itemRow = radio.closest('.po-item');
+            const productSelect = itemRow.querySelector('.product-select');
+            const productCustom = itemRow.querySelector('.product-custom');
+            
+            if (radio.value === 'inventory') {
+                productSelect.classList.remove('d-none');
+                productCustom.classList.add('d-none');
+                productSelect.required = true;
+                productCustom.required = false;
+            } else {
+                productSelect.classList.add('d-none');
+                productCustom.classList.remove('d-none');
+                productCustom.required = true;
+                productSelect.required = false;
+            }
+        }
+
+        // Calculate item total
+        function calculateItemTotal(element) {
+            const itemRow = element.closest('.po-item');
+            const quantity = parseFloat(itemRow.querySelector('.quantity-input').value) || 0;
+            const unitCost = parseFloat(itemRow.querySelector('.unit-cost-input').value) || 0;
+            const vatPercent = parseFloat(itemRow.querySelector('.vat-input').value) || 0;
+            
+            const subtotal = quantity * unitCost;
+            const vatAmount = subtotal * (vatPercent / 100);
+            const total = subtotal + vatAmount;
+            
+            itemRow.querySelector('.item-total').value = total.toFixed(2);
+            
+            // Recalculate PO totals
+            calculatePOTotals();
+        }
+
+        // Calculate PO totals
+        function calculatePOTotals() {
+            let subtotal = 0;
+            let totalVAT = 0;
+            
+            document.querySelectorAll('.po-item').forEach(item => {
+                const quantity = parseFloat(item.querySelector('.quantity-input').value) || 0;
+                const unitCost = parseFloat(item.querySelector('.unit-cost-input').value) || 0;
+                const vatPercent = parseFloat(item.querySelector('.vat-input').value) || 0;
+                
+                const itemSubtotal = quantity * unitCost;
+                const itemVAT = itemSubtotal * (vatPercent / 100);
+                
+                subtotal += itemSubtotal;
+                totalVAT += itemVAT;
+            });
+            
+            const total = subtotal + totalVAT;
+            
+            document.getElementById('poSubtotal').value = subtotal.toFixed(2);
+            document.getElementById('poTotalVAT').value = totalVAT.toFixed(2);
+            document.getElementById('poTotal').value = total.toFixed(2);
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            const table = document.getElementById('purchaseOrdersTable');
+            if (table) {
+                const tbody = table.querySelector('tbody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading purchase orders...</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        // Hide loading state
+        function hideLoadingState() {
+            // Loading state will be replaced by render functions
+        }
+
+        // Load data from database
+        function loadData() {
+            // Purchase orders will be loaded from database
+            renderPurchaseOrders();
+            updateStatistics();
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const totalPOs = purchaseOrders.length;
+            const pendingPOs = purchaseOrders.filter(po => po.status === 'pending').length;
+            const approvedPOs = purchaseOrders.filter(po => po.status === 'approved').length;
+            const draftPOs = purchaseOrders.filter(po => po.status === 'draft').length;
+            const totalValue = purchaseOrders.reduce((sum, po) => sum + po.totalAmount, 0);
+            const totalPaid = purchaseOrders.reduce((sum, po) => sum + po.amountPaid, 0);
+            const totalOutstanding = totalValue - totalPaid;
+
+            document.getElementById('totalPOs').textContent = totalPOs;
+            document.getElementById('pendingPOs').textContent = pendingPOs;
+            document.getElementById('totalValue').textContent = formatCurrency(totalValue);
+            document.getElementById('monthlyPOs').textContent = approvedPOs;
+        }
+
+        // Render purchase orders
+        function renderPurchaseOrders(ordersToRender = purchaseOrders) {
+            const tbody = document.getElementById('purchaseOrdersTable').querySelector('tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+
+            if (ordersToRender.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div class="card">
+                                <div class="card-body">
+                                    <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
+                                    <h5 class="mt-3">No purchase orders found</h5>
+                                    <p class="text-muted">No orders match your current filters.</p>
+                                    <button class="btn btn-primary" onclick="clearFilters()">
+                                        <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            ordersToRender.forEach(po => {
+                const row = document.createElement('tr');
+                const statusClass = po.status === 'approved' ? 'success' : 
+                                  po.status === 'pending' ? 'warning' : 'secondary';
+                const balance = po.totalAmount - po.amountPaid;
+                
+                row.innerHTML = `
+                    <td>
+                        <div>
+                            <strong>${po.poNumber}</strong><br>
+                            <small class="text-muted">${po.date}</small>
+                        </div>
+                    </td>
+                    <td>${po.supplier}</td>
+                    <td>
+                        <span class="badge-modern badge-${statusClass}">${po.status}</span>
+                    </td>
+                    <td class="text-end">${formatCurrency(po.totalAmount)}</td>
+                    <td class="text-end">${formatCurrency(po.amountPaid)}</td>
+                    <td class="text-end ${balance > 0 ? 'text-danger' : 'text-success'}">
+                        ${formatCurrency(balance)}
+                    </td>
+                    <td class="text-end">${po.dueDate}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-info btn-sm" onclick="viewPO('${po.id}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="editPO('${po.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deletePO('${po.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Filter purchase orders
+        function filterPurchaseOrders() {
+            fetchPurchaseOrders();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('supplierFilter').value = '';
+            document.getElementById('fromDateFilter').value = '';
+            document.getElementById('toDateFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            fetchPurchaseOrders();
+        }
+
+        // View purchase order
+        function viewPO(id) {
+            const po = purchaseOrders.find(p => p.id === id);
+            if (po) {
+                // Populate modal with PO details
+                document.getElementById('poDetailsNumber').textContent = po.poNumber;
+                document.getElementById('poDetailsSupplier').textContent = po.supplier;
+                document.getElementById('poDetailsDate').textContent = po.date;
+                document.getElementById('poDetailsDueDate').textContent = po.dueDate;
+                document.getElementById('poDetailsStatus').textContent = po.status;
+                document.getElementById('poDetailsTotal').textContent = formatCurrency(po.totalAmount);
+                document.getElementById('poDetailsPaid').textContent = formatCurrency(po.amountPaid);
+                document.getElementById('poDetailsBalance').textContent = formatCurrency(po.totalAmount - po.amountPaid);
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('poDetailsModal')).show();
+            }
+        }
+
+        // Edit purchase order
+        function editPO(id) {
+            if (window.modernUI) {
+                window.modernUI.showNotification('Edit functionality will be implemented in the next phase', 'info');
+            } else {
+                alert(`Editing purchase order ${id}...`);
+            }
+        }
+
+        // Delete purchase order
+        function deletePO(id) {
+            if (confirm('Are you sure you want to delete this purchase order?')) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Delete functionality will be implemented in the next phase', 'info');
+                } else {
+                    alert(`Deleting purchase order ${id}...`);
+                }
+            }
+        }
+
+        // Create purchase order
+        async function createPurchaseOrder() {
+            const form = document.getElementById('createPOForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            try {
+                const formData = new FormData(form);
+                const poData = {
+                    supplier_id: formData.get('supplierSelect'),
+                    date: formData.get('poDate'),
+                    due_date: formData.get('dueDate'),
+                    notes: formData.get('notes'),
+                    status: 'draft',
+                    items: [] // Will be populated from form items
+                };
+
+                const response = await fetch(PURCHASE_ORDERS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(poData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create purchase order');
+                }
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Purchase order created successfully', 'success');
+                } else {
+                    alert('Purchase order created successfully!');
+                }
+
+                // Clear form and close modal
+                form.reset();
+                bootstrap.Modal.getInstance(document.getElementById('createPOModal')).hide();
+                
+                // Reload purchase orders
+                fetchPurchaseOrders();
+            } catch (error) {
+                console.error('Error creating purchase order:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to create purchase order', 'error');
+                } else {
+                    alert('Error creating purchase order: ' + error.message);
+                }
+            }
+        }
+
+        // Export purchase orders
+        function exportPOs() {
+            // Create CSV content
+            const headers = ['PO Number', 'Supplier', 'Date', 'Due Date', 'Status', 'Total Amount', 'Amount Paid', 'Balance'];
+            const csvContent = [
+                headers.join(','),
+                ...purchaseOrders.map(po => [
+                    po.poNumber,
+                    po.supplier,
+                    po.date,
+                    po.dueDate,
+                    po.status,
+                    po.totalAmount,
+                    po.amountPaid,
+                    po.totalAmount - po.amountPaid
+                ].join(','))
+            ].join('\n');
+
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `purchase_orders_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            if (window.modernUI) {
+                window.modernUI.showNotification('Purchase orders exported successfully', 'success');
+            }
+        }
+
+        // Add PO item
+        // Add new PO item
+        function addPOItem() {
+            const container = document.getElementById('poItems');
+            const newItem = document.createElement('div');
+            const itemId = itemCounter++;
+            
+            newItem.className = 'po-item row mb-3 border rounded p-3 bg-light';
+            newItem.innerHTML = `
+                <div class="col-md-12 mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Item mode selection">
+                            <input type="radio" class="btn-check item-mode" name="itemMode${itemId}" id="inventory${itemId}" value="inventory" checked onchange="toggleItemMode(this)">
+                            <label class="btn btn-outline-primary" for="inventory${itemId}">
+                                <i class="bi bi-box-seam"></i> Select from Inventory
+                            </label>
+                            
+                            <input type="radio" class="btn-check item-mode" name="itemMode${itemId}" id="custom${itemId}" value="custom" onchange="toggleItemMode(this)">
+                            <label class="btn btn-outline-primary" for="custom${itemId}">
+                                <i class="bi bi-pencil"></i> Type Custom Item
+                            </label>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removePOItem(this)">
+                            <i class="bi bi-trash"></i> Remove
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Product *</label>
+                    <select class="form-select product-select" onchange="handleProductSelection(this)" required>
+                        <option value="">Select Product</option>
+                    </select>
+                    <input type="text" class="form-control product-custom d-none" placeholder="Type item description">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Quantity *</label>
+                    <input type="number" class="form-control quantity-input" min="1" value="1" required onchange="calculateItemTotal(this)">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Unit Cost</label>
+                    <input type="number" class="form-control unit-cost-input" step="0.01" placeholder="0.00" onchange="calculateItemTotal(this)">
+                    <small class="text-muted d-block">Optional</small>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">VAT %</label>
+                    <input type="number" class="form-control vat-input" step="0.01" placeholder="0" value="0" onchange="calculateItemTotal(this)">
+                    <small class="text-muted d-block">Optional</small>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Total</label>
+                    <input type="number" class="form-control item-total bg-white" readonly placeholder="0.00">
+                    <small class="text-muted d-block">Auto-calc</small>
+                </div>
+            `;
+            
+            container.appendChild(newItem);
+            
+            // Populate product dropdown for the new item
+            const productSelect = newItem.querySelector('.product-select');
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.name} ${product.sku ? '(' + product.sku + ')' : ''}`;
+                option.dataset.price = product.cost_price || '';
+                productSelect.appendChild(option);
+            });
+        }
+
+        // Remove PO item
+        function removePOItem(button) {
+            button.closest('.po-item').remove();
+        }
+
+        // Add event listeners
+        document.getElementById('statusFilter').addEventListener('change', filterPurchaseOrders);
+        document.getElementById('supplierFilter').addEventListener('change', filterPurchaseOrders);
+        document.getElementById('fromDateFilter').addEventListener('change', filterPurchaseOrders);
+        document.getElementById('toDateFilter').addEventListener('change', filterPurchaseOrders);
+        document.getElementById('searchFilter').addEventListener('input', filterPurchaseOrders);
+
+        // Initialize data loading
+        async function initializeData() {
+            try {
+                await loadSettings();
+                await Promise.all([
+                    fetchPurchaseOrders(),
+                    fetchSuppliers(),
+                    fetchProducts()
+                ]);
+            } catch (error) {
+                console.error('Error initializing data:', error);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+        });
+    </script>
+</body>
+    
+</html> 

@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Entries & IFRS Training - CNPERP Help Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+            padding-bottom: 40px;
+        }
+
+        .help-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .help-header {
+            background: white;
+            border-radius: 15px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .help-header h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .phase-1 {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .phase-2 {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .phase-3 {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .phase-4 {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .template-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+        }
+
+        .template-card h5 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .journal-entry-example {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .debit-entry {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .credit-entry {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .ifrs-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .video-card {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .quick-reference {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .toc {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 90px;
+        }
+
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 1rem;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .toc a:hover {
+            border-left-color: #764ba2;
+            background: white;
+            transform: translateX(5px);
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .tip-box {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Container -->
+    <div id="navbar-container"></div>
+
+    <div class="help-container">
+        <!-- Header -->
+        <div class="help-header">
+            <h1><i class="bi bi-journal-text me-3"></i>Journal Entries & IFRS Training</h1>
+            <p class="lead text-muted">Master the enterprise-grade journal entry system with 83 IFRS-compliant templates
+            </p>
+            <div class="mt-3">
+                <span class="phase-badge phase-1">Phase 1: Critical (15)</span>
+                <span class="phase-badge phase-2">Phase 2: Important (20)</span>
+                <span class="phase-badge phase-3">Phase 3: Advanced (24)</span>
+                <span class="phase-badge phase-4">Phase 4: Automation (24)</span>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Table of Contents -->
+            <div class="col-lg-3">
+                <div class="toc">
+                    <h5 class="mb-3"><i class="bi bi-list-ul me-2"></i>Contents</h5>
+                    <a href="#overview"><i class="bi bi-arrow-right-circle me-2"></i>System Overview</a>
+                    <a href="#getting-started"><i class="bi bi-play-circle me-2"></i>Getting Started</a>
+                    <a href="#phase1"><i class="bi bi-1-circle me-2"></i>Phase 1: Critical</a>
+                    <a href="#phase2"><i class="bi bi-2-circle me-2"></i>Phase 2: Important</a>
+                    <a href="#phase3"><i class="bi bi-3-circle me-2"></i>Phase 3: Advanced</a>
+                    <a href="#phase4"><i class="bi bi-4-circle me-2"></i>Phase 4: Automation</a>
+                    <a href="#workflows"><i class="bi bi-diagram-3 me-2"></i>Workflows</a>
+                    <a href="#best-practices"><i class="bi bi-star me-2"></i>Best Practices</a>
+                    <a href="#troubleshooting"><i class="bi bi-wrench me-2"></i>Troubleshooting</a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-lg-9">
+                <!-- System Overview -->
+                <div class="content-card" id="overview">
+                    <h2><i class="bi bi-info-circle-fill text-primary me-2"></i>System Overview</h2>
+                    <p class="lead">The CNPERP Journal Entry system is an enterprise-grade IFRS-compliant accounting
+                        platform with 83 professional templates covering 100% of accounting needs.</p>
+
+                    <div class="row mt-4">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="display-4 text-primary">83</div>
+                            <small class="text-muted">Total Templates</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="display-4 text-success">19</div>
+                            <small class="text-muted">IFRS Standards</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="display-4 text-info">10</div>
+                            <small class="text-muted">Recurring Entries</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="display-4 text-danger">80%</div>
+                            <small class="text-muted">Time Savings</small>
+                        </div>
+                    </div>
+
+                    <div class="success-box mt-4">
+                        <h5><i class="bi bi-check-circle me-2"></i>Key Benefits</h5>
+                        <ul class="mb-0">
+                            <li><strong>IFRS Compliance:</strong> All templates follow international accounting
+                                standards</li>
+                            <li><strong>Intelligent Matching:</strong> 78+ account keywords for automatic account
+                                selection</li>
+                            <li><strong>Multi-line Support:</strong> Handle complex transactions with unlimited entry
+                                lines</li>
+                            <li><strong>Automation:</strong> Recurring entries reduce manual work by 70%</li>
+                            <li><strong>Audit Ready:</strong> Built-in IFRS references and proper documentation</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Getting Started -->
+                <div class="content-card" id="getting-started">
+                    <h2><i class="bi bi-play-circle-fill text-success me-2"></i>Getting Started</h2>
+
+                    <h4 class="mt-4">Step 1: Access the System</h4>
+                    <p>Navigate to <strong>Accounting → Journal Entries</strong> from the main menu.</p>
+
+                    <div class="tip-box">
+                        <strong><i class="bi bi-lightbulb me-2"></i>Quick Tip:</strong> Press <kbd>F1</kbd> from any
+                        page to access the help system!
+                    </div>
+
+                    <h4 class="mt-4">Step 2: Understanding the Interface</h4>
+                    <ul>
+                        <li><strong>Header Section:</strong> Shows phase completion status and IFRS standards covered
+                        </li>
+                        <li><strong>Transaction Type Dropdown:</strong> 16 categorized optgroups with all 83 templates
+                        </li>
+                        <li><strong>Template Info Panel:</strong> Displays IFRS reference and transaction description
+                        </li>
+                        <li><strong>Entry Lines:</strong> Debit and credit lines with account selection and amounts</li>
+                        <li><strong>Balance Validation:</strong> Automatically ensures debits equal credits</li>
+                    </ul>
+
+                    <h4 class="mt-4">Step 3: Create Your First Entry</h4>
+                    <ol>
+                        <li>Click <strong>"New Journal Entry"</strong> button</li>
+                        <li>Select a transaction type from the dropdown (e.g., "Depreciation Expense")</li>
+                        <li>Review the template description with IFRS reference</li>
+                        <li>Select accounts for each line (system suggests based on keywords)</li>
+                        <li>Enter amounts</li>
+                        <li>Add narration/description</li>
+                        <li>Click <strong>"Save"</strong> to post the entry</li>
+                    </ol>
+
+                    <div class="journal-entry-example">
+                        <h6>Example: Simple Depreciation Entry</h6>
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Type</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Depreciation Expense</td>
+                                    <td><span class="debit-entry">Debit</span></td>
+                                    <td class="text-end">50,000.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Accumulated Depreciation</td>
+                                    <td><span class="credit-entry">Credit</span></td>
+                                    <td class="text-end">50,000.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <small class="text-muted mt-2 d-block"><span class="ifrs-badge">IAS 16</span> Monthly
+                            depreciation on fixed assets</small>
+                    </div>
+                </div>
+
+                <!-- Phase 1: Critical Templates -->
+                <div class="content-card" id="phase1">
+                    <h2><span class="phase-badge phase-1">Phase 1</span> Critical Daily Transactions</h2>
+                    <p>These 15 templates cover 80% of daily accounting activities.</p>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-building me-2"></i>Fixed Assets (IAS 16) - 2 Templates</h5>
+                        <ul>
+                            <li><strong>Asset Acquisition:</strong> Record PPE purchases at cost</li>
+                            <li><strong>Depreciation Expense:</strong> Systematic allocation over useful life</li>
+                        </ul>
+                        <div class="journal-entry-example">
+                            <strong>Example: Asset Purchase</strong>
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td>Dr. Equipment</td>
+                                        <td class="text-end">100,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-left: 2rem;">Cr. Bank</td>
+                                        <td class="text-end">100,000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-box-seam me-2"></i>Inventories (IAS 2) - 2 Templates</h5>
+                        <ul>
+                            <li><strong>Cost of Sales:</strong> Transfer inventory cost to expense when sold</li>
+                            <li><strong>Inventory Write-down:</strong> Reduce inventory to NRV when impaired</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-people me-2"></i>Employee Benefits (IAS 19) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Payroll Accrual:</strong> Record gross salaries and withholdings</li>
+                            <li><strong>Payroll Payment:</strong> Settle net pay to employees</li>
+                            <li><strong>Benefits Provision:</strong> Accrue leave pay and gratuity obligations</li>
+                        </ul>
+                        <div class="warning-box">
+                            <strong><i class="bi bi-exclamation-triangle me-2"></i>Important:</strong> Payroll template
+                            includes 5 lines: gross pay, employer taxes, net pay, tax withholding, and benefits
+                            deductions.
+                        </div>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-calculator me-2"></i>Taxation (IAS 12) - 2 Templates</h5>
+                        <ul>
+                            <li><strong>Income Tax Provision:</strong> Accrue current tax expense</li>
+                            <li><strong>Tax Payment:</strong> Settle tax liability with authorities</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-calendar-check me-2"></i>Period-End Adjustments (IAS 1) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Accrued Expenses:</strong> Recognize expenses incurred but not yet paid</li>
+                            <li><strong>Accrued Income:</strong> Recognize revenue earned but not yet received</li>
+                            <li><strong>Prepaid Expenses:</strong> Record advance payments</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 2: Important Templates -->
+                <div class="content-card" id="phase2">
+                    <h2><span class="phase-badge phase-2">Phase 2</span> Important Periodic Transactions</h2>
+                    <p>These 20 templates cover important monthly/quarterly adjustments representing +15% coverage.</p>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-graph-down me-2"></i>Financial Instruments (IFRS 9) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Impairment Loss (ECL):</strong> Record expected credit losses on financial
+                                assets</li>
+                            <li><strong>Bad Debt Write-off:</strong> Write off uncollectible receivables</li>
+                            <li><strong>Impairment Reversal:</strong> Reverse when credit conditions improve</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-exclamation-triangle me-2"></i>Asset Impairment (IAS 36) - 1 Template</h5>
+                        <ul>
+                            <li><strong>Asset Impairment:</strong> Write down non-financial assets to recoverable amount
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-clipboard-check me-2"></i>Provisions (IAS 37) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Create Provision:</strong> Recognize provisions for warranties, legal claims,
+                                restructuring</li>
+                            <li><strong>Use Provision:</strong> Utilize provision when liability settled</li>
+                            <li><strong>Reverse Provision:</strong> Reverse when no longer needed</li>
+                        </ul>
+                        <div class="tip-box">
+                            <strong><i class="bi bi-lightbulb me-2"></i>Best Practice:</strong> Review provisions
+                            quarterly for changes in estimates.
+                        </div>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-calendar-event me-2"></i>Revenue Recognition (IFRS 15) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Deferred Revenue Receipt:</strong> Record advance payments from customers</li>
+                            <li><strong>Recognize Deferred Revenue:</strong> Transfer to income as performance
+                                obligations met</li>
+                            <li><strong>Contract Asset:</strong> Record unbilled revenue for services performed</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-percent me-2"></i>Borrowing Costs (IAS 23) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Interest Expense Accrual:</strong> Accrue interest on borrowings</li>
+                            <li><strong>Interest Payment:</strong> Pay accrued interest</li>
+                            <li><strong>Capitalize Interest:</strong> Capitalize interest for qualifying assets</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-arrow-repeat me-2"></i>Asset Disposal (IAS 16) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Disposal - Gain:</strong> Record asset sale with gain</li>
+                            <li><strong>Disposal - Loss:</strong> Record asset sale with loss</li>
+                            <li><strong>Asset Scrapping:</strong> Write off asset with no proceeds</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-building me-2"></i>Leases (IFRS 16) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Lease Initial Recognition:</strong> Record right-of-use asset and lease
+                                liability</li>
+                            <li><strong>Lease Payment:</strong> Allocate payment between principal and interest</li>
+                            <li><strong>ROU Asset Depreciation:</strong> Depreciate right-of-use asset</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 3: Advanced Templates -->
+                <div class="content-card" id="phase3">
+                    <h2><span class="phase-badge phase-3">Phase 3</span> Advanced Financial Instruments</h2>
+                    <p>These 24 templates cover sophisticated accounting scenarios representing +4% coverage.</p>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-currency-exchange me-2"></i>Foreign Currency (IAS 21) - 4 Templates</h5>
+                        <ul>
+                            <li><strong>Foreign Currency Transaction:</strong> Record at spot rate</li>
+                            <li><strong>Foreign Exchange Gain:</strong> Settlement/revaluation gains</li>
+                            <li><strong>Foreign Exchange Loss:</strong> Settlement/revaluation losses</li>
+                            <li><strong>Period-End FX Revaluation:</strong> Revalue monetary items at closing rate</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-graph-up-arrow me-2"></i>Fair Value Measurement (IFRS 13) - 4 Templates</h5>
+                        <ul>
+                            <li><strong>Fair Value Gain (FVPL):</strong> Mark-to-market gains through P&L</li>
+                            <li><strong>Fair Value Loss (FVPL):</strong> Mark-to-market losses through P&L</li>
+                            <li><strong>Fair Value Gain (FVOCI):</strong> Fair value changes through OCI</li>
+                            <li><strong>Fair Value Loss (FVOCI):</strong> Fair value changes through OCI</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-file-earmark-text me-2"></i>Deferred Tax (IAS 12) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>DTA Recognition:</strong> Record deferred tax assets for deductible differences
+                            </li>
+                            <li><strong>DTL Recognition:</strong> Record deferred tax liabilities for taxable
+                                differences</li>
+                            <li><strong>Deferred Tax Reversal:</strong> Reverse when differences unwind</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-gift me-2"></i>Share-Based Payments (IFRS 2) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Compensation Expense:</strong> Recognize over vesting period</li>
+                            <li><strong>Share Option Exercise:</strong> Transfer reserve to share capital</li>
+                            <li><strong>Share Option Forfeiture:</strong> Reverse when options don't vest</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-lightbulb me-2"></i>Intangible Assets (IAS 38) - 4 Templates</h5>
+                        <ul>
+                            <li><strong>Intangible Acquisition:</strong> Capitalize software, patents, licenses</li>
+                            <li><strong>Intangible Amortization:</strong> Amortize finite-life intangibles</li>
+                            <li><strong>Research Expense:</strong> Expense research costs (cannot capitalize)</li>
+                            <li><strong>Development Capitalization:</strong> Capitalize qualifying development</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-bank me-2"></i>Government Grants (IAS 20) - 3 Templates</h5>
+                        <ul>
+                            <li><strong>Grant Income Method:</strong> Record as deferred income</li>
+                            <li><strong>Grant Recognition:</strong> Recognize income over periods</li>
+                            <li><strong>Grant Deduction Method:</strong> Deduct from asset cost</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 4: Automation -->
+                <div class="content-card" id="phase4">
+                    <h2><span class="phase-badge phase-4">Phase 4</span> Automation & Workflow</h2>
+                    <p>These 24 templates provide enterprise automation reducing manual work by 70%.</p>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-arrow-repeat me-2"></i>Recurring Entries - Monthly (5 Templates)</h5>
+                        <ul>
+                            <li><strong>Monthly Depreciation Batch:</strong> Automate all fixed asset depreciation</li>
+                            <li><strong>Monthly Amortization Batch:</strong> Automate intangible amortization</li>
+                            <li><strong>Monthly Lease Depreciation:</strong> Automate ROU asset depreciation</li>
+                            <li><strong>Monthly Interest Accrual:</strong> Automate interest expense accrual</li>
+                            <li><strong>Monthly Grant Recognition:</strong> Automate grant income recognition</li>
+                        </ul>
+                        <div class="success-box">
+                            <strong><i class="bi bi-check-circle me-2"></i>Automation Benefit:</strong> Set up once,
+                            runs automatically every month-end!
+                        </div>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-calendar3 me-2"></i>Recurring Entries - Quarterly (3 Templates)</h5>
+                        <ul>
+                            <li><strong>Quarterly Tax Provision:</strong> Automate tax calculation</li>
+                            <li><strong>Quarterly Impairment Review:</strong> Automate impairment testing</li>
+                            <li><strong>Quarterly Provision Review:</strong> Automate provision adjustments</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-calendar-year me-2"></i>Recurring Entries - Annual (2 Templates)</h5>
+                        <ul>
+                            <li><strong>Annual Bonus Accrual:</strong> Year-end bonus provision</li>
+                            <li><strong>Annual Leave Provision:</strong> Year-end leave liability</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-workflow me-2"></i>Workflow & Period-End (5 Templates)</h5>
+                        <ul>
+                            <li><strong>Reversing Entry:</strong> Auto-reversing accruals</li>
+                            <li><strong>Period-End Closing:</strong> Transfer P&L to retained earnings</li>
+                            <li><strong>Opening Balances:</strong> System implementation entries</li>
+                            <li><strong>Reclassification:</strong> Reclassify between accounts</li>
+                            <li><strong>Error Correction (IAS 8):</strong> Prior period error corrections</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-stack me-2"></i>Batch Processing (3 Templates)</h5>
+                        <ul>
+                            <li><strong>Batch Customer Receipts:</strong> Process 100+ receipts in one entry</li>
+                            <li><strong>Batch Supplier Payments:</strong> Process payment runs</li>
+                            <li><strong>Batch Payroll Processing:</strong> Consolidated payroll entry</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-card">
+                        <h5><i class="bi bi-building me-2"></i>Consolidation (IFRS 10) - 2 Templates</h5>
+                        <ul>
+                            <li><strong>Intercompany Elimination:</strong> Eliminate interco transactions</li>
+                            <li><strong>Goodwill Impairment:</strong> Annual goodwill testing</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Workflows -->
+                <div class="content-card" id="workflows">
+                    <h2><i class="bi bi-diagram-3-fill text-info me-2"></i>Common Workflows</h2>
+
+                    <h4 class="mt-4">Month-End Close Procedure</h4>
+                    <ol>
+                        <li><strong>Recurring Entries:</strong> Run all monthly recurring templates</li>
+                        <li><strong>Accruals:</strong> Record accrued expenses and income</li>
+                        <li><strong>Prepayments:</strong> Amortize prepaid expenses</li>
+                        <li><strong>Depreciation:</strong> Run monthly depreciation batch</li>
+                        <li><strong>Lease Accounting:</strong> Record lease payments and depreciation</li>
+                        <li><strong>Bank Reconciliation:</strong> Reconcile all bank accounts</li>
+                        <li><strong>Review:</strong> Review trial balance and profit & loss</li>
+                        <li><strong>Lock Period:</strong> Lock the period to prevent changes</li>
+                    </ol>
+
+                    <h4 class="mt-4">Quarter-End Process</h4>
+                    <ol>
+                        <li>Complete month-end procedures</li>
+                        <li>Run quarterly tax provision</li>
+                        <li>Perform impairment testing</li>
+                        <li>Review and adjust provisions</li>
+                        <li>Prepare quarterly financial statements</li>
+                    </ol>
+
+                    <h4 class="mt-4">Year-End Close</h4>
+                    <ol>
+                        <li>Complete all quarter-end procedures</li>
+                        <li>Record annual bonus accrual</li>
+                        <li>Calculate annual leave provision</li>
+                        <li>Perform goodwill impairment testing (if applicable)</li>
+                        <li>Complete deferred tax calculations</li>
+                        <li>Review all estimates and provisions</li>
+                        <li>Prepare financial statements</li>
+                        <li>Run period-end closing to transfer P&L</li>
+                    </ol>
+
+                    <div class="tip-box">
+                        <strong><i class="bi bi-lightbulb me-2"></i>Pro Tip:</strong> Use the Phase 4 Guide button in
+                        the system to view the comprehensive checklist!
+                    </div>
+                </div>
+
+                <!-- Best Practices -->
+                <div class="content-card" id="best-practices">
+                    <h2><i class="bi bi-star-fill text-warning me-2"></i>Best Practices</h2>
+
+                    <h4 class="mt-4">1. Always Use Templates</h4>
+                    <p>Templates ensure IFRS compliance and proper account classification. Never use "Custom
+                        Transaction" unless absolutely necessary.</p>
+
+                    <h4 class="mt-4">2. Review Template Descriptions</h4>
+                    <p>Each template includes detailed IFRS guidance. Read the description to understand recognition
+                        criteria.</p>
+
+                    <h4 class="mt-4">3. Check Account Matching</h4>
+                    <p>The system suggests accounts based on keywords. Always verify the suggested account is correct
+                        for your chart of accounts.</p>
+
+                    <h4 class="mt-4">4. Use Meaningful Narrations</h4>
+                    <p>Add clear descriptions to journal entries. Include references to invoices, contracts, or
+                        supporting documents.</p>
+
+                    <h4 class="mt-4">5. Set Up Recurring Entries</h4>
+                    <p>Configure all 10 recurring entries to automate monthly work. Review and adjust amounts quarterly.
+                    </p>
+
+                    <h4 class="mt-4">6. Document Complex Transactions</h4>
+                    <p>For multi-line entries (like payroll or asset disposal), attach supporting calculations.</p>
+
+                    <h4 class="mt-4">7. Review Before Posting</h4>
+                    <p>Always verify debits equal credits before saving. Check amounts and account classifications.</p>
+
+                    <h4 class="mt-4">8. Regular Training</h4>
+                    <p>Train staff on new templates and IFRS updates. Use this guide as reference material.</p>
+
+                    <div class="warning-box">
+                        <strong><i class="bi bi-exclamation-triangle me-2"></i>Critical:</strong> Never delete posted
+                        journal entries. Use reversal entries or error corrections (IAS 8) instead.
+                    </div>
+                </div>
+
+                <!-- Troubleshooting -->
+                <div class="content-card" id="troubleshooting">
+                    <h2><i class="bi bi-wrench-adjustable-circle-fill text-danger me-2"></i>Troubleshooting</h2>
+
+                    <h4 class="mt-4">Issue: Debits Don't Equal Credits</h4>
+                    <p><strong>Solution:</strong> The system validates automatically. If you see an error, check all
+                        amount fields for typos or missing values.</p>
+
+                    <h4 class="mt-4">Issue: Can't Find the Right Account</h4>
+                    <p><strong>Solution:</strong> Use the "Refresh Codes" button to reload the chart of accounts. If the
+                        account doesn't exist, create it first in Chart of Accounts.</p>
+
+                    <h4 class="mt-4">Issue: Template Doesn't Match My Scenario</h4>
+                    <p><strong>Solution:</strong> Select the closest template and modify the entry lines. You can add or
+                        remove lines as needed.</p>
+
+                    <h4 class="mt-4">Issue: Recurring Entry Amounts Are Wrong</h4>
+                    <p><strong>Solution:</strong> Recurring templates provide structure only. Update amounts each period
+                        based on actual calculations.</p>
+
+                    <h4 class="mt-4">Issue: Wrong Account Selected</h4>
+                    <p><strong>Solution:</strong> If already posted, create a reclassification entry to move the amount
+                        to the correct account.</p>
+
+                    <h4 class="mt-4">Issue: Need to Correct Prior Period Error</h4>
+                    <p><strong>Solution:</strong> Use the "Error Correction (IAS 8)" template. This adjusts retained
+                        earnings for material prior period errors.</p>
+
+                    <div class="tip-box">
+                        <strong><i class="bi bi-lightbulb me-2"></i>Need Help?</strong> Click the Debug button (bug
+                        icon) in the system to see technical information about accounts loaded.
+                    </div>
+                </div>
+
+                <!-- Quick Reference Card -->
+                <div class="quick-reference">
+                    <h3><i class="bi bi-bookmark-star me-2"></i>Quick Reference Card</h3>
+                    <div class="row text-start mt-4">
+                        <div class="col-md-6">
+                            <h5>Keyboard Shortcuts</h5>
+                            <ul>
+                                <li><kbd>F1</kbd> - Open Help System</li>
+                                <li><kbd>Ctrl+S</kbd> - Save Entry</li>
+                                <li><kbd>Ctrl+N</kbd> - New Entry</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Phase Breakdown</h5>
+                            <ul>
+                                <li>Phase 1: 15 templates (Daily)</li>
+                                <li>Phase 2: 20 templates (Periodic)</li>
+                                <li>Phase 3: 24 templates (Advanced)</li>
+                                <li>Phase 4: 24 templates (Automation)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Tutorial Section -->
+                <div class="video-card">
+                    <h3><i class="bi bi-play-btn-fill me-2"></i>Video Tutorials Coming Soon</h3>
+                    <p>Check back for step-by-step video guides on using the journal entry system.</p>
+                </div>
+
+                <!-- Navigation -->
+                <div class="text-center mt-5">
+                    <a href="/help-center" class="btn btn-primary btn-lg me-2">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                    </a>
+                    <a href="/static/journal-entries.html" class="btn btn-success btn-lg">
+                        <i class="bi bi-journal-text me-2"></i>Open Journal Entries
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/navbar.js?v=20251019"></script>
+</body>
+
+</html>

@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Printer Settings</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Modern Styles -->
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        .printer-type-card {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .printer-type-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .printer-type-card.selected {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+        }
+        
+        .printer-type-card .check-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .printer-type-card.selected .check-icon {
+            opacity: 1;
+        }
+        
+        .printer-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .a4-icon { color: #3b82f6; }
+        .dot-matrix-icon { color: #10b981; }
+        .thermal-icon { color: #f59e0b; }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 2px 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .feature-list li::before {
+            content: "✓";
+            color: var(--accent-color);
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        
+        .settings-section {
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-printer"></i> Printer Settings
+                        </h1>
+                        <p class="text-muted mb-0">Configure invoice and POS receipt printing<br>
+                        <small><strong>Note:</strong> Other documents (reports, statements, quotes) always print on A4 plain paper</small></p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary" onclick="loadSettings()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                        <button class="btn btn-success" onclick="saveSettings()">
+                            <i class="bi bi-save"></i> Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <ul class="nav nav-tabs" id="printerTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="invoice-tab" data-bs-toggle="tab" data-bs-target="#invoice-settings" 
+                                type="button" role="tab" aria-controls="invoice-settings" aria-selected="true">
+                            <i class="bi bi-file-pdf"></i> Invoice Printers
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pos-tab" data-bs-toggle="tab" data-bs-target="#pos-settings" 
+                                type="button" role="tab" aria-controls="pos-settings" aria-selected="false">
+                            <i class="bi bi-receipt"></i> POS Receipts
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-content" id="printerTabsContent">
+            <!-- Invoice Printer Settings Tab -->
+            <div class="tab-pane fade show active" id="invoice-settings" role="tabpanel" aria-labelledby="invoice-tab">
+                <!-- Invoice Scope Alert -->
+                <div class="alert alert-info mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <div>
+                            <strong>Invoice Printer Settings</strong><br>
+                            <small>These settings apply <strong>ONLY to invoices</strong>. Choose A4 PDF for professional invoices or dot matrix for continuous paper multi-part invoices.</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Left Panel - Printer Type Selection -->
+                    <div class="col-md-6">
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-printer"></i> Select Printer Type</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="printerTypes">
+                            <!-- Printer types will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Printer Configuration -->
+            <div class="col-md-6">
+                <!-- General Settings -->
+                <div class="modern-card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-gear"></i> General Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="defaultPrinterName" placeholder="Default Printer">
+                                <label for="defaultPrinterName">Default Printer Name</label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="autoPrint">
+                                <label class="form-check-label" for="autoPrint">
+                                    Auto-print invoices after creation
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- A4 PDF Settings -->
+                <div class="modern-card mb-4" id="a4Settings" style="display: none;">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-file-pdf"></i> A4 PDF Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="a4PaperSize">
+                                            <option value="A4">A4 (210 × 297 mm)</option>
+                                            <option value="Letter">US Letter (8.5 × 11 in)</option>
+                                            <option value="Legal">US Legal (8.5 × 14 in)</option>
+                                        </select>
+                                        <label for="a4PaperSize">Paper Size</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="a4Orientation">
+                                            <option value="portrait">Portrait</option>
+                                            <option value="landscape">Landscape</option>
+                                        </select>
+                                        <label for="a4Orientation">Orientation</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dot Matrix Settings -->
+                <div class="modern-card mb-4" id="dotMatrixSettings" style="display: none;">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-grid-3x3"></i> Dot Matrix Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="dotMatrixWidth">
+                                            <option value="80">80 Columns (Standard)</option>
+                                            <option value="136">136 Columns (Wide)</option>
+                                        </select>
+                                        <label for="dotMatrixWidth">Paper Width</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="dotMatrixLength">
+                                            <option value="44">Short Form (4 inches)</option>
+                                            <option value="66">Standard Form (11 inches)</option>
+                                            <option value="88">Long Form (14.7 inches)</option>
+                                        </select>
+                                        <label for="dotMatrixLength">Form Length</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="dotMatrixCopies">
+                                            <option value="1">1 (Original only)</option>
+                                            <option value="2">2 (Original + 1 copy)</option>
+                                            <option value="3">3 (Original + 2 copies)</option>
+                                            <option value="4">4 (Original + 3 copies)</option>
+                                        </select>
+                                        <label for="dotMatrixCopies">Carbon Copies</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="dotMatrixTemplate">
+                                            <option value="standard_80">Standard 80 Column</option>
+                                        </select>
+                                        <label for="dotMatrixTemplate">Template</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="dotMatrixCompressed">
+                                <label class="form-check-label" for="dotMatrixCompressed">
+                                    Compressed printing (17 CPI)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Section -->
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-play-circle"></i> Test & Preview</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex gap-3">
+                            <button class="btn test-button" onclick="testPrintSettings()">
+                                <i class="bi bi-printer"></i> Test Print
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="previewInvoice()">
+                                <i class="bi bi-eye"></i> Preview Sample
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i>
+                                Test printing will use the most recent invoice to validate your settings.
+                            </small>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Invoice Settings Tab -->
+
+            <!-- POS Receipt Settings Tab -->
+            <div class="tab-pane fade" id="pos-settings" role="tabpanel" aria-labelledby="pos-tab">
+                <!-- POS Scope Alert -->
+                <div class="alert alert-success mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-receipt me-2"></i>
+                        <div>
+                            <strong>POS Receipt Printer Settings</strong><br>
+                            <small>These settings apply <strong>ONLY to POS till receipts</strong>. Configure your thermal or impact receipt printer for customer and merchant receipts.</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Left Panel - POS Printer Types -->
+                    <div class="col-md-6">
+                        <div class="modern-card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-receipt"></i> Select POS Receipt Printer</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="posReceiptTypes">
+                                    <!-- POS receipt types will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel - POS Configuration -->
+                    <div class="col-md-6">
+                        <!-- General POS Settings -->
+                        <div class="modern-card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-gear"></i> General POS Settings</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="settings-section">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="posDefaultPrinter" placeholder="Default POS Printer">
+                                        <label for="posDefaultPrinter">Default POS Printer Name</label>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="posAutoPrint">
+                                        <label class="form-check-label" for="posAutoPrint">
+                                            Auto-print receipts after sale
+                                        </label>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="posCustomerCopy">
+                                                <label class="form-check-label" for="posCustomerCopy">
+                                                    Print customer copy
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="posMerchantCopy">
+                                                <label class="form-check-label" for="posMerchantCopy">
+                                                    Print merchant copy
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Receipt Format Settings -->
+                        <div class="modern-card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-layout-text-window-reverse"></i> Receipt Format</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="settings-section">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="number" class="form-control" id="posReceiptWidth" min="20" max="80" placeholder="48">
+                                                <label for="posReceiptWidth">Receipt Width (chars)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-floating mb-3">
+                                                <select class="form-select" id="posCutType">
+                                                    <option value="full">Full Cut</option>
+                                                    <option value="partial">Partial Cut</option>
+                                                    <option value="none">No Cut</option>
+                                                </select>
+                                                <label for="posCutType">Paper Cut Type</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-floating mb-3">
+                                                <select class="form-select" id="posCharSize">
+                                                    <option value="normal">Normal (12x24)</option>
+                                                    <option value="condensed">Condensed (9x17)</option>
+                                                    <option value="double_width">Double Width</option>
+                                                    <option value="double_height">Double Height</option>
+                                                </select>
+                                                <label for="posCharSize">Character Size</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-floating mb-3">
+                                                <select class="form-select" id="posLineSpacing">
+                                                    <option value="normal">Normal (1/6 inch)</option>
+                                                    <option value="tight">Tight (1/8 inch)</option>
+                                                    <option value="loose">Loose (1/4 inch)</option>
+                                                </select>
+                                                <label for="posLineSpacing">Line Spacing</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="number" class="form-control" id="posHeaderLines" min="0" max="10" placeholder="3">
+                                                <label for="posHeaderLines">Header Lines</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="number" class="form-control" id="posFooterLines" min="0" max="10" placeholder="2">
+                                                <label for="posFooterLines">Footer Lines</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Features -->
+                        <div class="modern-card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-stars"></i> Additional Features</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="settings-section">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="posLogoEnabled">
+                                                <label class="form-check-label" for="posLogoEnabled">
+                                                    Enable logo printing
+                                                </label>
+                                            </div>
+                                            <div class="form-floating mb-3">
+                                                <input type="number" class="form-control" id="posLogoHeight" min="1" max="20" placeholder="5">
+                                                <label for="posLogoHeight">Logo Height (lines)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="posBarcodeEnabled">
+                                                <label class="form-check-label" for="posBarcodeEnabled">
+                                                    Enable barcode printing
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="posQrEnabled">
+                                                <label class="form-check-label" for="posQrEnabled">
+                                                    Enable QR code printing
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="posTemplate">
+                                            <option value="standard_thermal">Standard Thermal</option>
+                                            <option value="compact">Compact</option>
+                                            <option value="detailed">Detailed</option>
+                                            <option value="logo_top">Logo at Top</option>
+                                            <option value="logo_center">Logo Centered</option>
+                                        </select>
+                                        <label for="posTemplate">Receipt Template</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- POS Test Section -->
+                        <div class="modern-card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bi bi-play-circle"></i> Test POS Receipt</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex gap-3">
+                                    <button class="btn test-button" onclick="testPosReceipt()">
+                                        <i class="bi bi-printer"></i> Test Print
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="previewPosReceipt()">
+                                        <i class="bi bi-eye"></i> Preview Sample
+                                    </button>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i>
+                                        Test printing will use the most recent sale to validate your POS receipt settings.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End POS Settings Tab -->
+        </div>
+        
+        <!-- A4 Plain Paper Documents Info -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-light border" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        <div>
+                            <strong>A4 Plain Paper Documents</strong><br>
+                            <small>All other documents are automatically printed on <strong>A4 plain paper</strong> regardless of the above settings:<br>
+                            Reports (Trial Balance, Balance Sheet, P&L), Statements, Quotes, Purchase Orders, Banking Documents, VAT Returns, Management Reports</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+    
+
+    <script>
+        // Global variables
+        let printerTypes = {};
+        let posReceiptTypes = {};
+        let currentSettings = {};
+        let posCurrentSettings = {};
+        let selectedPrinterType = 'a4_pdf';
+        let selectedPosReceiptType = 'thermal_80mm';
+
+        // API endpoints
+        const API_BASE = '/api/v1';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPrinterTypes();
+            loadPosReceiptTypes();
+            loadSettings();
+            loadPosSettings();
+        });
+
+        async function loadPrinterTypes() {
+            try {
+                const response = await fetch(`${API_BASE}/settings/invoice-printer/types`);
+                if (response.ok) {
+                    const data = await response.json();
+                    printerTypes = data.data;
+                    populatePrinterTypes();
+                } else {
+                    showNotification('Failed to load printer types', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading printer types:', error);
+                showNotification('Failed to load printer types', 'error');
+            }
+        }
+
+        function populatePrinterTypes() {
+            const container = document.getElementById('printerTypes');
+            container.innerHTML = '';
+
+            printerTypes.printer_types.forEach(printerType => {
+                const typeCard = document.createElement('div');
+                typeCard.className = 'printer-type-card';
+                typeCard.onclick = () => selectPrinterType(printerType.value);
+                
+                const iconClass = printerType.value === 'a4_pdf' ? 'a4-icon' : 
+                                printerType.value === 'dot_matrix' ? 'dot-matrix-icon' : 'thermal-icon';
+                const iconName = printerType.value === 'a4_pdf' ? 'file-pdf' : 
+                              printerType.value === 'dot_matrix' ? 'grid-3x3' : 'receipt';
+                
+                typeCard.innerHTML = `
+                    <i class="bi bi-check-circle-fill check-icon"></i>
+                    <i class="bi bi-${iconName} printer-icon ${iconClass}"></i>
+                    <h6 class="mb-2">${printerType.name}</h6>
+                    <p class="text-muted mb-3">${printerType.description}</p>
+                    <ul class="feature-list">
+                        ${printerType.supports.map(feature => `<li>${formatFeature(feature)}</li>`).join('')}
+                    </ul>
+                `;
+                
+                container.appendChild(typeCard);
+            });
+        }
+
+        function formatFeature(feature) {
+            const features = {
+                'high_quality': 'High Quality Output',
+                'graphics': 'Graphics & Images',
+                'colors': 'Color Printing',
+                'logos': 'Company Logos',
+                'continuous_paper': 'Continuous Paper',
+                'carbon_copies': 'Carbon Copies',
+                'fast_printing': 'Fast Printing',
+                'low_cost': 'Low Cost Operation',
+                'compact_size': 'Compact Size',
+                'low_maintenance': 'Low Maintenance'
+            };
+            return features[feature] || feature;
+        }
+
+        function selectPrinterType(printerType) {
+            selectedPrinterType = printerType;
+            
+            // Update visual selection
+            document.querySelectorAll('.printer-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Show/hide relevant settings
+            showRelevantSettings(printerType);
+        }
+
+        function showRelevantSettings(printerType) {
+            // Hide all settings first
+            document.getElementById('a4Settings').style.display = 'none';
+            document.getElementById('dotMatrixSettings').style.display = 'none';
+            
+            // Show relevant settings
+            if (printerType === 'a4_pdf') {
+                document.getElementById('a4Settings').style.display = 'block';
+            } else if (printerType === 'dot_matrix') {
+                document.getElementById('dotMatrixSettings').style.display = 'block';
+                loadDotMatrixTemplates();
+            }
+        }
+
+        async function loadDotMatrixTemplates() {
+            try {
+                const response = await fetch(`${API_BASE}/invoices/dot-matrix/templates`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const templateSelect = document.getElementById('dotMatrixTemplate');
+                    templateSelect.innerHTML = '';
+                    
+                    Object.keys(data.templates).forEach(templateKey => {
+                        const template = data.templates[templateKey];
+                        const option = document.createElement('option');
+                        option.value = templateKey;
+                        option.textContent = template.name;
+                        templateSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading templates:', error);
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/settings/invoice-printer`);
+                if (response.ok) {
+                    const data = await response.json();
+                    currentSettings = data.data;
+                    populateSettings();
+                } else {
+                    showNotification('Failed to load settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showNotification('Failed to load settings', 'error');
+            }
+        }
+
+        function populateSettings() {
+            // General settings
+            document.getElementById('defaultPrinterName').value = currentSettings.default_printer_name || '';
+            document.getElementById('autoPrint').checked = currentSettings.auto_print || false;
+            
+            // A4 settings
+            document.getElementById('a4PaperSize').value = currentSettings.a4_paper_size || 'A4';
+            document.getElementById('a4Orientation').value = currentSettings.a4_orientation || 'portrait';
+            
+            // Dot matrix settings
+            document.getElementById('dotMatrixWidth').value = currentSettings.dot_matrix_paper_width || 80;
+            document.getElementById('dotMatrixLength').value = currentSettings.dot_matrix_form_length || 66;
+            document.getElementById('dotMatrixCopies').value = currentSettings.dot_matrix_carbon_copies || 1;
+            document.getElementById('dotMatrixCompressed').checked = currentSettings.dot_matrix_compressed || false;
+            
+            // Select printer type and show settings
+            selectPrinterType(currentSettings.invoice_printer_type || 'a4_pdf');
+            
+            // Update template selection
+            if (currentSettings.dot_matrix_template) {
+                document.getElementById('dotMatrixTemplate').value = currentSettings.dot_matrix_template;
+            }
+        }
+
+        async function saveSettings() {
+            try {
+                const settings = {
+                    invoice_printer_type: selectedPrinterType,
+                    default_printer_name: document.getElementById('defaultPrinterName').value,
+                    auto_print: document.getElementById('autoPrint').checked,
+                    a4_paper_size: document.getElementById('a4PaperSize').value,
+                    a4_orientation: document.getElementById('a4Orientation').value,
+                    dot_matrix_paper_width: parseInt(document.getElementById('dotMatrixWidth').value),
+                    dot_matrix_form_length: parseInt(document.getElementById('dotMatrixLength').value),
+                    dot_matrix_carbon_copies: parseInt(document.getElementById('dotMatrixCopies').value),
+                    dot_matrix_compressed: document.getElementById('dotMatrixCompressed').checked,
+                    dot_matrix_template: document.getElementById('dotMatrixTemplate').value
+                };
+
+                const response = await fetch(`${API_BASE}/settings/invoice-printer`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    showNotification('Settings saved successfully', 'success');
+                    currentSettings = settings;
+                } else {
+                    throw new Error('Failed to save settings');
+                }
+
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showNotification('Failed to save settings', 'error');
+            }
+        }
+
+        async function testPrintSettings() {
+            try {
+                // Get the most recent invoice for testing
+                const invoicesResponse = await fetch(`${API_BASE}/invoices/?limit=1`);
+                if (!invoicesResponse.ok) {
+                    throw new Error('No invoices found for testing');
+                }
+                
+                const invoices = await invoicesResponse.json();
+                if (invoices.length === 0) {
+                    showNotification('No invoices available for testing. Create an invoice first.', 'warning');
+                    return;
+                }
+
+                const testInvoiceId = invoices[0].id;
+                
+                // Test print using current settings
+                const printUrl = `${API_BASE}/invoices/${testInvoiceId}/print`;
+                window.open(printUrl, '_blank');
+                
+                showNotification('Test print initiated', 'success');
+
+            } catch (error) {
+                console.error('Error testing print:', error);
+                showNotification('Failed to test print: ' + error.message, 'error');
+            }
+        }
+
+        async function previewInvoice() {
+            try {
+                // Get the most recent invoice for preview
+                const invoicesResponse = await fetch(`${API_BASE}/invoices/?limit=1`);
+                if (!invoicesResponse.ok) {
+                    throw new Error('No invoices found for preview');
+                }
+                
+                const invoices = await invoicesResponse.json();
+                if (invoices.length === 0) {
+                    showNotification('No invoices available for preview. Create an invoice first.', 'warning');
+                    return;
+                }
+
+                const testInvoiceId = invoices[0].id;
+                
+                // Get preview using current settings
+                const response = await fetch(`${API_BASE}/invoices/${testInvoiceId}/preview`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.preview) {
+                        // Show text preview in a modal or new window
+                        const previewWindow = window.open('', '_blank');
+                        previewWindow.document.write(`
+                            <html>
+                            <head>
+                                <title>Invoice Preview - ${data.filename}</title>
+                                <style>
+                                    body { 
+                                        font-family: 'Courier New', monospace; 
+                                        font-size: 12px; 
+                                        line-height: 1.2; 
+                                        white-space: pre-wrap; 
+                                        margin: 20px; 
+                                    }
+                                </style>
+                            </head>
+                            <body>${data.preview}</body>
+                            </html>
+                        `);
+                        previewWindow.document.close();
+                    } else {
+                        // For PDF, redirect to print endpoint
+                        const printUrl = `${API_BASE}/invoices/${testInvoiceId}/print`;
+                        window.open(printUrl, '_blank');
+                    }
+                    
+                    showNotification(`Preview generated (${data.printer_type})`, 'success');
+                } else {
+                    throw new Error('Failed to generate preview');
+                }
+
+            } catch (error) {
+                console.error('Error generating preview:', error);
+                showNotification('Failed to generate preview: ' + error.message, 'error');
+            }
+        }
+
+        // POS Receipt Functions
+        async function loadPosReceiptTypes() {
+            try {
+                const response = await fetch(`${API_BASE}/settings/pos-receipt/types`);
+                if (response.ok) {
+                    const data = await response.json();
+                    posReceiptTypes = data.data;
+                    populatePosReceiptTypes();
+                } else {
+                    showNotification('Failed to load POS receipt types', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading POS receipt types:', error);
+                showNotification('Failed to load POS receipt types', 'error');
+            }
+        }
+
+        function populatePosReceiptTypes() {
+            const container = document.getElementById('posReceiptTypes');
+            container.innerHTML = '';
+
+            posReceiptTypes.printer_types.forEach(receiptType => {
+                const typeCard = document.createElement('div');
+                typeCard.className = 'printer-type-card';
+                typeCard.onclick = () => selectPosReceiptType(receiptType.value);
+                
+                const iconClass = receiptType.value.includes('58mm') ? 'thermal-icon' : 
+                                receiptType.value.includes('80mm') ? 'a4-icon' : 
+                                receiptType.value.includes('impact') ? 'dot-matrix-icon' : 'thermal-icon';
+                
+                typeCard.innerHTML = `
+                    <i class="bi bi-check-circle-fill check-icon"></i>
+                    <i class="bi bi-receipt printer-icon ${iconClass}"></i>
+                    <h6 class="mb-2">${receiptType.name}</h6>
+                    <p class="text-muted mb-2">${receiptType.description}</p>
+                    <small class="badge bg-light text-dark mb-3">${receiptType.width_chars} chars × ${receiptType.width_mm}mm</small>
+                    <ul class="feature-list">
+                        ${receiptType.supports.map(feature => `<li>${formatFeature(feature)}</li>`).join('')}
+                    </ul>
+                `;
+                
+                container.appendChild(typeCard);
+            });
+        }
+
+        function selectPosReceiptType(receiptType) {
+            selectedPosReceiptType = receiptType;
+            
+            // Update visual selection
+            document.querySelectorAll('#posReceiptTypes .printer-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Update receipt width based on type
+            const typeInfo = posReceiptTypes.printer_types.find(t => t.value === receiptType);
+            if (typeInfo) {
+                document.getElementById('posReceiptWidth').value = typeInfo.width_chars;
+            }
+        }
+
+        async function loadPosSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/settings/pos-receipt`);
+                if (response.ok) {
+                    const data = await response.json();
+                    posCurrentSettings = data.data;
+                    populatePosSettings();
+                } else {
+                    showNotification('Failed to load POS settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading POS settings:', error);
+                showNotification('Failed to load POS settings', 'error');
+            }
+        }
+
+        function populatePosSettings() {
+            // General POS settings
+            document.getElementById('posDefaultPrinter').value = posCurrentSettings.pos_default_printer_name || '';
+            document.getElementById('posAutoPrint').checked = posCurrentSettings.pos_auto_print || false;
+            document.getElementById('posCustomerCopy').checked = posCurrentSettings.pos_print_customer_copy || true;
+            document.getElementById('posMerchantCopy').checked = posCurrentSettings.pos_print_merchant_copy || false;
+            
+            // Format settings
+            document.getElementById('posReceiptWidth').value = posCurrentSettings.pos_receipt_width || 48;
+            document.getElementById('posCutType').value = posCurrentSettings.pos_receipt_cut_type || 'full';
+            document.getElementById('posCharSize').value = posCurrentSettings.pos_char_size || 'normal';
+            document.getElementById('posLineSpacing').value = posCurrentSettings.pos_line_spacing || 'normal';
+            document.getElementById('posHeaderLines').value = posCurrentSettings.pos_header_lines || 3;
+            document.getElementById('posFooterLines').value = posCurrentSettings.pos_footer_lines || 2;
+            
+            // Additional features
+            document.getElementById('posLogoEnabled').checked = posCurrentSettings.pos_logo_enabled || false;
+            document.getElementById('posLogoHeight').value = posCurrentSettings.pos_logo_height || 5;
+            document.getElementById('posBarcodeEnabled').checked = posCurrentSettings.pos_barcode_enabled || true;
+            document.getElementById('posQrEnabled').checked = posCurrentSettings.pos_qr_code_enabled || false;
+            document.getElementById('posTemplate').value = posCurrentSettings.pos_template || 'standard_thermal';
+            
+            // Select receipt type and show settings
+            selectPosReceiptType(posCurrentSettings.pos_receipt_printer_type || 'thermal_80mm');
+        }
+
+        async function savePosSettings() {
+            try {
+                const settings = {
+                    pos_receipt_printer_type: selectedPosReceiptType,
+                    pos_default_printer_name: document.getElementById('posDefaultPrinter').value,
+                    pos_auto_print: document.getElementById('posAutoPrint').checked,
+                    pos_print_customer_copy: document.getElementById('posCustomerCopy').checked,
+                    pos_print_merchant_copy: document.getElementById('posMerchantCopy').checked,
+                    pos_receipt_width: parseInt(document.getElementById('posReceiptWidth').value),
+                    pos_receipt_cut_type: document.getElementById('posCutType').value,
+                    pos_char_size: document.getElementById('posCharSize').value,
+                    pos_line_spacing: document.getElementById('posLineSpacing').value,
+                    pos_header_lines: parseInt(document.getElementById('posHeaderLines').value),
+                    pos_footer_lines: parseInt(document.getElementById('posFooterLines').value),
+                    pos_logo_enabled: document.getElementById('posLogoEnabled').checked,
+                    pos_logo_height: parseInt(document.getElementById('posLogoHeight').value),
+                    pos_barcode_enabled: document.getElementById('posBarcodeEnabled').checked,
+                    pos_qr_code_enabled: document.getElementById('posQrEnabled').checked,
+                    pos_template: document.getElementById('posTemplate').value,
+                    pos_paper_width_mm: posReceiptTypes.printer_types.find(t => t.value === selectedPosReceiptType)?.width_mm || 80
+                };
+
+                const response = await fetch(`${API_BASE}/settings/pos-receipt`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    showNotification('POS receipt settings saved successfully', 'success');
+                    posCurrentSettings = settings;
+                } else {
+                    throw new Error('Failed to save POS settings');
+                }
+
+            } catch (error) {
+                console.error('Error saving POS settings:', error);
+                showNotification('Failed to save POS settings', 'error');
+            }
+        }
+
+        async function testPosReceipt() {
+            try {
+                const response = await fetch(`${API_BASE}/pos/receipt/test-print`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'test_pos_receipt.txt';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showNotification('POS test receipt generated successfully', 'success');
+                } else {
+                    throw new Error('Failed to generate test receipt');
+                }
+            } catch (error) {
+                console.error('Error testing POS receipt:', error);
+                showNotification('Failed to test POS receipt: ' + error.message, 'error');
+            }
+        }
+
+        async function previewPosReceipt() {
+            try {
+                // Get the most recent sale for preview
+                const salesResponse = await fetch(`${API_BASE}/sales/sales?limit=1`);
+                if (!salesResponse.ok) {
+                    throw new Error('No sales found for preview');
+                }
+                
+                const sales = await salesResponse.json();
+                if (!sales.length) {
+                    showNotification('No sales available for preview. Complete a sale first.', 'warning');
+                    return;
+                }
+
+                const testSaleId = sales[0].id;
+                
+                // Get receipt preview
+                const response = await fetch(`${API_BASE}/pos/sales/${testSaleId}/receipt`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Show preview in a modal or new window
+                    const previewWindow = window.open('', '_blank');
+                    previewWindow.document.write(`
+                        <html>
+                        <head>
+                            <title>POS Receipt Preview</title>
+                            <style>
+                                body { 
+                                    font-family: 'Courier New', monospace; 
+                                    font-size: 10px; 
+                                    line-height: 1.1; 
+                                    white-space: pre-wrap; 
+                                    margin: 20px; 
+                                    background: #000;
+                                    color: #fff;
+                                    width: ${data.data.printer_config.paper_width}ch;
+                                }
+                            </style>
+                        </head>
+                        <body>${data.data.receipt_content}</body>
+                        </html>
+                    `);
+                    previewWindow.document.close();
+                    
+                    showNotification(`POS receipt preview generated (${data.data.printer_config.printer_type})`, 'success');
+                } else {
+                    throw new Error('Failed to generate preview');
+                }
+
+            } catch (error) {
+                console.error('Error generating POS preview:', error);
+                showNotification('Failed to generate POS preview: ' + error.message, 'error');
+            }
+        }
+
+        // Update saveSettings to handle both invoice and POS
+        async function saveSettings() {
+            const activeTab = document.querySelector('.nav-link.active').getAttribute('aria-controls');
+            
+            if (activeTab === 'invoice-settings') {
+                await saveInvoiceSettings();
+            } else if (activeTab === 'pos-settings') {
+                await savePosSettings();
+            }
+        }
+
+        async function saveInvoiceSettings() {
+            try {
+                const settings = {
+                    invoice_printer_type: selectedPrinterType,
+                    default_printer_name: document.getElementById('defaultPrinterName').value,
+                    auto_print: document.getElementById('autoPrint').checked,
+                    a4_paper_size: document.getElementById('a4PaperSize').value,
+                    a4_orientation: document.getElementById('a4Orientation').value,
+                    dot_matrix_paper_width: parseInt(document.getElementById('dotMatrixWidth').value),
+                    dot_matrix_form_length: parseInt(document.getElementById('dotMatrixLength').value),
+                    dot_matrix_carbon_copies: parseInt(document.getElementById('dotMatrixCopies').value),
+                    dot_matrix_compressed: document.getElementById('dotMatrixCompressed').checked,
+                    dot_matrix_template: document.getElementById('dotMatrixTemplate').value
+                };
+
+                const response = await fetch(`${API_BASE}/settings/invoice-printer`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    showNotification('Invoice settings saved successfully', 'success');
+                    currentSettings = settings;
+                } else {
+                    throw new Error('Failed to save invoice settings');
+                }
+
+            } catch (error) {
+                console.error('Error saving invoice settings:', error);
+                showNotification('Failed to save invoice settings', 'error');
+            }
+        }
+
+        function showNotification(message, type) {
+            // Create notification
+            const alertClass = type === 'success' ? 'alert-success' : 
+                             type === 'error' ? 'alert-danger' : 
+                             type === 'warning' ? 'alert-warning' : 'alert-info';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    </script>
+    <script src="../js/navbar.js?v=20250106001"></script>
+
+    
+    
+</body>
+</html>

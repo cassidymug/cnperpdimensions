@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking System Guide | CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); min-height: 100vh; padding: 20px; }
+        .help-container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; }
+        .help-header { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 3rem 2rem; text-align: center; }
+        .help-header h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .help-content { padding: 3rem; }
+        .section { margin-bottom: 3rem; }
+        .section h2 { color: #00539a; font-weight: bold; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 3px solid #4facfe; }
+        .section h3 { color: #4facfe; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; }
+        .feature-card { background: #f8f9fa; border-left: 4px solid #4facfe; padding: 1.5rem; margin-bottom: 1rem; border-radius: 8px; }
+        .code-block { background: #2d2d2d; color: #f8f8f2; padding: 1.5rem; border-radius: 8px; font-family: 'Courier New', monospace; margin: 1rem 0; overflow-x: auto; }
+        .icon-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; margin-bottom: 1rem; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #dee2e6; }
+        ul.check-list { list-style: none; padding-left: 0; }
+        ul.check-list li { padding: 0.5rem 0; padding-left: 2rem; position: relative; }
+        ul.check-list li:before { content: "✓"; position: absolute; left: 0; color: #28a745; font-weight: bold; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+    <div class="help-container">
+        <div class="help-header">
+            <h1><i class="bi bi-bank me-3"></i>Banking System</h1>
+            <p class="lead">Comprehensive Financial Management</p>
+        </div>
+
+        <div class="help-content">
+            <div class="section">
+                <h2><i class="bi bi-info-circle-fill me-2"></i>Overview</h2>
+                <p class="lead">The banking system provides comprehensive financial management capabilities including bank accounts, transactions, transfers, reconciliations, and beneficiaries. It integrates with the accounting system to maintain proper financial records.</p>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-star-fill text-warning me-2"></i>Key Features</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-bank2 text-primary me-2"></i>Bank Accounts</h4>
+                            <ul class="check-list">
+                                <li>Create and manage bank accounts</li>
+                                <li>Support for multiple currencies</li>
+                                <li>Integration with accounting codes</li>
+                                <li>Account balance tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-arrow-left-right text-success me-2"></i>Bank Transactions</h4>
+                            <ul class="check-list">
+                                <li>Record deposits, withdrawals, transfers</li>
+                                <li>VAT tracking</li>
+                                <li>Automatic accounting entry creation</li>
+                                <li>Transaction reconciliation support</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-send text-info me-2"></i>Bank Transfers</h4>
+                            <ul class="check-list">
+                                <li>Internal transfers between accounts</li>
+                                <li>External transfers with exchange rates</li>
+                                <li>Transfer fees and VAT handling</li>
+                                <li>Beneficiary management</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-check2-square text-warning me-2"></i>Bank Reconciliations</h4>
+                            <ul class="check-list">
+                                <li>Statement vs book balance reconciliation</li>
+                                <li>Reconciliation items management</li>
+                                <li>Multi-currency support</li>
+                                <li>Complete audit trail</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-file-earmark-code me-2"></i>API Endpoints</h2>
+                
+                <h3>Bank Accounts</h3>
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/api/v1/banking/accounts</code></td>
+                            <td>List bank accounts with filtering</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td><code>/api/v1/banking/accounts</code></td>
+                            <td>Create new bank account</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/api/v1/banking/accounts/{id}</code></td>
+                            <td>Get specific bank account</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Bank Transactions</h3>
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/api/v1/banking/transactions</code></td>
+                            <td>List transactions with filtering</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td><code>/api/v1/banking/transactions</code></td>
+                            <td>Create new transaction</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Bank Transfers</h3>
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/api/v1/banking/transfers</code></td>
+                            <td>List transfers with filtering</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td><code>/api/v1/banking/transfers</code></td>
+                            <td>Create new transfer</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-database me-2"></i>Data Models</h2>
+                
+                <h3>BankAccount</h3>
+                <div class="code-block">
+class BankAccount(BaseModel):
+    id: str
+    name: str
+    institution: str
+    account_number: str
+    currency: str
+    account_type: str
+    accounting_code_id: str
+                </div>
+
+                <h3>BankTransaction</h3>
+                <div class="code-block">
+class BankTransaction(BaseModel):
+    id: str
+    bank_account_id: str
+    date: date
+    amount: Decimal
+    description: str
+    transaction_type: str
+    reference: str
+    reconciled: bool
+    vat_amount: Decimal
+    accounting_entry_id: str
+                </div>
+
+                <h3>BankTransfer</h3>
+                <div class="code-block">
+class BankTransfer(BaseModel):
+    id: str
+    amount: Decimal
+    transfer_type: str
+    status: str
+    reference: str
+    description: str
+    source_account_id: str
+    destination_account_id: str
+    exchange_rate: Decimal
+    vat_amount: Decimal
+    transfer_fee: Decimal
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-list-check me-2"></i>Transaction Types</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-bordered">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>deposit</code></td><td>Money received</td></tr>
+                                <tr><td><code>withdrawal</code></td><td>Money withdrawn</td></tr>
+                                <tr><td><code>transfer</code></td><td>Internal transfer</td></tr>
+                                <tr><td><code>payment</code></td><td>Payment made</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-bordered">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>receipt</code></td><td>Payment received</td></tr>
+                                <tr><td><code>bank_charge</code></td><td>Bank fees</td></tr>
+                                <tr><td><code>interest</code></td><td>Interest earned/paid</td></tr>
+                                <tr><td><code>reversal</code></td><td>Transaction reversal</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-gear me-2"></i>Usage Examples</h2>
+                
+                <h3>Create Bank Account</h3>
+                <div class="code-block">
+account_data = {
+    "name": "Main Checking Account",
+    "institution": "First National Bank",
+    "account_number": "1234567890",
+    "currency": "USD",
+    "account_type": "checking",
+    "accounting_code_id": "bank-account-code-id"
+}
+
+banking_service = BankingService(db)
+account, result = banking_service.create_bank_account(
+    account_data, 
+    branch_id
+)
+                </div>
+
+                <h3>Create Transaction</h3>
+                <div class="code-block">
+transaction_data = {
+    "bank_account_id": "account-id",
+    "date": date.today(),
+    "amount": Decimal("1000.00"),
+    "description": "Customer payment",
+    "transaction_type": "deposit",
+    "reference": "INV-001",
+    "vat_amount": Decimal("100.00")
+}
+
+transaction, result = banking_service.create_bank_transaction(
+    transaction_data, 
+    branch_id
+)
+                </div>
+
+                <h3>Create Transfer</h3>
+                <div class="code-block">
+transfer_data = {
+    "source_account_id": "source-account-id",
+    "destination_account_id": "dest-account-id",
+    "amount": Decimal("500.00"),
+    "transfer_type": "internal",
+    "reference": "TRANSFER-001",
+    "description": "Transfer to savings",
+    "vat_amount": Decimal("0.00"),
+    "transfer_fee": Decimal("5.00")
+}
+
+transfer, result = banking_service.create_bank_transfer(
+    transfer_data, 
+    branch_id
+)
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-link-45deg me-2"></i>Integration</h2>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-calculator me-2"></i>Accounting Integration
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>Automatic journal entry creation</li>
+                                    <li>Proper debit/credit handling</li>
+                                    <li>Chart of accounts integration</li>
+                                    <li>Audit trail maintenance</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-people me-2"></i>User Management
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>User-specific beneficiaries</li>
+                                    <li>Branch-based account management</li>
+                                    <li>Role-based access control</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-percent me-2"></i>VAT Handling
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>VAT amount tracking</li>
+                                    <li>VAT rate calculations</li>
+                                    <li>Separate VAT accounting entries</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <a href="/static/help-center.html" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+                <a href="/static/bank-transactions.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-bank me-2"></i>Open Banking Module
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

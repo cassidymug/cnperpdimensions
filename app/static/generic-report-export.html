@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Generic Report Export</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>body{background:#f8f9fa;} pre{background:#fff;border:1px solid #dee2e6;padding:1rem;border-radius:.5rem;max-height:300px;overflow:auto;} .small-note{font-size:.75rem;color:#6c757d;} </style>
+    
+    
+</head>
+<body>
+
+    
+    
+    
+    
+    
+    
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Generic Report Export</h4>
+    <div class="btn-group">
+      <button class="btn btn-outline-primary" onclick="sendExport('pdf')">Export PDF</button>
+      <button class="btn btn-outline-success" onclick="sendExport('xlsx')">Export XLSX</button>
+      <button class="btn btn-outline-secondary" onclick="previewJson()">Preview JSON</button>
+    </div>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-header py-2">Meta</div>
+        <div class="card-body">
+          <div class="mb-2">
+            <label class="form-label small">Title</label>
+            <input id="titleInput" class="form-control form-control-sm" placeholder="Generic Report" />
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Period Start</label>
+            <input type="date" id="periodStart" class="form-control form-control-sm" />
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Period End</label>
+            <input type="date" id="periodEnd" class="form-control form-control-sm" />
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="includeLogo" checked>
+            <label class="form-check-label small" for="includeLogo">Include Logo</label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="includeWatermark" checked>
+            <label class="form-check-label small" for="includeWatermark">Include Watermark</label>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Watermark Text (optional)</label>
+            <input id="watermarkText" class="form-control form-control-sm" placeholder="Override watermark" />
+          </div>
+          <div class="small-note">Payload flattened & validated server-side (size, rows).</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card h-100">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+          <span>Data JSON</span>
+          <div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadSample()">Sample</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="beautify()">Beautify</button>
+          </div>
+        </div>
+        <div class="card-body p-2">
+          <textarea id="jsonInput" class="form-control" style="height:260px;font-family:monospace;font-size:12px;" placeholder='{"data":{"key":"value"}}'></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mt-4">
+    <h6>Preview</h6>
+    <pre id="previewBox" class="mb-0 small text-break">(no preview)</pre>
+  </div>
+</div>
+ 
+<script>
+function today(){return new Date().toISOString().split('T')[0];}
+document.getElementById('periodStart').value = today();
+document.getElementById('periodEnd').value = today();
+
+function buildPayload(){
+  const title = document.getElementById('titleInput').value.trim() || 'Generic Report';
+  const period = {start: document.getElementById('periodStart').value, end: document.getElementById('periodEnd').value};
+  let raw = document.getElementById('jsonInput').value.trim();
+  let dataObj = {};
+  if(raw){
+    try{ dataObj = JSON.parse(raw); }catch(e){ alert('Invalid JSON body'); throw e; }
+  }
+  // If user pasted object with data key, keep; else encapsulate
+  if(!('data' in dataObj)){
+    dataObj = { data: dataObj };
+  }
+  dataObj.title = title; dataObj.period = period;
+  return dataObj;
+}
+
+function previewJson(){
+  try{ const payload = buildPayload(); document.getElementById('previewBox').textContent = JSON.stringify(payload, null, 2); }
+  catch(e){ /* handled */ }
+}
+function beautify(){
+  try{ const txt = document.getElementById('jsonInput').value.trim(); if(!txt) return; const obj=JSON.parse(txt); document.getElementById('jsonInput').value = JSON.stringify(obj, null, 2); }
+  catch(e){ alert('Cannot beautify invalid JSON'); }
+}
+function loadSample(){
+  const sample = { data: { summary: { metricA: 1234.56, metricB: 789 }, breakdown: { region: { north: 500, south: 734 }, channels: [ {name:'Online', value: 600}, {name:'Retail', value: 634} ] } } };
+  document.getElementById('jsonInput').value = JSON.stringify(sample, null, 2);
+  previewJson();
+}
+async function sendExport(fmt){
+  const payload = buildPayload();
+  const includeLogo = document.getElementById('includeLogo').checked;
+  const includeWatermark = document.getElementById('includeWatermark').checked;
+  const watermarkText = document.getElementById('watermarkText').value.trim();
+  const params = new URLSearchParams();
+  params.append('export', fmt);
+  params.append('include_logo', includeLogo);
+  params.append('include_watermark', includeWatermark);
+  if(watermarkText) params.append('watermark_text', watermarkText);
+  const resp = await fetch(`/api/v1/reports/generic-report/export?${params.toString()}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  if(!resp.ok){ const msg = await resp.text(); alert('Export failed: '+msg); return; }
+  const blob = await resp.blob();
+  const a=document.createElement('a');
+  const fnameBase = payload.title.toLowerCase().replace(/\s+/g,'_');
+  a.href=URL.createObjectURL(blob); a.download = fnameBase + (fmt==='pdf'?'.pdf':'.xlsx'); a.click();
+}
+</script>
+</body>
+</html>

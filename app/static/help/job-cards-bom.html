@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Cards & BOM Integration | CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); min-height: 100vh; padding: 20px; }
+        .help-container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; }
+        .help-header { background: linear-gradient(135deg, #43e97b, #38f9d7); color: white; padding: 3rem 2rem; text-align: center; }
+        .help-header h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .help-content { padding: 3rem; }
+        .section { margin-bottom: 3rem; }
+        .section h2 { color: #43e97b; font-weight: bold; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 3px solid #38f9d7; }
+        .feature-card { background: #f0fdf7; border-left: 4px solid #43e97b; padding: 1.5rem; margin-bottom: 1rem; border-radius: 8px; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #dee2e6; }
+        ul.check-list { list-style: none; padding-left: 0; }
+        ul.check-list li { padding: 0.5rem 0; padding-left: 2rem; position: relative; }
+        ul.check-list li:before { content: "✓"; position: absolute; left: 0; color: #28a745; font-weight: bold; font-size: 1.2rem; }
+        .workflow-box { background: white; border: 2px solid #43e97b; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="help-container">
+        <div class="help-header">
+            <h1><i class="bi bi-clipboard-check me-3"></i>Job Cards & BOM Integration</h1>
+            <p class="lead">Manufacturing Job Cards with Recipe Manager Integration</p>
+        </div>
+
+        <div class="help-content">
+            <div class="section">
+                <h2><i class="bi bi-info-circle-fill me-2"></i>Overview</h2>
+                <p class="lead">The Job Cards system is fully integrated with the Recipe Manager (Bill of Materials) module. This enables recipe selection when creating manufacturing job cards, automatic material population, and complete inventory adjustments upon job completion.</p>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-star-fill text-warning me-2"></i>Key Features</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-book text-primary me-2"></i>Recipe/BOM Selection</h4>
+                            <ul class="check-list">
+                                <li>Select recipe when creating manufacturing job cards</li>
+                                <li>Choose from all products with defined recipes</li>
+                                <li>Specify production quantity</li>
+                                <li>Automatic material quantity scaling</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-box-seam text-success me-2"></i>Material Auto-Population</h4>
+                            <ul class="check-list">
+                                <li>All BOM components auto-added as materials</li>
+                                <li>Quantities scaled by production quantity</li>
+                                <li>Manual adjustment capability</li>
+                                <li>Real-time cost calculations</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-arrow-repeat text-info me-2"></i>Automatic Inventory Adjustments</h4>
+                            <ul class="check-list">
+                                <li>Raw materials deducted from HQ inventory</li>
+                                <li>Finished goods added to HQ inventory</li>
+                                <li>COGS entries automatically created</li>
+                                <li>Transaction tracking for audit trail</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-calculator text-warning me-2"></i>Production Tracking</h4>
+                            <ul class="check-list">
+                                <li>Track production quantities</li>
+                                <li>Monitor material consumption</li>
+                                <li>Calculate manufacturing costs</li>
+                                <li>Include labor and overhead</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-list-ol me-2"></i>How to Use</h2>
+                
+                <div class="workflow-box">
+                    <h4><i class="bi bi-1-circle-fill text-primary me-2"></i>Step 1: Create Recipes</h4>
+                    <div class="alert alert-light">
+                        <ol>
+                            <li>Go to <strong>Recipe Manager</strong> (http://localhost:8010/static/recipes.html)</li>
+                            <li>Create recipes for your manufactured products</li>
+                            <li>Define all raw materials and quantities needed</li>
+                            <li>Save each recipe</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="workflow-box">
+                    <h4><i class="bi bi-2-circle-fill text-success me-2"></i>Step 2: Create Manufacturing Job Card</h4>
+                    <div class="alert alert-light">
+                        <ol>
+                            <li>Open <strong>Job Cards</strong> (http://localhost:8010/static/job-cards.html)</li>
+                            <li>Click <strong>"New Job Card"</strong></li>
+                            <li>Fill in basic details:
+                                <ul>
+                                    <li>Select customer</li>
+                                    <li>Choose <strong>"Manufacturing"</strong> as Job Type</li>
+                                    <li>Select branch</li>
+                                    <li>Set start and due dates</li>
+                                </ul>
+                            </li>
+                            <li><strong>BOM Section</strong> appears automatically:
+                                <ul>
+                                    <li>Choose a Recipe/BOM from dropdown</li>
+                                    <li>Set production quantity (e.g., 5 units)</li>
+                                    <li>Click recipe dropdown to auto-load materials</li>
+                                </ul>
+                            </li>
+                            <li><strong>Materials auto-populate:</strong>
+                                <ul>
+                                    <li>All BOM components appear</li>
+                                    <li>Quantities calculated (recipe qty × production qty)</li>
+                                    <li>Manually adjust if needed</li>
+                                </ul>
+                            </li>
+                            <li>Add labor hours and rates</li>
+                            <li>Save the job card</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="workflow-box">
+                    <h4><i class="bi bi-3-circle-fill text-info me-2"></i>Step 3: Process the Job</h4>
+                    <div class="alert alert-light">
+                        <h5>Start the Job:</h5>
+                        <ul>
+                            <li>Change status to <strong>"In Progress"</strong></li>
+                            <li>Materials are issued from inventory</li>
+                        </ul>
+
+                        <h5 class="mt-3">Complete the Job:</h5>
+                        <ul>
+                            <li>Change status to <strong>"Completed"</strong></li>
+                            <li><strong>Automatic Production Process Runs:</strong>
+                                <ul class="check-list">
+                                    <li>Raw materials deducted from HQ inventory</li>
+                                    <li>Finished goods added to HQ inventory</li>
+                                    <li>COGS entry created with all costs</li>
+                                    <li>Production note added to job card</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-diagram-3 me-2"></i>Example Workflow</h2>
+                
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Example: Manufacturing 10 Burger Buns</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Recipe Setup:</h6>
+                        <ul>
+                            <li>Product: Burger Buns (makes 10 units)</li>
+                            <li>Flour: 5kg @ P5/kg</li>
+                            <li>Milk: 2L @ P15/L</li>
+                            <li>Eggs: 50 pieces @ P2/piece</li>
+                        </ul>
+
+                        <h6 class="mt-3">Job Card Created:</h6>
+                        <ul>
+                            <li>Job Type: Manufacturing</li>
+                            <li>Recipe Selected: Burger Buns</li>
+                            <li>Production Quantity: 10 units</li>
+                            <li>Materials Auto-Loaded:
+                                <ul>
+                                    <li>5kg Flour</li>
+                                    <li>2L Milk</li>
+                                    <li>50 Eggs</li>
+                                </ul>
+                            </li>
+                            <li>Labor: 3 hours @ P40/hr = P120</li>
+                        </ul>
+
+                        <h6 class="mt-3">When Job Completed:</h6>
+                        <ul class="check-list">
+                            <li>Inventory Reduced: 5kg Flour, 2L Milk, 50 Eggs</li>
+                            <li>Inventory Increased: 10 Burger Buns</li>
+                            <li>COGS Recorded: Materials P155 + Labor P120 = P275</li>
+                            <li>Cost per unit: P27.50</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-lightbulb-fill text-warning me-2"></i>Benefits</h2>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-speedometer2 me-2"></i>Efficiency
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>No manual material entry</li>
+                                    <li>Automatic quantity calculations</li>
+                                    <li>Reduced data entry errors</li>
+                                    <li>Faster job card creation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-check-circle me-2"></i>Accuracy
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>Consistent material usage</li>
+                                    <li>Accurate cost tracking</li>
+                                    <li>Proper inventory management</li>
+                                    <li>Complete audit trail</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-graph-up me-2"></i>Insights
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li>Real production costs</li>
+                                    <li>Material consumption tracking</li>
+                                    <li>Labor cost analysis</li>
+                                    <li>Profitability metrics</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <a href="/static/help-center.html" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+                <a href="/static/job-cards.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-clipboard-check me-2"></i>Open Job Cards
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

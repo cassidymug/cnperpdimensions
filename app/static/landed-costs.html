@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landed Costs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/modern-ui.css">
+    <script src="/static/js/auth-bootstrap.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    
+    
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <script src="/static/js/navbar.js?v=20250106001"></script>
+    <div style="height: 70px;"></div>
+    
+    <div id="main-container" class="container-fluid">
+        <div id="alertPlaceholder"></div>
+        <div id="content-container" class="col-12">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="display-6 fw-bold">
+                                <i class="bi bi-truck text-primary me-3"></i>
+                                Landed Costs
+                            </h1>
+                            <p class="lead text-muted">Track and allocate additional costs to your purchases.</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#landedCostModal">
+                                <i class="bi bi-plus-circle me-2"></i>Add Landed Cost
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Landed Costs Table -->
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-hover" id="landedCostsTable">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Purchase Ref</th>
+                                <th>Date</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="landedCostsTableBody">
+                            <!-- Rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Landed Cost Modal -->
+    <div class="modal fade" id="landedCostModal" tabindex="-1" aria-labelledby="landedCostModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="landedCostModalLabel">Add Landed Cost</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="landedCostForm">
+                        <input type="hidden" id="landedCostId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="lcReference" class="form-label">Reference *</label>
+                                <input type="text" class="form-control" id="lcReference" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lcDate" class="form-label">Date *</label>
+                                <input type="date" class="form-control" id="lcDate" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="lcPurchase" class="form-label">Associated Purchase *</label>
+                                <select class="form-select" id="lcPurchase" required>
+                                    <!-- Purchase orders will be loaded here -->
+                                </select>
+                            </div>
+                             <div class="col-md-6">
+                                <label for="lcSupplier" class="form-label">Supplier</label>
+                                <select class="form-select" id="lcSupplier">
+                                    <!-- Suppliers will be loaded here -->
+                                </select>
+                            </div>
+                        </div>
+                        <hr>
+                        <h5>Cost Items</h5>
+                        <div id="lcItemsContainer">
+                            <!-- Landed cost items will be added here -->
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addLandedCostItem">
+                            <i class="bi bi-plus"></i> Add Item
+                        </button>
+                        <hr>
+                        <div class="mb-3">
+                            <label for="lcNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="lcNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveLandedCost">Save Landed Cost</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+    
+    
+    <script>
+        class LandedCostApp {
+            constructor() {
+                this.landedCosts = [];
+                this.purchases = [];
+                this.suppliers = [];
+                this.modal = new bootstrap.Modal(document.getElementById('landedCostModal'));
+            }
+
+            async init() {
+                this.bindEvents();
+                await this.loadInitialData();
+                this.renderTable();
+            }
+
+            bindEvents() {
+                document.getElementById('saveLandedCost').addEventListener('click', () => this.saveLandedCost());
+                document.getElementById('addLandedCostItem').addEventListener('click', () => this.addCostItemRow());
+            }
+
+            async loadInitialData() {
+                // In a real app, you'd fetch this data from API endpoints
+                // For now, we'll use dummy data
+                this.purchases = [
+                    { id: 'po-001', reference: 'PO-2025-001' },
+                    { id: 'po-002', reference: 'PO-2025-002' },
+                ];
+                this.suppliers = [
+                    { id: 'sup-001', name: 'Global Shipping Co.' },
+                    { id: 'sup-002', name: 'Local Logistics' },
+                ];
+                
+                this.populateSelect('lcPurchase', this.purchases, 'id', 'reference');
+                this.populateSelect('lcSupplier', this.suppliers, 'id', 'name');
+            }
+            
+            populateSelect(elementId, data, valueField, textField) {
+                const select = document.getElementById(elementId);
+                select.innerHTML = '<option value="">Select...</option>';
+                data.forEach(item => {
+                    const option = new Option(item[textField], item[valueField]);
+                    select.add(option);
+                });
+            }
+
+            renderTable() {
+                const tableBody = document.getElementById('landedCostsTableBody');
+                tableBody.innerHTML = '';
+                if (this.landedCosts.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No landed costs found.</td></tr>';
+                    return;
+                }
+                this.landedCosts.forEach(lc => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${lc.reference}</td>
+                        <td>${this.getPurchaseRef(lc.purchase_id)}</td>
+                        <td>${lc.date}</td>
+                        <td>${this.formatCurrency(lc.total_amount)}</td>
+                        <td><span class="badge bg-${this.getStatusColor(lc.status)}">${lc.status}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="app.editLandedCost('${lc.id}')">Edit</button>
+                            <button class="btn btn-sm btn-success" onclick="app.allocateCost('${lc.id}')" ${lc.status !== 'confirmed' ? 'disabled' : ''}>Allocate</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            addCostItemRow(item = {}) {
+                const container = document.getElementById('lcItemsContainer');
+                const itemRow = document.createElement('div');
+                itemRow.className = 'row mb-2 align-items-center';
+                itemRow.innerHTML =
+                    '<div class="col-md-5">' +
+                    '    <input type="text" class="form-control" placeholder="Description (e.g., Freight)" value="' + (item.description || '') + '" required>' +
+                    '</div>' +
+                    '<div class="col-md-5">' +
+                    '    <input type="number" class="form-control" placeholder="Amount" step="0.01" value="' + (item.amount || '') + '" required>' +
+                    '</div>' +
+                    '<div class="col-md-2">' +
+                    '    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest(\'.row\').remove()">' +
+                    '        <i class="bi bi-trash"></i>' +
+                    '    </button>' +
+                    '</div>';
+                container.appendChild(itemRow);
+            }
+
+            async saveLandedCost() {
+                const form = document.getElementById('landedCostForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                const landedCostData = {
+                    id: document.getElementById('landedCostId').value,
+                    reference: document.getElementById('lcReference').value,
+                    date: document.getElementById('lcDate').value,
+                    purchase_id: document.getElementById('lcPurchase').value,
+                    supplier_id: document.getElementById('lcSupplier').value,
+                    notes: document.getElementById('lcNotes').value,
+                    items: [],
+                    total_amount: 0,
+                    status: 'draft'
+                };
+
+                const itemRows = document.querySelectorAll('#lcItemsContainer .row');
+                let totalAmount = 0;
+                itemRows.forEach(row => {
+                    const description = row.querySelector('input[type="text"]').value;
+                    const amount = parseFloat(row.querySelector('input[type="number"]').value);
+                    if (description && amount > 0) {
+                        landedCostData.items.push({ description, amount });
+                        totalAmount += amount;
+                    }
+                });
+                
+                landedCostData.total_amount = totalAmount;
+
+                // Here you would send the data to the API
+                console.log('Saving Landed Cost:', landedCostData);
+                
+                // For demo, we just add it to our local array
+                if(landedCostData.id) {
+                    const index = this.landedCosts.findIndex(lc => lc.id === landedCostData.id);
+                    this.landedCosts[index] = landedCostData;
+                } else {
+                    landedCostData.id = 'lc-' + Date.now();
+                    this.landedCosts.push(landedCostData);
+                }
+
+                this.renderTable();
+                this.modal.hide();
+                this.showAlert('Landed cost saved successfully!', 'success');
+            }
+            
+            editLandedCost(id) {
+                const lc = this.landedCosts.find(c => c.id === id);
+                if (!lc) return;
+
+                document.getElementById('landedCostId').value = lc.id;
+                document.getElementById('lcReference').value = lc.reference;
+                document.getElementById('lcDate').value = lc.date;
+                document.getElementById('lcPurchase').value = lc.purchase_id;
+                document.getElementById('lcSupplier').value = lc.supplier_id;
+                document.getElementById('lcNotes').value = lc.notes;
+                
+                const itemsContainer = document.getElementById('lcItemsContainer');
+                itemsContainer.innerHTML = '';
+                lc.items.forEach(item => this.addCostItemRow(item));
+
+                document.getElementById('landedCostModalLabel').textContent = 'Edit Landed Cost';
+                this.modal.show();
+            }
+
+            async allocateCost(id) {
+                if (!confirm('Are you sure you want to allocate these costs? This cannot be undone.')) return;
+                
+                // API call to POST /api/v1/landed-costs/{id}/allocate
+                console.log('Allocating cost for ID:', id);
+                
+                const lc = this.landedCosts.find(c => c.id === id);
+                if(lc) {
+                    lc.status = 'allocated';
+                    this.renderTable();
+                    this.showAlert('Costs allocated successfully!', 'success');
+                }
+            }
+
+            getPurchaseRef(id) {
+                const purchase = this.purchases.find(p => p.id === id);
+                return purchase ? purchase.reference : 'N/A';
+            }
+
+            getStatusColor(status) {
+                switch (status) {
+                    case 'draft': return 'secondary';
+                    case 'confirmed': return 'primary';
+                    case 'allocated': return 'success';
+                    default: return 'dark';
+                }
+            }
+
+            formatCurrency(amount) {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+            }
+
+            showAlert(message, type = 'info') {
+                const placeholder = document.getElementById('alertPlaceholder');
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML =
+                    '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                    '   ' + message +
+                    '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                    '</div>';
+                placeholder.append(wrapper);
+                setTimeout(() => wrapper.remove(), 5000);
+            }
+        }
+
+        const app = new LandedCostApp();
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>

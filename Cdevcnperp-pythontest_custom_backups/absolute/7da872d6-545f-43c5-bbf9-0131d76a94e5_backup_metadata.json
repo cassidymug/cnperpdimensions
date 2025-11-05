@@ -1,0 +1,11 @@
+{
+  "backup_type": "absolute",
+  "file_path": "C:\\dev\\cnperp-python\\test_custom_backups/absolute/backup_absolute_Test_backup_with_custom_location_20251015_165108_7da872d6-545f-43c5-bbf9-0131d76a94e5.sql",
+  "file_size": 159,
+  "file_hash": "6840cb1d7a4c42433368656e2d2185c5e870800220602e06227025a0eafa7ba1",
+  "created_at": "2025-10-15T16:51:08.389549",
+  "description": "Test backup with custom location",
+  "version": "1.0",
+  "database_name": "cnperp",
+  "database_host": "localhost"
+}

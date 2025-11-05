@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight Barcode Generator - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px; /* Space for navbar */
+            padding-bottom: 20px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .generator-card {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .scale-display {
+            background: #f8f9fa;
+            border: 3px solid #dee2e6;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .weight-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #28a745;
+            font-family: 'Courier New', monospace;
+        }
+        .barcode-container {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        .barcode-svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .print-label {
+            page-break-after: always;
+            width: 50mm;
+            height: 30mm;
+            padding: 2mm;
+            border: 1px solid #000;
+            background: white;
+        }
+        .product-name-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #495057;
+        }
+        .quick-weight-btn {
+            margin: 5px;
+        }
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+            .print-label { page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    <div id="navbar-container"></div>
+    
+    <div class="generator-card">
+        <!-- Header -->
+        <div class="card-header no-print">
+            <h1><i class="fas fa-weight"></i> Weight Barcode Generator</h1>
+            <p class="mb-0">For Butchery, Produce & Deli Counter</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="card-body p-4">
+            <!-- Product Selection -->
+            <div class="row mb-4 no-print">
+                <div class="col-md-6">
+                    <label class="form-label"><i class="fas fa-box"></i> Select Product</label>
+                    <select class="form-select form-select-lg" id="productSelect" onchange="loadProductDetails()">
+                        <option value="">-- Select a weight-based product --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label"><i class="fas fa-filter"></i> Filter by Category</label>
+                    <select class="form-select form-select-lg" id="categoryFilter" onchange="filterProducts()">
+                        <option value="">All Categories</option>
+                        <option value="meat">Meat</option>
+                        <option value="fruits">Fruits</option>
+                        <option value="vegetables">Vegetables</option>
+                        <option value="dairy">Dairy</option>
+                        <option value="bakery">Bakery</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Product Details -->
+            <div id="productDetails" style="display: none;">
+                <div class="alert alert-info">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Product:</strong> <span id="displayProductName"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Price/kg:</strong> R<span id="displayPricePerKg"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Tare:</strong> <span id="displayTare"></span>g
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weight Input Section -->
+                <div class="scale-display no-print">
+                    <h4><i class="fas fa-balance-scale"></i> Enter Weight</h4>
+                    <div class="weight-display" id="weightDisplay">0.000</div>
+                    <div class="mb-3">
+                        <label class="form-label">Weight (grams)</label>
+                        <input type="number" class="form-control form-control-lg text-center" 
+                               id="weightInput" step="0.1" min="0" max="99999" 
+                               placeholder="Enter weight in grams" 
+                               onkeyup="updateWeightDisplay()" 
+                               onfocus="this.select()">
+                    </div>
+                    
+                    <!-- Quick Weight Buttons -->
+                    <div class="mb-3">
+                        <button class="btn btn-outline-secondary quick-weight-btn" onclick="setWeight(250)">250g</button>
+                        <button class="btn btn-outline-secondary quick-weight-btn" onclick="setWeight(500)">500g</button>
+                        <button class="btn btn-outline-secondary quick-weight-btn" onclick="setWeight(750)">750g</button>
+                        <button class="btn btn-outline-secondary quick-weight-btn" onclick="setWeight(1000)">1kg</button>
+                        <button class="btn btn-outline-secondary quick-weight-btn" onclick="setWeight(1500)">1.5kg</button>
+                        <button class="btn btn-outline-secondary quick-weight-btn" onclick="setWeight(2000)">2kg</button>
+                        <button class="btn btn-outline-secondary quick-weight-btn" onclick="setWeight(2500)">2.5kg</button>
+                    </div>
+
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h6>Gross Weight</h6>
+                            <div class="text-primary fs-5" id="grossWeightKg">0.000 kg</div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Net Weight</h6>
+                            <div class="text-success fs-5" id="netWeightKg">0.000 kg</div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Total Price</h6>
+                            <div class="text-danger fs-5" id="totalPrice">R 0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated Barcode -->
+                <div id="barcodeSection" style="display: none;">
+                    <div class="barcode-container">
+                        <h5 class="mb-3">Generated Barcode</h5>
+                        <div class="product-name-display mb-3" id="labelProductName"></div>
+                        <svg id="barcodeOutput" class="barcode-svg"></svg>
+                        <div class="mt-3">
+                            <h4 class="text-primary"><strong id="barcodePriceLabel">R 0.00</strong></h4>
+                            <small class="text-muted" id="barcodeDetails"></small>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="text-center no-print mt-4">
+                        <button class="btn btn-success btn-lg" onclick="printLabel()">
+                            <i class="fas fa-print"></i> Print Label
+                        </button>
+                        <button class="btn btn-primary btn-lg" onclick="generateBarcode()">
+                            <i class="fas fa-sync"></i> Generate New
+                        </button>
+                        <button class="btn btn-secondary btn-lg" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <div class="text-center mt-4 no-print" id="generateSection">
+                    <button class="btn btn-warning btn-lg px-5" onclick="generateBarcode()">
+                        <i class="fas fa-barcode"></i> Generate Barcode Label
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Template (Hidden) -->
+    <div id="printTemplate" style="display: none;">
+        <div class="print-label">
+            <div style="text-align: center;">
+                <div style="font-size: 10pt; font-weight: bold;" id="printProductName"></div>
+                <svg id="printBarcode" style="width: 100%;"></svg>
+                <div style="font-size: 12pt; font-weight: bold;" id="printPrice"></div>
+                <div style="font-size: 8pt;" id="printDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+        let currentProduct = null;
+        let allProducts = [];
+
+        // Load weight-based products on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWeightProducts();
+        });
+
+        async function loadWeightProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/weight-products/weight-products`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    allProducts = data.products;
+                    populateProductSelect(allProducts);
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                alert('Failed to load products');
+            }
+        }
+
+        function populateProductSelect(products) {
+            const select = document.getElementById('productSelect');
+            select.innerHTML = '<option value="">-- Select a weight-based product --</option>';
+            
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.name} (${product.category}) - R${product.price_per_kg}/kg`;
+                option.dataset.product = JSON.stringify(product);
+                select.appendChild(option);
+            });
+        }
+
+        function filterProducts() {
+            const category = document.getElementById('categoryFilter').value;
+            const filtered = category ? 
+                allProducts.filter(p => p.category.toLowerCase() === category.toLowerCase()) : 
+                allProducts;
+            populateProductSelect(filtered);
+        }
+
+        function loadProductDetails() {
+            const select = document.getElementById('productSelect');
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (!selectedOption.value) {
+                document.getElementById('productDetails').style.display = 'none';
+                return;
+            }
+            
+            currentProduct = JSON.parse(selectedOption.dataset.product);
+            
+            document.getElementById('displayProductName').textContent = currentProduct.name;
+            document.getElementById('displayPricePerKg').textContent = currentProduct.price_per_kg.toFixed(2);
+            document.getElementById('displayTare').textContent = currentProduct.tare_weight || 0;
+            
+            document.getElementById('productDetails').style.display = 'block';
+            document.getElementById('weightInput').focus();
+        }
+
+        function setWeight(grams) {
+            document.getElementById('weightInput').value = grams;
+            updateWeightDisplay();
+        }
+
+        function updateWeightDisplay() {
+            const weight = parseFloat(document.getElementById('weightInput').value) || 0;
+            const tare = currentProduct?.tare_weight || 0;
+            const pricePerKg = currentProduct?.price_per_kg || 0;
+            
+            // Display weight in kg
+            const weightKg = weight / 1000;
+            document.getElementById('weightDisplay').textContent = weightKg.toFixed(3);
+            document.getElementById('grossWeightKg').textContent = weightKg.toFixed(3) + ' kg';
+            
+            // Calculate net weight
+            const netWeight = Math.max(0, weight - tare);
+            const netWeightKg = netWeight / 1000;
+            document.getElementById('netWeightKg').textContent = netWeightKg.toFixed(3) + ' kg';
+            
+            // Calculate price
+            const totalPrice = netWeightKg * pricePerKg;
+            document.getElementById('totalPrice').textContent = 'R ' + totalPrice.toFixed(2);
+        }
+
+        function generateBarcode() {
+            if (!currentProduct) {
+                alert('Please select a product first');
+                return;
+            }
+            
+            const weight = parseFloat(document.getElementById('weightInput').value);
+            if (!weight || weight <= 0 || weight > 99999) {
+                alert('Please enter a valid weight (1-99999 grams)');
+                return;
+            }
+            
+            // Check min/max weight
+            if (currentProduct.min_weight && weight < currentProduct.min_weight) {
+                alert(`Weight is below minimum (${currentProduct.min_weight}g)`);
+                return;
+            }
+            if (currentProduct.max_weight && weight > currentProduct.max_weight) {
+                alert(`Weight exceeds maximum (${currentProduct.max_weight}g)`);
+                return;
+            }
+            
+            // Generate barcode
+            const barcode = generateWeightBarcode(
+                currentProduct.barcode_prefix,
+                currentProduct.barcode_sku,
+                Math.floor(weight)
+            );
+            
+            // Calculate price
+            const tare = currentProduct.tare_weight || 0;
+            const netWeight = Math.max(0, weight - tare);
+            const price = (netWeight / 1000) * currentProduct.price_per_kg;
+            
+            // Display barcode
+            JsBarcode('#barcodeOutput', barcode, {
+                format: 'EAN13',
+                width: 2,
+                height: 60,
+                displayValue: true,
+                fontSize: 16,
+                margin: 10
+            });
+            
+            document.getElementById('labelProductName').textContent = currentProduct.name;
+            document.getElementById('barcodePriceLabel').textContent = `R ${price.toFixed(2)}`;
+            document.getElementById('barcodeDetails').textContent = 
+                `${(netWeight/1000).toFixed(3)}kg @ R${currentProduct.price_per_kg.toFixed(2)}/kg`;
+            
+            document.getElementById('barcodeSection').style.display = 'block';
+            document.getElementById('generateSection').style.display = 'none';
+        }
+
+        function generateWeightBarcode(prefix, productCode, weightGrams) {
+            const weightStr = weightGrams.toString().padStart(5, '0');
+            const barcode12 = prefix + productCode + weightStr;
+            const checkDigit = calculateChecksum(barcode12);
+            return barcode12 + checkDigit;
+        }
+
+        function calculateChecksum(barcode12) {
+            let oddSum = 0, evenSum = 0;
+            for (let i = 0; i < 12; i++) {
+                if (i % 2 === 0) oddSum += parseInt(barcode12[i]);
+                else evenSum += parseInt(barcode12[i]);
+            }
+            const total = oddSum + (evenSum * 3);
+            return ((10 - (total % 10)) % 10).toString();
+        }
+
+        function printLabel() {
+            // Copy barcode to print template
+            const barcodeValue = document.querySelector('#barcodeOutput').getAttribute('data-barcode') || 
+                                 document.querySelector('#barcodeOutput text')?.textContent;
+            
+            JsBarcode('#printBarcode', barcodeValue, {
+                format: 'EAN13',
+                width: 2,
+                height: 40,
+                displayValue: true,
+                fontSize: 12,
+                margin: 2
+            });
+            
+            document.getElementById('printProductName').textContent = currentProduct.name;
+            document.getElementById('printPrice').textContent = document.getElementById('barcodePriceLabel').textContent;
+            document.getElementById('printDetails').textContent = document.getElementById('barcodeDetails').textContent;
+            
+            window.print();
+        }
+
+        function resetForm() {
+            document.getElementById('weightInput').value = '';
+            document.getElementById('barcodeSection').style.display = 'none';
+            document.getElementById('generateSection').style.display = 'block';
+            updateWeightDisplay();
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/navbar.js?v=20251015-HELP"></script>
+</body>
+</html>

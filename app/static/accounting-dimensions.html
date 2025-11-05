@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting Dimensions - CNP ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .dimension-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #007bff;
+        }
+
+        .dimension-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .dimension-card.organizational {
+            border-left-color: #007bff;
+        }
+
+        .dimension-card.geographical {
+            border-left-color: #28a745;
+        }
+
+        .dimension-card.functional {
+            border-left-color: #ffc107;
+        }
+
+        .dimension-card.project {
+            border-left-color: #17a2b8;
+        }
+
+        .dimension-card.product {
+            border-left-color: #6f42c1;
+        }
+
+        .dimension-card.customer {
+            border-left-color: #fd7e14;
+        }
+
+        .dimension-card.temporal {
+            border-left-color: #dc3545;
+        }
+
+        .dimension-card.custom {
+            border-left-color: #6c757d;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .value-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            margin: 4px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            font-size: 0.875rem;
+        }
+
+        .value-badge:hover {
+            background: #e9ecef;
+        }
+
+        .hierarchy-tree {
+            padding-left: 20px;
+        }
+
+        .hierarchy-item {
+            padding: 8px;
+            margin: 4px 0;
+            border-left: 2px solid #dee2e6;
+            cursor: pointer;
+        }
+
+        .hierarchy-item:hover {
+            background: #f8f9fa;
+        }
+
+        .dimension-type-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+
+        .filter-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-xl {
+            max-width: 90%;
+        }
+
+        .value-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">
+                    <i class="fas fa-cube"></i> Accounting Dimensions
+                    <small class="text-muted fs-6">Multi-dimensional Financial Analysis</small>
+                </h1>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-dimensions">-</div>
+                    <div class="stats-label">Total Dimensions</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="active-dimensions">-</div>
+                    <div class="stats-label">Active Dimensions</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-values">-</div>
+                    <div class="stats-label">Total Values</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="required-dimensions">-</div>
+                    <div class="stats-label">Required Dimensions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <ul class="nav nav-tabs" id="dimensionTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dimensions-tab" data-bs-toggle="tab" data-bs-target="#dimensions"
+                    type="button" role="tab">
+                    <i class="fas fa-cube"></i> Dimensions
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="values-tab" data-bs-toggle="tab" data-bs-target="#values" type="button"
+                    role="tab">
+                    <i class="fas fa-list"></i> Dimension Values
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics"
+                    type="button" role="tab">
+                    <i class="fas fa-chart-bar"></i> Analytics
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="dimensionTabContent">
+            <!-- Dimensions Tab -->
+            <div class="tab-pane fade show active" id="dimensions" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <!-- Filter Panel -->
+                        <div class="filter-panel">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Dimension Type</label>
+                                    <select class="form-select" id="dimension-type-filter" onchange="loadDimensions()">
+                                        <option value="">All Types</option>
+                                        <option value="organizational">Organizational</option>
+                                        <option value="geographical">Geographical</option>
+                                        <option value="functional">Functional</option>
+                                        <option value="project">Project</option>
+                                        <option value="product">Product</option>
+                                        <option value="customer">Customer</option>
+                                        <option value="temporal">Temporal</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-select" id="dimension-status-filter"
+                                        onchange="loadDimensions()">
+                                        <option value="">All</option>
+                                        <option value="true">Active Only</option>
+                                        <option value="false">Inactive Only</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Scope</label>
+                                    <select class="form-select" id="dimension-scope-filter" onchange="loadDimensions()">
+                                        <option value="">All Scopes</option>
+                                        <option value="global">Global</option>
+                                        <option value="branch">Branch</option>
+                                        <option value="entity">Entity</option>
+                                        <option value="department">Department</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary" onclick="showCreateDimensionModal()">
+                                            <i class="fas fa-plus"></i> Create Dimension
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="dimensions-container">
+                            <!-- Dimensions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Values Tab -->
+            <div class="tab-pane fade" id="values" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="filter-panel">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Select Dimension</label>
+                                    <select class="form-select" id="values-dimension-filter"
+                                        onchange="loadDimensionValues()">
+                                        <option value="">Select a dimension...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-select" id="values-status-filter"
+                                        onchange="loadDimensionValues()">
+                                        <option value="">All</option>
+                                        <option value="true">Active Only</option>
+                                        <option value="false">Inactive Only</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary" onclick="showCreateValueModal()"
+                                            id="create-value-btn" disabled>
+                                            <i class="fas fa-plus"></i> Create Value
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="values-container">
+                            <!-- Dimension values will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div class="tab-pane fade" id="analytics" role="tabpanel">
+                <div class="row mt-3">
+                    <!-- Dimension Type Distribution -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Dimension Type Distribution</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="dimensionTypeChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dimension Scope Distribution -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-chart-doughnut"></i> Scope Distribution</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="dimensionScopeChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Values per Dimension -->
+                    <div class="col-md-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Values per Dimension</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="valuesPerDimensionChart" height="100"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dimension Details Table -->
+                    <div class="col-md-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-table"></i> Dimension Analysis</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Dimension</th>
+                                                <th>Type</th>
+                                                <th>Scope</th>
+                                                <th>Values</th>
+                                                <th>Active Values</th>
+                                                <th>Required</th>
+                                                <th>Status</th>
+                                                <th>Usage %</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="analytics-table-body">
+                                            <!-- Populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Insights -->
+                    <div class="col-md-12 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Key Insights</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="insights-container" class="row">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Dimension Modal -->
+    <div class="modal fade" id="createDimensionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Dimension</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createDimensionForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dimCode" class="form-label">Code *</label>
+                                <input type="text" class="form-control" id="dimCode" required maxlength="20">
+                                <small class="text-muted">Unique identifier (e.g., DEPT, PROJ, GEO)</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dimName" class="form-label">Name *</label>
+                                <input type="text" class="form-control" id="dimName" required maxlength="100">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dimDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="dimDescription" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dimType" class="form-label">Dimension Type *</label>
+                                <select class="form-select" id="dimType" required>
+                                    <option value="">Select Type...</option>
+                                    <option value="organizational">Organizational</option>
+                                    <option value="geographical">Geographical</option>
+                                    <option value="functional">Functional</option>
+                                    <option value="project">Project</option>
+                                    <option value="product">Product</option>
+                                    <option value="customer">Customer</option>
+                                    <option value="temporal">Temporal</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dimScope" class="form-label">Scope *</label>
+                                <select class="form-select" id="dimScope" required>
+                                    <option value="global">Global</option>
+                                    <option value="branch">Branch</option>
+                                    <option value="entity">Entity</option>
+                                    <option value="department">Department</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dimDisplayOrder" class="form-label">Display Order</label>
+                                <input type="number" class="form-control" id="dimDisplayOrder" value="0" min="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dimMaxHierarchy" class="form-label">Max Hierarchy Levels</label>
+                                <input type="number" class="form-control" id="dimMaxHierarchy" value="1" min="1"
+                                    max="10">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="dimIsActive" checked>
+                                    <label class="form-check-label" for="dimIsActive">Active</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="dimIsRequired">
+                                    <label class="form-check-label" for="dimIsRequired">Required on
+                                        Transactions</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="dimAllowMultiple">
+                                    <label class="form-check-label" for="dimAllowMultiple">Allow Multiple
+                                        Values</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="dimSupportsHierarchy">
+                                    <label class="form-check-label" for="dimSupportsHierarchy">Supports
+                                        Hierarchy</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createDimension()">Create Dimension</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Dimension Modal -->
+    <div class="modal fade" id="editDimensionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Dimension</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editDimensionForm">
+                        <input type="hidden" id="editDimId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editDimCode" class="form-label">Code *</label>
+                                <input type="text" class="form-control" id="editDimCode" required disabled>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editDimName" class="form-label">Name *</label>
+                                <input type="text" class="form-control" id="editDimName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDimDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDimDescription" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editDimType" class="form-label">Dimension Type *</label>
+                                <select class="form-select" id="editDimType" required>
+                                    <option value="organizational">Organizational</option>
+                                    <option value="geographical">Geographical</option>
+                                    <option value="functional">Functional</option>
+                                    <option value="project">Project</option>
+                                    <option value="product">Product</option>
+                                    <option value="customer">Customer</option>
+                                    <option value="temporal">Temporal</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editDimScope" class="form-label">Scope *</label>
+                                <select class="form-select" id="editDimScope" required>
+                                    <option value="global">Global</option>
+                                    <option value="branch">Branch</option>
+                                    <option value="entity">Entity</option>
+                                    <option value="department">Department</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editDimIsActive">
+                                <label class="form-check-label" for="editDimIsActive">Active</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editDimIsRequired">
+                                <label class="form-check-label" for="editDimIsRequired">Required on Transactions</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateDimension()">Update Dimension</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Value Modal -->
+    <div class="modal fade" id="createValueModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Dimension Value</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createValueForm">
+                        <input type="hidden" id="valueDimensionId">
+                        <div class="mb-3">
+                            <label for="valueCode" class="form-label">Code *</label>
+                            <input type="text" class="form-control" id="valueCode" required maxlength="50">
+                        </div>
+                        <div class="mb-3">
+                            <label for="valueName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="valueName" required maxlength="200">
+                        </div>
+                        <div class="mb-3">
+                            <label for="valueDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="valueDescription" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="valueParent" class="form-label">Parent Value</label>
+                            <select class="form-select" id="valueParent">
+                                <option value="">None (Top Level)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="valueIsActive" checked>
+                                <label class="form-check-label" for="valueIsActive">Active</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createValue()">Create Value</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Value Modal -->
+    <div class="modal fade" id="editValueModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Dimension Value</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editValueForm">
+                        <input type="hidden" id="editValueId">
+                        <div class="mb-3">
+                            <label for="editValueCode" class="form-label">Code *</label>
+                            <input type="text" class="form-control" id="editValueCode" required disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValueName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="editValueName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValueDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editValueDescription" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editValueIsActive">
+                                <label class="form-check-label" for="editValueIsActive">Active</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateValue()">Update Value</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Dimension Details Modal -->
+    <div class="modal fade" id="viewDimensionModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dimension Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="dimension-details-container">
+                        <!-- Dimension details will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+
+    <script>
+        // Global variables
+        let dimensions = [];
+        let dimensionValues = [];
+        let selectedDimension = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function () {
+            loadStatistics();
+            loadDimensions();
+            populateDimensionFilters();
+        });
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/v1/accounting/dimensions/', {
+                    headers: auth.authHeader()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    dimensions = data;
+
+                    document.getElementById('total-dimensions').textContent = data.length;
+                    document.getElementById('active-dimensions').textContent = data.filter(d => d.is_active).length;
+                    document.getElementById('required-dimensions').textContent = data.filter(d => d.is_required).length;
+
+                    // Count total values
+                    let totalValues = 0;
+                    data.forEach(dim => {
+                        if (dim.values) totalValues += dim.values.length;
+                    });
+                    document.getElementById('total-values').textContent = totalValues;
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Load dimensions
+        async function loadDimensions() {
+            try {
+                const typeFilter = document.getElementById('dimension-type-filter')?.value || '';
+                const statusFilter = document.getElementById('dimension-status-filter')?.value || '';
+                const scopeFilter = document.getElementById('dimension-scope-filter')?.value || '';
+
+                let url = '/api/v1/accounting/dimensions/?include_values=true';
+                if (typeFilter) url += `&dimension_type=${typeFilter}`;
+                if (statusFilter) url += `&is_active=${statusFilter}`;
+
+                const response = await fetch(url, { headers: auth.authHeader() });
+
+                if (response.ok) {
+                    dimensions = await response.json();
+                    // Apply scope filter client-side
+                    if (scopeFilter) {
+                        dimensions = dimensions.filter(d => d.scope === scopeFilter);
+                    }
+                    displayDimensions();
+                    loadStatistics();
+                } else {
+                    showNotification('Failed to load dimensions', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading dimensions:', error);
+                showNotification('Error loading dimensions', 'error');
+            }
+        }
+
+        // Display dimensions
+        function displayDimensions() {
+            const container = document.getElementById('dimensions-container');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (dimensions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-cube"></i>
+                        <h4>No Dimensions Found</h4>
+                        <p>Create your first dimension to start multi-dimensional analysis.</p>
+                        <button class="btn btn-primary" onclick="showCreateDimensionModal()">
+                            <i class="fas fa-plus"></i> Create Dimension
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            dimensions.forEach(dim => {
+                const card = document.createElement('div');
+                card.className = `card dimension-card ${dim.dimension_type} mb-3`;
+
+                const statusBadge = dim.is_active
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Inactive</span>';
+                const requiredBadge = dim.is_required
+                    ? '<span class="badge bg-warning text-dark ms-1">Required</span>'
+                    : '';
+                const scopeBadge = `<span class="badge bg-info text-dark ms-1">${dim.scope}</span>`;
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    <i class="fas fa-cube"></i> ${dim.name}
+                                    ${statusBadge}
+                                    ${requiredBadge}
+                                    ${scopeBadge}
+                                </h5>
+                                <small class="text-muted">
+                                    <strong>Code:</strong> ${dim.code} |
+                                    <strong>Type:</strong> ${dim.dimension_type}
+                                </small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-info" onclick="viewDimensionDetails('${dim.id}')" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="editDimension('${dim.id}')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteDimension('${dim.id}')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-2">${dim.description || 'No description'}</p>
+                                <div class="mt-2">
+                                    <strong>Values (${dim.values?.length || 0}):</strong>
+                                    <div class="mt-2">
+                                        ${dim.values?.slice(0, 10).map(v =>
+                    `<span class="value-badge">${v.name}</span>`
+                ).join('') || '<small class="text-muted">No values defined</small>'}
+                                        ${dim.values?.length > 10 ? `<span class="text-muted">... and ${dim.values.length - 10} more</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="fas fa-check-circle ${dim.supports_hierarchy ? 'text-success' : 'text-muted'}"></i> Hierarchy Support</li>
+                                    <li><i class="fas fa-check-circle ${dim.allow_multiple_values ? 'text-success' : 'text-muted'}"></i> Multiple Values</li>
+                                    <li><strong>Display Order:</strong> ${dim.display_order}</li>
+                                    <li><strong>Max Levels:</strong> ${dim.max_hierarchy_levels}</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Created: ${new Date(dim.created_at).toLocaleDateString()} |
+                                Updated: ${new Date(dim.updated_at).toLocaleDateString()}
+                            </small>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Populate dimension filters
+        async function populateDimensionFilters() {
+            const select = document.getElementById('values-dimension-filter');
+            if (!select) return;
+
+            try {
+                const response = await fetch('/api/v1/accounting/dimensions/?is_active=true', {
+                    headers: auth.authHeader()
+                });
+
+                if (response.ok) {
+                    const dims = await response.json();
+                    select.innerHTML = '<option value="">Select a dimension...</option>';
+                    dims.forEach(dim => {
+                        const option = document.createElement('option');
+                        option.value = dim.id;
+                        option.textContent = `${dim.name} (${dim.code})`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading dimension filters:', error);
+            }
+        }
+
+        // Load dimension values
+        async function loadDimensionValues() {
+            const dimensionId = document.getElementById('values-dimension-filter')?.value;
+            const statusFilter = document.getElementById('values-status-filter')?.value || '';
+
+            if (!dimensionId) {
+                document.getElementById('values-container').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-list"></i>
+                        <h4>Select a Dimension</h4>
+                        <p>Choose a dimension to view and manage its values.</p>
+                    </div>
+                `;
+                document.getElementById('create-value-btn').disabled = true;
+                return;
+            }
+
+            document.getElementById('create-value-btn').disabled = false;
+            selectedDimension = dimensionId;
+
+            try {
+                let url = `/api/v1/accounting/dimensions/${dimensionId}/values`;
+                if (statusFilter) url += `?is_active=${statusFilter}`;
+
+                const response = await fetch(url, { headers: auth.authHeader() });
+
+                if (response.ok) {
+                    dimensionValues = await response.json();
+                    displayDimensionValues();
+                } else {
+                    showNotification('Failed to load dimension values', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading dimension values:', error);
+                showNotification('Error loading dimension values', 'error');
+            }
+        }
+
+        // Display dimension values
+        function displayDimensionValues() {
+            const container = document.getElementById('values-container');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (dimensionValues.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-list"></i>
+                        <h4>No Values Found</h4>
+                        <p>Create values for this dimension.</p>
+                        <button class="btn btn-primary" onclick="showCreateValueModal()">
+                            <i class="fas fa-plus"></i> Create Value
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const table = document.createElement('div');
+            table.className = 'table-responsive';
+            table.innerHTML = `
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Parent</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${dimensionValues.map(value => `
+                            <tr>
+                                <td><code>${value.code}</code></td>
+                                <td>${value.name}</td>
+                                <td>${value.description || '-'}</td>
+                                <td>${value.parent_value_name || '-'}</td>
+                                <td>
+                                    ${value.is_active
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Inactive</span>'}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editValue('${value.id}')" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteValue('${value.id}')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.appendChild(table);
+        }
+
+        // Show create dimension modal
+        function showCreateDimensionModal() {
+            document.getElementById('createDimensionForm').reset();
+            new bootstrap.Modal(document.getElementById('createDimensionModal')).show();
+        }
+
+        // Create dimension
+        async function createDimension() {
+            const formData = {
+                code: document.getElementById('dimCode').value,
+                name: document.getElementById('dimName').value,
+                description: document.getElementById('dimDescription').value,
+                dimension_type: document.getElementById('dimType').value,
+                scope: document.getElementById('dimScope').value,
+                is_active: document.getElementById('dimIsActive').checked,
+                is_required: document.getElementById('dimIsRequired').checked,
+                allow_multiple_values: document.getElementById('dimAllowMultiple').checked,
+                supports_hierarchy: document.getElementById('dimSupportsHierarchy').checked,
+                display_order: parseInt(document.getElementById('dimDisplayOrder').value) || 0,
+                max_hierarchy_levels: parseInt(document.getElementById('dimMaxHierarchy').value) || 1
+            };
+
+            try {
+                const response = await fetch('/api/v1/accounting/dimensions/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Dimension created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createDimensionModal')).hide();
+                    loadDimensions();
+                    populateDimensionFilters();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to create dimension: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating dimension:', error);
+                showNotification('Error creating dimension', 'error');
+            }
+        }
+
+        // Edit dimension
+        function editDimension(dimensionId) {
+            const dim = dimensions.find(d => d.id === dimensionId);
+            if (!dim) return;
+
+            document.getElementById('editDimId').value = dim.id;
+            document.getElementById('editDimCode').value = dim.code;
+            document.getElementById('editDimName').value = dim.name;
+            document.getElementById('editDimDescription').value = dim.description || '';
+            document.getElementById('editDimType').value = dim.dimension_type;
+            document.getElementById('editDimScope').value = dim.scope;
+            document.getElementById('editDimIsActive').checked = dim.is_active;
+            document.getElementById('editDimIsRequired').checked = dim.is_required;
+
+            new bootstrap.Modal(document.getElementById('editDimensionModal')).show();
+        }
+
+        // Update dimension
+        async function updateDimension() {
+            const dimensionId = document.getElementById('editDimId').value;
+            const formData = {
+                name: document.getElementById('editDimName').value,
+                description: document.getElementById('editDimDescription').value,
+                dimension_type: document.getElementById('editDimType').value,
+                scope: document.getElementById('editDimScope').value,
+                is_active: document.getElementById('editDimIsActive').checked,
+                is_required: document.getElementById('editDimIsRequired').checked
+            };
+
+            try {
+                const response = await fetch(`/api/v1/accounting/dimensions/${dimensionId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Dimension updated successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editDimensionModal')).hide();
+                    loadDimensions();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to update dimension: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating dimension:', error);
+                showNotification('Error updating dimension', 'error');
+            }
+        }
+
+        // Delete dimension
+        async function deleteDimension(dimensionId) {
+            if (!confirm('Are you sure you want to delete this dimension? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/accounting/dimensions/${dimensionId}`, {
+                    method: 'DELETE',
+                    headers: auth.authHeader()
+                });
+
+                if (response.ok) {
+                    showNotification('Dimension deleted successfully!', 'success');
+                    loadDimensions();
+                    populateDimensionFilters();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to delete dimension: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting dimension:', error);
+                showNotification('Error deleting dimension', 'error');
+            }
+        }
+
+        // View dimension details
+        async function viewDimensionDetails(dimensionId) {
+            try {
+                const response = await fetch(`/api/v1/accounting/dimensions/${dimensionId}`, {
+                    headers: auth.authHeader()
+                });
+
+                if (!response.ok) {
+                    showNotification('Failed to load dimension details', 'error');
+                    return;
+                }
+
+                const dim = await response.json();
+                const container = document.getElementById('dimension-details-container');
+
+                container.innerHTML = `
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <table class="table table-sm">
+                                <tr><th>Code:</th><td>${dim.code}</td></tr>
+                                <tr><th>Name:</th><td>${dim.name}</td></tr>
+                                <tr><th>Type:</th><td>${dim.dimension_type}</td></tr>
+                                <tr><th>Scope:</th><td>${dim.scope}</td></tr>
+                                <tr><th>Description:</th><td>${dim.description || 'N/A'}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Configuration</h6>
+                            <table class="table table-sm">
+                                <tr><th>Status:</th><td>${dim.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td></tr>
+                                <tr><th>Required:</th><td>${dim.is_required ? 'Yes' : 'No'}</td></tr>
+                                <tr><th>Multiple Values:</th><td>${dim.allow_multiple_values ? 'Yes' : 'No'}</td></tr>
+                                <tr><th>Hierarchy Support:</th><td>${dim.supports_hierarchy ? 'Yes' : 'No'}</td></tr>
+                                <tr><th>Max Hierarchy Levels:</th><td>${dim.max_hierarchy_levels}</td></tr>
+                                <tr><th>Display Order:</th><td>${dim.display_order}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6>Dimension Values (${dim.values?.length || 0})</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Parent</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dim.values?.map(value => `
+                                    <tr>
+                                        <td><code>${value.code}</code></td>
+                                        <td>${value.name}</td>
+                                        <td>${value.description || '-'}</td>
+                                        <td>${value.parent_value_name || '-'}</td>
+                                        <td>${value.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="5" class="text-center text-muted">No values defined</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                new bootstrap.Modal(document.getElementById('viewDimensionModal')).show();
+            } catch (error) {
+                console.error('Error viewing dimension details:', error);
+                showNotification('Error loading dimension details', 'error');
+            }
+        }
+
+        // Show create value modal
+        function showCreateValueModal() {
+            if (!selectedDimension) {
+                showNotification('Please select a dimension first', 'warning');
+                return;
+            }
+
+            document.getElementById('createValueForm').reset();
+            document.getElementById('valueDimensionId').value = selectedDimension;
+
+            // Populate parent dropdown
+            const parentSelect = document.getElementById('valueParent');
+            parentSelect.innerHTML = '<option value="">None (Top Level)</option>';
+            dimensionValues.filter(v => v.is_active).forEach(value => {
+                const option = document.createElement('option');
+                option.value = value.id;
+                option.textContent = value.name;
+                parentSelect.appendChild(option);
+            });
+
+            new bootstrap.Modal(document.getElementById('createValueModal')).show();
+        }
+
+        // Create value
+        async function createValue() {
+            const formData = {
+                dimension_id: document.getElementById('valueDimensionId').value,
+                code: document.getElementById('valueCode').value,
+                name: document.getElementById('valueName').value,
+                description: document.getElementById('valueDescription').value,
+                parent_value_id: document.getElementById('valueParent').value || null,
+                is_active: document.getElementById('valueIsActive').checked
+            };
+
+            try {
+                const response = await fetch('/api/v1/accounting/dimensions/values', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Value created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createValueModal')).hide();
+                    loadDimensionValues();
+                    loadDimensions();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to create value: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating value:', error);
+                showNotification('Error creating value', 'error');
+            }
+        }
+
+        // Edit value
+        function editValue(valueId) {
+            const value = dimensionValues.find(v => v.id === valueId);
+            if (!value) return;
+
+            document.getElementById('editValueId').value = value.id;
+            document.getElementById('editValueCode').value = value.code;
+            document.getElementById('editValueName').value = value.name;
+            document.getElementById('editValueDescription').value = value.description || '';
+            document.getElementById('editValueIsActive').checked = value.is_active;
+
+            new bootstrap.Modal(document.getElementById('editValueModal')).show();
+        }
+
+        // Update value
+        async function updateValue() {
+            const valueId = document.getElementById('editValueId').value;
+            const formData = {
+                name: document.getElementById('editValueName').value,
+                description: document.getElementById('editValueDescription').value,
+                is_active: document.getElementById('editValueIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`/api/v1/accounting/dimensions/values/${valueId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Value updated successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editValueModal')).hide();
+                    loadDimensionValues();
+                    loadDimensions();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to update value: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating value:', error);
+                showNotification('Error updating value', 'error');
+            }
+        }
+
+        // Delete value
+        async function deleteValue(valueId) {
+            if (!confirm('Are you sure you want to delete this value? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/accounting/dimensions/values/${valueId}`, {
+                    method: 'DELETE',
+                    headers: auth.authHeader()
+                });
+
+                if (response.ok) {
+                    showNotification('Value deleted successfully!', 'success');
+                    loadDimensionValues();
+                    loadDimensions();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to delete value: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting value:', error);
+                showNotification('Error deleting value', 'error');
+            }
+        }
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // ==================== ANALYTICS FUNCTIONS ====================
+
+        let analyticsCharts = {};
+
+        // Load analytics when Analytics tab is shown
+        document.getElementById('analytics-tab').addEventListener('shown.bs.tab', function () {
+            loadAnalytics();
+        });
+
+        async function loadAnalytics() {
+            if (dimensions.length === 0) {
+                await loadDimensions();
+            }
+
+            renderDimensionTypeChart();
+            renderDimensionScopeChart();
+            renderValuesPerDimensionChart();
+            renderAnalyticsTable();
+            renderKeyInsights();
+        }
+
+        // Render Dimension Type Distribution Chart
+        function renderDimensionTypeChart() {
+            const ctx = document.getElementById('dimensionTypeChart');
+            if (!ctx) return;
+
+            // Count dimensions by type
+            const typeCounts = {};
+            dimensions.forEach(dim => {
+                typeCounts[dim.dimension_type] = (typeCounts[dim.dimension_type] || 0) + 1;
+            });
+
+            // Destroy existing chart
+            if (analyticsCharts.typeChart) {
+                analyticsCharts.typeChart.destroy();
+            }
+
+            // Create new chart
+            analyticsCharts.typeChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(typeCounts).map(type => type.charAt(0).toUpperCase() + type.slice(1)),
+                    datasets: [{
+                        data: Object.values(typeCounts),
+                        backgroundColor: [
+                            '#007bff', '#28a745', '#dc3545', '#ffc107',
+                            '#17a2b8', '#6f42c1', '#e83e8c', '#fd7e14'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        title: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Dimension Scope Distribution Chart
+        function renderDimensionScopeChart() {
+            const ctx = document.getElementById('dimensionScopeChart');
+            if (!ctx) return;
+
+            // Count dimensions by scope
+            const scopeCounts = {};
+            dimensions.forEach(dim => {
+                scopeCounts[dim.scope] = (scopeCounts[dim.scope] || 0) + 1;
+            });
+
+            // Destroy existing chart
+            if (analyticsCharts.scopeChart) {
+                analyticsCharts.scopeChart.destroy();
+            }
+
+            // Create new chart
+            analyticsCharts.scopeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(scopeCounts).map(scope => scope.charAt(0).toUpperCase() + scope.slice(1)),
+                    datasets: [{
+                        data: Object.values(scopeCounts),
+                        backgroundColor: ['#007bff', '#28a745', '#ffc107', '#17a2b8']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Values per Dimension Chart
+        function renderValuesPerDimensionChart() {
+            const ctx = document.getElementById('valuesPerDimensionChart');
+            if (!ctx) return;
+
+            // Get dimension names and value counts
+            const labels = dimensions.map(dim => dim.name);
+            const valueCounts = dimensions.map(dim => (dim.values || []).length);
+            const activeValueCounts = dimensions.map(dim =>
+                (dim.values || []).filter(v => v.is_active).length
+            );
+
+            // Destroy existing chart
+            if (analyticsCharts.valuesChart) {
+                analyticsCharts.valuesChart.destroy();
+            }
+
+            // Create new chart
+            analyticsCharts.valuesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Values',
+                            data: valueCounts,
+                            backgroundColor: '#007bff'
+                        },
+                        {
+                            label: 'Active Values',
+                            data: activeValueCounts,
+                            backgroundColor: '#28a745'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Analytics Table
+        function renderAnalyticsTable() {
+            const tbody = document.getElementById('analytics-table-body');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            dimensions.forEach(dim => {
+                const totalValues = (dim.values || []).length;
+                const activeValues = (dim.values || []).filter(v => v.is_active).length;
+                const usagePercent = totalValues > 0 ? Math.round((activeValues / totalValues) * 100) : 0;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${dim.name}</strong><br><small class="text-muted">${dim.code}</small></td>
+                    <td><span class="badge bg-primary">${dim.dimension_type}</span></td>
+                    <td><span class="badge bg-info">${dim.scope}</span></td>
+                    <td class="text-center">${totalValues}</td>
+                    <td class="text-center">${activeValues}</td>
+                    <td class="text-center">
+                        ${dim.is_required ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-muted"></i>'}
+                    </td>
+                    <td class="text-center">
+                        ${dim.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}
+                    </td>
+                    <td>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar ${usagePercent > 75 ? 'bg-success' : usagePercent > 50 ? 'bg-info' : usagePercent > 25 ? 'bg-warning' : 'bg-danger'}"
+                                 style="width: ${usagePercent}%">
+                                ${usagePercent}%
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Render Key Insights
+        function renderKeyInsights() {
+            const container = document.getElementById('insights-container');
+            if (!container) return;
+
+            const insights = generateInsights();
+            container.innerHTML = '';
+
+            insights.forEach(insight => {
+                const col = document.createElement('div');
+                col.className = 'col-md-6 mb-3';
+                col.innerHTML = `
+                    <div class="alert alert-${insight.type} mb-0">
+                        <i class="fas ${insight.icon} me-2"></i>
+                        <strong>${insight.title}:</strong> ${insight.message}
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        }
+
+        // Generate insights based on dimension data
+        function generateInsights() {
+            const insights = [];
+            const totalDimensions = dimensions.length;
+            const activeDimensions = dimensions.filter(d => d.is_active).length;
+            const requiredDimensions = dimensions.filter(d => d.is_required).length;
+
+            // Total dimensions insight
+            if (totalDimensions === 0) {
+                insights.push({
+                    type: 'warning',
+                    icon: 'fa-exclamation-triangle',
+                    title: 'No Dimensions',
+                    message: 'You haven\'t created any dimensions yet. Start by creating your first dimension.'
+                });
+            } else if (totalDimensions < 3) {
+                insights.push({
+                    type: 'info',
+                    icon: 'fa-info-circle',
+                    title: 'Getting Started',
+                    message: `You have ${totalDimensions} dimension${totalDimensions > 1 ? 's' : ''}. Consider adding more dimensions for comprehensive multi-dimensional analysis.`
+                });
+            } else {
+                insights.push({
+                    type: 'success',
+                    icon: 'fa-check-circle',
+                    title: 'Good Coverage',
+                    message: `You have ${totalDimensions} dimensions configured, providing comprehensive analysis capabilities.`
+                });
+            }
+
+            // Inactive dimensions warning
+            const inactiveDimensions = totalDimensions - activeDimensions;
+            if (inactiveDimensions > 0) {
+                insights.push({
+                    type: 'warning',
+                    icon: 'fa-pause-circle',
+                    title: 'Inactive Dimensions',
+                    message: `${inactiveDimensions} dimension${inactiveDimensions > 1 ? 's are' : ' is'} currently inactive. Consider activating them or removing if no longer needed.`
+                });
+            }
+
+            // Required dimensions insight
+            if (requiredDimensions === 0 && totalDimensions > 0) {
+                insights.push({
+                    type: 'info',
+                    icon: 'fa-info-circle',
+                    title: 'Optional Dimensions',
+                    message: 'No dimensions are marked as required. Consider making critical dimensions required to ensure data completeness.'
+                });
+            } else if (requiredDimensions > 0) {
+                insights.push({
+                    type: 'success',
+                    icon: 'fa-asterisk',
+                    title: 'Required Dimensions',
+                    message: `${requiredDimensions} dimension${requiredDimensions > 1 ? 's are' : ' is'} required, ensuring consistent data entry.`
+                });
+            }
+
+            // Dimension values insight
+            let totalValues = 0;
+            let emptyDimensions = 0;
+            let lowValueDimensions = 0;
+
+            dimensions.forEach(dim => {
+                const valueCount = (dim.values || []).length;
+                totalValues += valueCount;
+                if (valueCount === 0) emptyDimensions++;
+                else if (valueCount < 3) lowValueDimensions++;
+            });
+
+            if (emptyDimensions > 0) {
+                insights.push({
+                    type: 'warning',
+                    icon: 'fa-list',
+                    title: 'Empty Dimensions',
+                    message: `${emptyDimensions} dimension${emptyDimensions > 1 ? 's have' : ' has'} no values defined. Add values to make them usable.`
+                });
+            }
+
+            if (lowValueDimensions > 0 && emptyDimensions === 0) {
+                insights.push({
+                    type: 'info',
+                    icon: 'fa-chart-line',
+                    title: 'Limited Values',
+                    message: `${lowValueDimensions} dimension${lowValueDimensions > 1 ? 's have' : ' has'} fewer than 3 values. Consider adding more options if needed.`
+                });
+            }
+
+            // Type distribution insight
+            const typeCount = {};
+            dimensions.forEach(dim => {
+                typeCount[dim.dimension_type] = (typeCount[dim.dimension_type] || 0) + 1;
+            });
+
+            const mostCommonType = Object.keys(typeCount).reduce((a, b) =>
+                typeCount[a] > typeCount[b] ? a : b, Object.keys(typeCount)[0]
+            );
+
+            if (mostCommonType && typeCount[mostCommonType] > totalDimensions * 0.5) {
+                insights.push({
+                    type: 'info',
+                    icon: 'fa-chart-pie',
+                    title: 'Type Distribution',
+                    message: `Most dimensions (${Math.round((typeCount[mostCommonType] / totalDimensions) * 100)}%) are ${mostCommonType} type. Consider diversifying dimension types.`
+                });
+            }
+
+            // Average values per dimension
+            if (totalDimensions > 0 && totalValues > 0) {
+                const avgValues = Math.round(totalValues / totalDimensions);
+                insights.push({
+                    type: 'success',
+                    icon: 'fa-calculator',
+                    title: 'Value Density',
+                    message: `Average of ${avgValues} value${avgValues > 1 ? 's' : ''} per dimension across ${totalValues} total dimension values.`
+                });
+            }
+
+            return insights;
+        }
+    </script>
+    <script src="/static/js/navbar.js?v=20250126001"></script>
+</body>
+
+</html>

@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Payments - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/static/css/modern-ui.css" rel="stylesheet">
+    <script src="/static/js/auth-bootstrap.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <style>
+        .payment-status-pending { color: #dc3545; font-weight: bold; }
+        .payment-status-partial { color: #fd7e14; font-weight: bold; }
+        .payment-status-paid { color: #198754; font-weight: bold; }
+        .overdue { background-color: #ffebee; }
+        .payment-summary-card { border-left: 4px solid #0d6efd; }
+        .outstanding-card { border-left: 4px solid #dc3545; }
+        .paid-card { border-left: 4px solid #198754; }
+    </style>
+</head>
+<body>
+    <!-- Include Standardized Navbar -->
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="bi bi-credit-card me-2"></i>Purchase Payments Management</h2>
+                        <p class="text-muted">Manage payments for all purchase orders and track outstanding balances</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-success" onclick="bulkPaymentMode()">
+                            <i class="bi bi-cash-stack"></i> Bulk Payment Mode
+                        </button>
+                        <button class="btn btn-primary" onclick="exportPaymentReport()">
+                            <i class="bi bi-download"></i> Export Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card payment-summary-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-muted">Total Outstanding</h6>
+                                <h4 class="mb-0" id="totalOutstanding">P 0.00</h4>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-exclamation-triangle text-danger fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card outstanding-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-muted">Overdue Payments</h6>
+                                <h4 class="mb-0" id="overduePayments">P 0.00</h4>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-clock text-warning fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card paid-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-muted">Paid This Month</h6>
+                                <h4 class="mb-0" id="paidThisMonth">P 0.00</h4>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-check-circle text-success fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card payment-summary-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-muted">Pending Purchases</h6>
+                                <h4 class="mb-0" id="pendingCount">0</h4>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-hourglass text-primary fs-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label class="form-label">Payment Status</label>
+                                <select class="form-select" id="paymentStatusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="pending">Pending Payment</option>
+                                    <option value="partial">Partially Paid</option>
+                                    <option value="paid">Fully Paid</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Supplier</label>
+                                <select class="form-select" id="supplierFilter">
+                                    <option value="">All Suppliers</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Amount Range</label>
+                                <select class="form-select" id="amountRangeFilter">
+                                    <option value="">All Amounts</option>
+                                    <option value="0-1000">P 0 - P 1,000</option>
+                                    <option value="1000-5000">P 1,000 - P 5,000</option>
+                                    <option value="5000-10000">P 5,000 - P 10,000</option>
+                                    <option value="10000+">P 10,000+</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Due Date From</label>
+                                <input type="date" class="form-control" id="dueDateFromFilter">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Due Date To</label>
+                                <input type="date" class="form-control" id="dueDateToFilter">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button class="btn btn-primary" onclick="applyFilters()">
+                                        <i class="bi bi-funnel"></i> Apply Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchases Payment Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-table me-2"></i>Purchase Payment Status</h5>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="selectAllPayments">
+                                    <label class="form-check-label" for="selectAllPayments">Select All</label>
+                                </div>
+                                <button class="btn btn-sm btn-success ms-2" id="bulkPaymentBtn" style="display: none;">
+                                    <i class="bi bi-cash"></i> Pay Selected (<span id="selectedCount">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="paymentsTable">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="40">
+                                            <input type="checkbox" id="selectAllHeader" class="form-check-input">
+                                        </th>
+                                        <th>Purchase Info</th>
+                                        <th>Supplier</th>
+                                        <th>Purchase Date</th>
+                                        <th>Due Date</th>
+                                        <th>Total Amount</th>
+                                        <th>Amount Paid</th>
+                                        <th>Outstanding</th>
+                                        <th>Payment Status</th>
+                                        <th>Days Overdue</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentsTableBody">
+                                    <!-- Payment data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-credit-card"></i> Record Payment
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="paymentForm">
+                        <input type="hidden" id="paymentPurchaseId">
+                        
+                        <!-- Purchase Summary -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Purchase ID:</strong> <span id="paymentPurchaseRef"></span><br>
+                                        <strong>Supplier:</strong> <span id="paymentSupplierName"></span><br>
+                                        <strong>Purchase Date:</strong> <span id="paymentPurchaseDate"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Total Amount:</strong> <span id="paymentTotalAmount">P 0.00</span><br>
+                                        <strong>Already Paid:</strong> <span id="paymentAmountPaid">P 0.00</span><br>
+                                        <strong>Outstanding:</strong> <span id="paymentOutstanding" class="text-danger fw-bold">P 0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Details -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Amount *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">P</span>
+                                        <input type="number" class="form-control" id="paymentAmount" 
+                                               step="0.01" min="0.01" required>
+                                    </div>
+                                    <div class="form-text">Maximum: <span id="maxPaymentAmount">P 0.00</span></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Date *</label>
+                                    <input type="date" class="form-control" id="paymentDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Method</label>
+                                    <select class="form-select" id="paymentMethod">
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="cash">Cash</option>
+                                        <option value="check">Check</option>
+                                        <option value="mobile_money">Mobile Money</option>
+                                        <option value="eft">EFT</option>
+                                        <option value="credit_card">Credit Card</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Reference/Transaction ID</label>
+                                    <input type="text" class="form-control" id="paymentReference" 
+                                           placeholder="e.g., Check #, Transfer ID, Receipt #">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Payment Notes</label>
+                            <textarea class="form-control" id="paymentNotes" rows="3" 
+                                      placeholder="Optional notes about this payment"></textarea>
+                        </div>
+                        
+                        <!-- Quick Amount Buttons -->
+                        <div class="mb-3">
+                            <label class="form-label">Quick Amount Selection</label>
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-outline-secondary" onclick="setPaymentAmount('full')">
+                                    Pay Full Amount
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="setPaymentAmount('half')">
+                                    Pay Half
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="setPaymentAmount('quarter')">
+                                    Pay 25%
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="customPaymentAmount()">
+                                    Custom Amount
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="submitPaymentBtn">
+                        <i class="bi bi-check"></i> Record Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Payment Modal -->
+    <div class="modal fade" id="bulkPaymentModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-cash-stack"></i> Bulk Payment Processing
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Process multiple payments at once. Select the purchases and enter payment details.
+                    </div>
+                    
+                    <div id="bulkPaymentList">
+                        <!-- Selected purchases will be shown here -->
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Common Payment Date</label>
+                                <input type="date" class="form-control" id="bulkPaymentDate">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Common Payment Method</label>
+                                <select class="form-select" id="bulkPaymentMethod">
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="check">Check</option>
+                                    <option value="mobile_money">Mobile Money</option>
+                                    <option value="eft">EFT</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Common Notes</label>
+                        <textarea class="form-control" id="bulkPaymentNotes" rows="2" 
+                                  placeholder="Notes applied to all payments"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="processBulkPaymentBtn">
+                        <i class="bi bi-check-all"></i> Process All Payments
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History Modal -->
+    <div class="modal fade" id="paymentHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-clock-history"></i> Payment History
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="paymentHistoryContent">
+                        <!-- Payment history will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+    
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    
+    <script>
+        // Global variables
+        let allPurchases = [];
+        let filteredPurchases = [];
+        let suppliers = [];
+        let selectedPurchases = [];
+        let loading = false;
+
+        // API endpoints
+        const API_BASE = 'http://localhost:8010/api/v1';
+        const PURCHASES_ENDPOINT = `${API_BASE}/purchases`;
+        const SUPPLIERS_ENDPOINT = `${API_BASE}/purchases/suppliers`;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize navbar
+            if (window.initializeNavbar) {
+                initializeNavbar();
+            }
+            
+            await initializeData();
+            setupEventListeners();
+        });
+
+        // Load initial data
+        async function initializeData() {
+            try {
+                loading = true;
+                console.log('Loading purchase payments data...');
+                
+                // Load data in parallel
+                await Promise.all([
+                    loadPurchases(),
+                    loadSuppliers()
+                ]);
+                
+                // Populate filters
+                populateSupplierFilter();
+                
+                // Render payments table
+                renderPaymentsTable();
+                
+                // Update summary cards
+                updateSummaryCards();
+                
+                console.log('Purchase payments data loaded successfully');
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Error loading purchase payments data', 'error');
+                }
+            } finally {
+                loading = false;
+            }
+        }
+
+        // Load purchases
+        async function loadPurchases() {
+            try {
+                const response = await fetch(PURCHASES_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                allPurchases = await response.json();
+                filteredPurchases = [...allPurchases];
+                
+                console.log('Loaded purchases:', allPurchases.length);
+                
+            } catch (error) {
+                console.error('Error loading purchases:', error);
+                throw error;
+            }
+        }
+
+        // Load suppliers
+        async function loadSuppliers() {
+            try {
+                const response = await fetch(SUPPLIERS_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const responseData = await response.json();
+                if (!responseData.success) {
+                    throw new Error(responseData.message || 'Failed to load suppliers');
+                }
+                suppliers = responseData.data;
+                console.log('Loaded suppliers:', suppliers.length);
+                
+            } catch (error) {
+                console.error('Error loading suppliers:', error);
+                throw error;
+            }
+        }
+
+        // Populate supplier filter
+        function populateSupplierFilter() {
+            const supplierFilter = document.getElementById('supplierFilter');
+            supplierFilter.innerHTML = '<option value="">All Suppliers</option>';
+            
+            suppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier.id;
+                option.textContent = supplier.name;
+                supplierFilter.appendChild(option);
+            });
+        }
+
+        // Render payments table
+        function renderPaymentsTable() {
+            const tbody = document.getElementById('paymentsTableBody');
+            
+            if (filteredPurchases.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No purchases found matching the current filters
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filteredPurchases.map(purchase => {
+                const supplier = suppliers.find(s => s.id === purchase.supplier_id);
+                const supplierName = supplier ? supplier.name : 'Unknown Supplier';
+                
+                const totalAmount = parseFloat(purchase.total_amount || 0);
+                const amountPaid = parseFloat(purchase.amount_paid || 0);
+                const outstanding = totalAmount - amountPaid;
+                
+                const purchaseDate = new Date(purchase.purchase_date);
+                const dueDate = purchase.due_date ? new Date(purchase.due_date) : null;
+                const today = new Date();
+                
+                let paymentStatus = 'pending';
+                let statusClass = 'payment-status-pending';
+                let statusText = 'Pending Payment';
+                
+                if (amountPaid >= totalAmount) {
+                    paymentStatus = 'paid';
+                    statusClass = 'payment-status-paid';
+                    statusText = 'Fully Paid';
+                } else if (amountPaid > 0) {
+                    paymentStatus = 'partial';
+                    statusClass = 'payment-status-partial';
+                    statusText = 'Partially Paid';
+                }
+                
+                // Calculate days overdue
+                let daysOverdue = 0;
+                let overdueClass = '';
+                if (dueDate && today > dueDate && outstanding > 0) {
+                    daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+                    overdueClass = 'overdue';
+                    if (paymentStatus === 'pending') {
+                        paymentStatus = 'overdue';
+                        statusText = 'Overdue';
+                        statusClass = 'text-danger fw-bold';
+                    }
+                }
+                
+                return `
+                    <tr class="${overdueClass}" data-purchase-id="${purchase.id}">
+                        <td>
+                            <input type="checkbox" class="form-check-input purchase-checkbox" 
+                                   value="${purchase.id}" ${outstanding <= 0 ? 'disabled' : ''}>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>${purchase.reference || purchase.id.substring(0, 8)}</strong><br>
+                                <small class="text-muted">ID: ${purchase.id.substring(0, 8)}...</small>
+                            </div>
+                        </td>
+                        <td>${supplierName}</td>
+                        <td>${formatDate(purchase.purchase_date)}</td>
+                        <td>${dueDate ? formatDate(purchase.due_date) : '<span class="text-muted">Not set</span>'}</td>
+                        <td><strong>${formatCurrency(totalAmount)}</strong></td>
+                        <td>${formatCurrency(amountPaid)}</td>
+                        <td class="${outstanding > 0 ? 'text-danger fw-bold' : 'text-success'}">${formatCurrency(outstanding)}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td>
+                            ${daysOverdue > 0 ? 
+                                `<span class="badge bg-danger">${daysOverdue} days</span>` : 
+                                '<span class="text-muted">-</span>'
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-group-sm">
+                                ${outstanding > 0 ? `
+                                    <button class="btn btn-sm btn-success" onclick="openPaymentModal('${purchase.id}')" title="Record Payment">
+                                        <i class="bi bi-credit-card"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-sm btn-info" onclick="viewPaymentHistory('${purchase.id}')" title="Payment History">
+                                    <i class="bi bi-clock-history"></i>
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="viewPurchaseDetails('${purchase.id}')" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Update summary cards
+        function updateSummaryCards() {
+            let totalOutstanding = 0;
+            let overduePayments = 0;
+            let paidThisMonth = 0;
+            let pendingCount = 0;
+            
+            const today = new Date();
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            filteredPurchases.forEach(purchase => {
+                const totalAmount = parseFloat(purchase.total_amount || 0);
+                const amountPaid = parseFloat(purchase.amount_paid || 0);
+                const outstanding = totalAmount - amountPaid;
+                
+                // Total outstanding
+                totalOutstanding += outstanding;
+                
+                // Pending count
+                if (outstanding > 0) {
+                    pendingCount++;
+                }
+                
+                // Overdue payments
+                if (purchase.due_date) {
+                    const dueDate = new Date(purchase.due_date);
+                    if (today > dueDate && outstanding > 0) {
+                        overduePayments += outstanding;
+                    }
+                }
+                
+                // Paid this month (approximate - would need payment history for exact)
+                if (amountPaid > 0) {
+                    const purchaseDate = new Date(purchase.purchase_date);
+                    if (purchaseDate >= firstDayOfMonth) {
+                        paidThisMonth += amountPaid;
+                    }
+                }
+            });
+            
+            document.getElementById('totalOutstanding').textContent = formatCurrency(totalOutstanding);
+            document.getElementById('overduePayments').textContent = formatCurrency(overduePayments);
+            document.getElementById('paidThisMonth').textContent = formatCurrency(paidThisMonth);
+            document.getElementById('pendingCount').textContent = pendingCount;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Filter event listeners
+            ['paymentStatusFilter', 'supplierFilter', 'amountRangeFilter', 'dueDateFromFilter', 'dueDateToFilter'].forEach(filterId => {
+                document.getElementById(filterId).addEventListener('change', applyFilters);
+            });
+            
+            // Checkbox event listeners
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            selectAllHeader.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.purchase-checkbox:not(:disabled)');
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                updateSelectedPurchases();
+            });
+            
+            // Payment form submission
+            document.getElementById('submitPaymentBtn').addEventListener('click', submitPayment);
+            
+            // Bulk payment processing
+            document.getElementById('processBulkPaymentBtn').addEventListener('click', processBulkPayments);
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const statusFilter = document.getElementById('paymentStatusFilter').value;
+            const supplierFilter = document.getElementById('supplierFilter').value;
+            const amountRangeFilter = document.getElementById('amountRangeFilter').value;
+            const dueDateFromFilter = document.getElementById('dueDateFromFilter').value;
+            const dueDateToFilter = document.getElementById('dueDateToFilter').value;
+            
+            filteredPurchases = allPurchases.filter(purchase => {
+                const totalAmount = parseFloat(purchase.total_amount || 0);
+                const amountPaid = parseFloat(purchase.amount_paid || 0);
+                const outstanding = totalAmount - amountPaid;
+                
+                // Status filter
+                if (statusFilter) {
+                    let purchaseStatus = 'pending';
+                    if (amountPaid >= totalAmount) purchaseStatus = 'paid';
+                    else if (amountPaid > 0) purchaseStatus = 'partial';
+                    
+                    // Check for overdue
+                    if (purchase.due_date && new Date() > new Date(purchase.due_date) && outstanding > 0) {
+                        purchaseStatus = 'overdue';
+                    }
+                    
+                    if (purchaseStatus !== statusFilter) return false;
+                }
+                
+                // Supplier filter
+                if (supplierFilter && purchase.supplier_id !== supplierFilter) return false;
+                
+                // Amount range filter
+                if (amountRangeFilter) {
+                    const [min, max] = amountRangeFilter.split('-').map(v => v.replace('+', '').replace('P', '').trim());
+                    const minAmount = parseFloat(min);
+                    const maxAmount = max ? parseFloat(max) : Infinity;
+                    
+                    if (totalAmount < minAmount || totalAmount > maxAmount) return false;
+                }
+                
+                // Due date filters
+                if (dueDateFromFilter && purchase.due_date) {
+                    if (new Date(purchase.due_date) < new Date(dueDateFromFilter)) return false;
+                }
+                
+                if (dueDateToFilter && purchase.due_date) {
+                    if (new Date(purchase.due_date) > new Date(dueDateToFilter)) return false;
+                }
+                
+                return true;
+            });
+            
+            renderPaymentsTable();
+            updateSummaryCards();
+        }
+
+        // Open payment modal
+        function openPaymentModal(purchaseId) {
+            const purchase = allPurchases.find(p => p.id === purchaseId);
+            if (!purchase) return;
+            
+            const supplier = suppliers.find(s => s.id === purchase.supplier_id);
+            const supplierName = supplier ? supplier.name : 'Unknown Supplier';
+            
+            const totalAmount = parseFloat(purchase.total_amount || 0);
+            const amountPaid = parseFloat(purchase.amount_paid || 0);
+            const outstanding = totalAmount - amountPaid;
+            
+            // Populate modal
+            document.getElementById('paymentPurchaseId').value = purchase.id;
+            document.getElementById('paymentPurchaseRef').textContent = purchase.reference || 'P-' + purchase.id.substring(0, 8);
+            document.getElementById('paymentSupplierName').textContent = supplierName;
+            document.getElementById('paymentPurchaseDate').textContent = formatDate(purchase.purchase_date);
+            document.getElementById('paymentTotalAmount').textContent = formatCurrency(totalAmount);
+            document.getElementById('paymentAmountPaid').textContent = formatCurrency(amountPaid);
+            document.getElementById('paymentOutstanding').textContent = formatCurrency(outstanding);
+            document.getElementById('maxPaymentAmount').textContent = formatCurrency(outstanding);
+            
+            // Set defaults
+            document.getElementById('paymentAmount').value = '';
+            document.getElementById('paymentAmount').max = outstanding.toFixed(2);
+            document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('paymentMethod').value = 'bank_transfer';
+            document.getElementById('paymentReference').value = '';
+            document.getElementById('paymentNotes').value = '';
+            
+            // Store current purchase
+            window.currentPaymentPurchase = purchase;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        }
+
+        // Submit payment
+        async function submitPayment() {
+            try {
+                const purchaseId = document.getElementById('paymentPurchaseId').value;
+                const amount = parseFloat(document.getElementById('paymentAmount').value);
+                const paymentDate = document.getElementById('paymentDate').value;
+                const paymentMethod = document.getElementById('paymentMethod').value;
+                const reference = document.getElementById('paymentReference').value;
+                const notes = document.getElementById('paymentNotes').value;
+                
+                // Validation
+                if (!amount || amount <= 0) {
+                    throw new Error('Please enter a valid payment amount');
+                }
+                
+                if (!paymentDate) {
+                    throw new Error('Please select a payment date');
+                }
+                
+                // Submit payment
+                const response = await fetch(`${PURCHASES_ENDPOINT}/${purchaseId}/payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        payment_date: paymentDate,
+                        payment_method: paymentMethod,
+                        reference: reference,
+                        notes: notes
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to record payment');
+                }
+                
+                const result = await response.json();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+                modal.hide();
+                
+                // Refresh data
+                await loadPurchases();
+                renderPaymentsTable();
+                updateSummaryCards();
+                
+                // Show success message
+                if (window.modernUI) {
+                    window.modernUI.showNotification(
+                        `Payment of ${formatCurrency(result.payment_amount)} recorded successfully`, 
+                        'success'
+                    );
+                }
+                
+            } catch (error) {
+                console.error('Error recording payment:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Update selected purchases
+        function updateSelectedPurchases() {
+            const checkboxes = document.querySelectorAll('.purchase-checkbox:checked');
+            selectedPurchases = Array.from(checkboxes).map(cb => cb.value);
+            
+            document.getElementById('selectedCount').textContent = selectedPurchases.length;
+            document.getElementById('bulkPaymentBtn').style.display = selectedPurchases.length > 0 ? 'inline-block' : 'none';
+        }
+
+        // Bulk payment mode
+        function bulkPaymentMode() {
+            // Enable checkboxes and show selection UI
+            const checkboxes = document.querySelectorAll('.purchase-checkbox');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', updateSelectedPurchases);
+            });
+            
+            updateSelectedPurchases();
+            
+            // Show bulk payment modal if selections exist
+            if (selectedPurchases.length > 0) {
+                showBulkPaymentModal();
+            } else {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Please select purchases to process payments', 'info');
+                }
+            }
+        }
+
+        // Set payment amount
+        function setPaymentAmount(type) {
+            const outstanding = parseFloat(window.currentPaymentPurchase.total_amount || 0) - 
+                              parseFloat(window.currentPaymentPurchase.amount_paid || 0);
+            
+            let amount = 0;
+            switch (type) {
+                case 'full':
+                    amount = outstanding;
+                    break;
+                case 'half':
+                    amount = outstanding / 2;
+                    break;
+                case 'quarter':
+                    amount = outstanding * 0.25;
+                    break;
+            }
+            
+            document.getElementById('paymentAmount').value = amount.toFixed(2);
+        }
+
+        // Custom payment amount
+        function customPaymentAmount() {
+            const amount = prompt('Enter custom payment amount:');
+            if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+                document.getElementById('paymentAmount').value = parseFloat(amount).toFixed(2);
+            }
+        }
+
+        function showBulkPaymentModal() {
+            const bulkPaymentList = document.getElementById('bulkPaymentList');
+            bulkPaymentList.innerHTML = '';
+
+            if (selectedPurchases.length === 0) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('No purchases selected for bulk payment.', 'warning');
+                }
+                return;
+            }
+
+            let totalBulkAmount = 0;
+            const selectedPurchaseDetails = selectedPurchases.map(id => allPurchases.find(p => p.id === id));
+
+            const itemsHtml = selectedPurchaseDetails.map(purchase => {
+                if (!purchase) return '';
+                const outstanding = (purchase.total_amount || 0) - (purchase.amount_paid || 0);
+                totalBulkAmount += outstanding;
+                const supplier = suppliers.find(s => s.id === purchase.supplier_id);
+
+                return `
+                    <div class="card mb-2" id="bulk-item-${purchase.id}">
+                        <div class="card-body p-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <strong>${purchase.reference || purchase.id.substring(0,8)}</strong><br>
+                                    <small class="text-muted">${supplier ? supplier.name : 'Unknown'}</small>
+                                </div>
+                                <div class="col-md-2">
+                                    Outstanding: <strong class="text-danger">${formatCurrency(outstanding)}</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label-sm">Payment Amount</label>
+                                    <input type="number" class="form-control form-control-sm bulk-payment-amount" 
+                                           data-purchase-id="${purchase.id}" value="${outstanding.toFixed(2)}"
+                                           max="${outstanding.toFixed(2)}" step="0.01">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label-sm">Payment Reference</label>
+                                    <input type="text" class="form-control form-control-sm bulk-payment-reference"
+                                           placeholder="Optional reference">
+                                </div>
+                                <div class="col-md-1 text-end">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="removeBulkItem('${purchase.id}')">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            bulkPaymentList.innerHTML = `
+                <div class="alert alert-secondary">
+                    <h5>Total Payment: <strong id="bulkTotalAmount">${formatCurrency(totalBulkAmount)}</strong></h5>
+                </div>
+                ${itemsHtml}
+            `;
+
+            // Set default common values
+            document.getElementById('bulkPaymentDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('bulkPaymentMethod').value = 'bank_transfer';
+            document.getElementById('bulkPaymentNotes').value = '';
+
+            const modal = new bootstrap.Modal(document.getElementById('bulkPaymentModal'));
+            modal.show();
+
+            // Add event listeners to update total
+            document.querySelectorAll('.bulk-payment-amount').forEach(input => {
+                input.addEventListener('input', updateTotalBulkAmount);
+            });
+        }
+
+        function updateTotalBulkAmount() {
+            let totalBulkAmount = 0;
+            document.querySelectorAll('.bulk-payment-amount').forEach(input => {
+                totalBulkAmount += parseFloat(input.value) || 0;
+            });
+            document.getElementById('bulkTotalAmount').textContent = formatCurrency(totalBulkAmount);
+        }
+
+        function removeBulkItem(purchaseId) {
+            document.getElementById(`bulk-item-${purchaseId}`).remove();
+            // Uncheck the main table
+            const mainCheckbox = document.querySelector(`.purchase-checkbox[value="${purchaseId}"]`);
+            if (mainCheckbox) mainCheckbox.checked = false;
+            updateSelectedPurchases();
+            updateTotalBulkAmount();
+        }
+
+        async function processBulkPayments() {
+            const commonData = {
+                payment_date: document.getElementById('bulkPaymentDate').value,
+                payment_method: document.getElementById('bulkPaymentMethod').value,
+                notes: document.getElementById('bulkPaymentNotes').value,
+            };
+
+            const payments = [];
+            const amountInputs = document.querySelectorAll('.bulk-payment-amount');
+            
+            amountInputs.forEach(input => {
+                const purchaseId = input.dataset.purchaseId;
+                const amount = parseFloat(input.value);
+                if (amount > 0) {
+                    const referenceInput = document.querySelector(`#bulk-item-${purchaseId} .bulk-payment-reference`);
+                    payments.push({
+                        purchase_id: purchaseId,
+                        amount: amount,
+                        reference: referenceInput ? referenceInput.value : ''
+                    });
+                }
+            });
+
+            if (payments.length === 0) {
+                if(window.modernUI) window.modernUI.showNotification('No payments to process.', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${PURCHASES_ENDPOINT}/bulk-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        common: commonData,
+                        payments: payments
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Bulk payment failed');
+                }
+
+                const result = await response.json();
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('bulkPaymentModal'));
+                modal.hide();
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification(result.message || 'Bulk payment processed.', 'success');
+                    if (result.errors && result.errors.length > 0) {
+                        window.modernUI.showNotification(`With ${result.errors.length} errors. Check console.`, 'warning');
+                        console.error('Bulk payment errors:', result.errors);
+                    }
+                }
+
+                // Refresh data
+                await initializeData();
+
+            } catch (error) {
+                console.error('Error processing bulk payments:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // View payment history (placeholder)
+        function viewPaymentHistory(purchaseId) {
+            // This would show historical payments for the purchase
+            if (window.modernUI) {
+                window.modernUI.showNotification('Payment history feature coming soon', 'info');
+            }
+        }
+
+        // View purchase details (placeholder)
+        function viewPurchaseDetails(purchaseId) {
+            // This would redirect to purchase details or open in modal
+            window.open(`/static/purchases.html?view=${purchaseId}`, '_blank');
+        }
+
+        // Export payment report (placeholder)
+        function exportPaymentReport() {
+            if (window.modernUI) {
+                window.modernUI.showNotification('Export functionality coming soon', 'info');
+            }
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-BW', {
+                style: 'currency',
+                currency: 'BWP',
+                minimumFractionDigits: 2
+            }).format(amount || 0).replace('BWP', 'P');
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleDateString('en-BW');
+        }
+    </script>
+    <script src="js/navbar.js?v=20250106001"></script>
+</body>
+</html>

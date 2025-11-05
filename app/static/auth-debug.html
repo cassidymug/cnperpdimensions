@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Debug</title>
+    
+    
+</head>
+<body>
+    
+    
+    
+    
+    
+    
+    
+    <h1>Authentication Debug</h1>
+    <div id="debug-info"></div>
+    
+    <h2>Test Login</h2>
+    <button onclick="testLogin()">Test Login with test/test/MAIN</button>
+    <div id="login-result"></div>
+    
+    <script>
+        function debugAuth() {
+            const tokenKey = 'auth_token';
+            const userKey = 'user_data';
+            const expKey = 'token_exp';
+            
+            const token = localStorage.getItem(tokenKey);
+            const user = localStorage.getItem(userKey);
+            const exp = localStorage.getItem(expKey);
+            const nowSeconds = Math.floor(Date.now() / 1000);
+            
+            const debugInfo = {
+                token: token ? 'Present' : 'Missing',
+                tokenLength: token ? token.length : 0,
+                tokenSample: token ? token.substring(0, 50) + '...' : 'N/A',
+                user: user ? JSON.parse(user) : 'Missing',
+                exp: exp,
+                nowSeconds: nowSeconds,
+                isExpired: exp ? (nowSeconds > parseInt(exp)) : 'No expiration set',
+                timeDiff: exp ? (parseInt(exp) - nowSeconds) : 'N/A'
+            };
+            
+            document.getElementById('debug-info').innerHTML = '<pre>' + JSON.stringify(debugInfo, null, 2) + '</pre>';
+            console.log('Auth Debug Info:', debugInfo);
+        }
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = 'Testing login...';
+            
+            try {
+                const response = await fetch('/api/v1/auth/login-json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'test',
+                        password: 'test', 
+                        branch_code: 'MAIN'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = '<h3>Login Success!</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    
+                    // Parse the JWT token to check its structure
+                    if (data.access_token) {
+                        try {
+                            const tokenParts = data.access_token.split('.');
+                            if (tokenParts.length === 3) {
+                                const payload = JSON.parse(atob(tokenParts[1]));
+                                resultDiv.innerHTML += '<h3>JWT Payload:</h3><pre>' + JSON.stringify(payload, null, 2) + '</pre>';
+                            }
+                        } catch (e) {
+                            resultDiv.innerHTML += '<p>Could not parse JWT: ' + e.message + '</p>';
+                        }
+                    }
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = '<h3>Login Failed!</h3><p>Status: ' + response.status + '</p><pre>' + error + '</pre>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<h3>Login Error!</h3><p>' + error.message + '</p>';
+            }
+            
+            // Refresh debug info after login attempt
+            setTimeout(debugAuth, 100);
+        }
+        
+        // Run debug on load
+        debugAuth();
+        
+        // Add button to refresh
+        document.body.innerHTML += '<br><button onclick="debugAuth()">Refresh Debug Info</button>';
+    </script>
+</body>
+</html>

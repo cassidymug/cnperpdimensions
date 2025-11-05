@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Bank Transactions</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        .dark-mode {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        .transaction-row {
+            transition: background-color 0.2s ease;
+        }
+
+        .transaction-row:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .amount-positive {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .amount-negative {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .transaction-type-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .reconciled-badge {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .filter-section {
+            background-color: var(--bg-primary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .table {
+            color: var(--text-primary);
+        }
+
+        .table th {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+
+        .table td {
+            border-color: var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Standardized Navbar -->
+    
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+    
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-list-ul text-primary"></i> Bank Transactions
+                        </h1>
+                        <p class="text-muted mb-0">View and manage bank transactions</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bank"></i> Banking Modules
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/static/bank-accounts.html">
+                                    <i class="bi bi-bank"></i> Bank Accounts
+                                </a></li>
+                                <li><a class="dropdown-item active" href="/static/bank-transactions.html">
+                                    <i class="bi bi-arrow-left-right"></i> Transactions
+                                </a></li>
+                                <li><a class="dropdown-item" href="/static/bank-reconciliations.html">
+                                    <i class="bi bi-check2-square"></i> Reconciliations
+                                </a></li>
+                                <li><a class="dropdown-item" href="/static/bank-transfers.html">
+                                    <i class="bi bi-arrow-repeat"></i> Transfers
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/static/banking-reports.html">
+                                    <i class="bi bi-graph-up"></i> Banking Reports
+                                </a></li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+                            <i class="bi bi-plus"></i> Add Transaction
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Transactions</h6>
+                            <h3 class="mb-0" id="totalTransactions">-</h3>
+                        </div>
+                        <i class="bi bi-list-ul fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Credits</h6>
+                            <h3 class="mb-0" id="totalCredits">-</h3>
+                        </div>
+                        <i class="bi bi-arrow-up-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Debits</h6>
+                            <h3 class="mb-0" id="totalDebits">-</h3>
+                        </div>
+                        <i class="bi bi-arrow-down-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Reconciled</h6>
+                            <h3 class="mb-0" id="reconciledCount">-</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Account</label>
+                    <select class="form-select" id="accountFilter">
+                        <option value="">All Accounts</option>
+                        <option value="1">Main Checking Account</option>
+                        <option value="2">Savings Account</option>
+                        <option value="3">Business Account</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" id="typeFilter">
+                        <option value="">All Types</option>
+                        <option value="deposit">Deposit</option>
+                        <option value="withdrawal">Withdrawal</option>
+                        <option value="transfer">Transfer</option>
+                        <option value="payment">Payment</option>
+                        <option value="receipt">Receipt</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="reconciled">Reconciled</option>
+                        <option value="unreconciled">Unreconciled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="fromDateFilter">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="toDateFilter">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Search transactions...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Transaction History</h5>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm me-2" onclick="exportTransactions()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="reconcileTransactions()">
+                            <i class="bi bi-check-circle"></i> Reconcile
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th>Date</th>
+                                <th>Reference</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>VAT</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTable">
+                            <!-- Transactions will be dynamically generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div class="modal fade" id="addTransactionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Add New Transaction
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTransactionForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Account *</label>
+                                    <select class="form-select" id="transactionAccount" required>
+                                        <option value="">Select Account</option>
+                                        <option value="1">Main Checking Account</option>
+                                        <option value="2">Savings Account</option>
+                                        <option value="3">Business Account</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Transaction Date *</label>
+                                    <input type="date" class="form-control" id="transactionDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Transaction Type *</label>
+                                    <select class="form-select" id="transactionType" required>
+                                        <option value="">Select Type</option>
+                                        <option value="deposit">Deposit</option>
+                                        <option value="withdrawal">Withdrawal</option>
+                                        <option value="transfer">Transfer</option>
+                                        <option value="payment">Payment</option>
+                                        <option value="receipt">Receipt</option>
+                                        <option value="bank_charge">Bank Charge</option>
+                                        <option value="interest">Interest</option>
+                                        <option value="reversal">Reversal</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Amount *</label>
+                                    <input type="number" class="form-control" id="transactionAmount" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Description *</label>
+                                    <input type="text" class="form-control" id="transactionDescription" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Reference</label>
+                                    <input type="text" class="form-control" id="transactionReference">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">VAT Amount</label>
+                                    <input type="number" class="form-control" id="transactionVAT" step="0.01" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Destination Account</label>
+                                    <select class="form-select" id="destinationAccount">
+                                        <option value="">Select Account (for transfers)</option>
+                                        <option value="1">Main Checking Account</option>
+                                        <option value="2">Savings Account</option>
+                                        <option value="3">Business Account</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="transactionNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveTransactionBtn">
+                        <i class="bi bi-check"></i> Save Transaction
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div class="modal fade" id="transactionDetailsModal" tabindex="-1" aria-labelledby="transactionDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="transactionDetailsModalLabel">
+                        <i class="bi bi-eye"></i> Transaction Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Reference:</strong> <span id="transactionDetailsReference"></span></p>
+                            <p><strong>Date:</strong> <span id="transactionDetailsDate"></span></p>
+                            <p><strong>Description:</strong> <span id="transactionDetailsDescription"></span></p>
+                            <p><strong>Type:</strong> <span id="transactionDetailsType"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Amount:</strong> <span id="transactionDetailsAmount"></span></p>
+                            <p><strong>VAT Amount:</strong> <span id="transactionDetailsVat"></span></p>
+                            <p><strong>Status:</strong> <span id="transactionDetailsStatus"></span></p>
+                            <p><strong>Created:</strong> <span id="transactionDetailsCreated"></span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reconciliation Modal -->
+    <div class="modal fade" id="reconciliationModal" tabindex="-1" aria-labelledby="reconciliationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reconciliationModalLabel">
+                        <i class="bi bi-check-circle"></i> Reconcile Transactions
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Reconciliation Process:</strong> This will mark selected transactions as reconciled and create appropriate accounting entries for bank-initiated transactions (charges, fees, VAT).
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isBankInitiated">
+                            <label class="form-check-label" for="isBankInitiated">
+                                <strong>Bank-Initiated Transactions</strong>
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Check this if these are bank charges, transfer fees, VAT, or other bank-initiated transactions that need accounting entries created.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reconciliationNotes" class="form-label">Reconciliation Notes</label>
+                        <textarea class="form-control" id="reconciliationNotes" rows="3" placeholder="Optional notes about this reconciliation..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> This action will:
+                        <ul class="mb-0 mt-2">
+                            <li>Mark selected transactions as reconciled</li>
+                            <li>Create accounting entries for bank-initiated transactions</li>
+                            <li>Update journal entries and ledgers</li>
+                            <li>Affect financial reports</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="performReconciliation()">
+                        <i class="bi bi-check-circle me-2"></i>Reconcile Transactions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Auth Bootstrap (load first) -->
+    <script src="js/auth-bootstrap.js"></script>
+    <!-- Auth MUST load before navbar so role & token context is available -->
+    <script src="/static/js/auth.js"></script>
+    
+    
+    <script src="js/navbar-loader.js"></script>
+    <!-- Branch switcher for eligible roles -->
+    <script src="js/branch-switcher.js"></script>
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    
+    <script>
+        // Require authentication for this page
+        document.addEventListener('DOMContentLoaded', ()=>{
+            if (!window.auth || !auth.isAuthenticated()) {
+                window.location.replace('/static/login.html');
+            }
+        });
+
+        // Unified fetch wrapper adding Authorization header automatically
+        function apiFetch(url, options={}){
+            const tokenHeaders = (window.auth && auth.getToken()) ? auth.authHeader() : {};
+            const mergedHeaders = { ...(options.headers||{}), ...tokenHeaders };
+            return fetch(url, { ...options, headers: mergedHeaders });
+        }
+        // Global data storage
+        let bankTransactions = [];
+        let bankAccounts = [];
+        let loading = false;
+
+        // Currency settings
+        let currentCurrency = 'BWP';
+        let currencySymbol = 'P';
+        let currencyCode = 'BWP';
+
+        // API endpoints
+        const API_BASE = '/api/v1';
+        const BANKING_ENDPOINT = `${API_BASE}/banking`;
+        const TRANSACTIONS_ENDPOINT = `${BANKING_ENDPOINT}/transactions`;
+        const ACCOUNTS_ENDPOINT = `${BANKING_ENDPOINT}/accounts`;
+
+        // Load settings and currency
+        async function loadSettings() {
+            try {
+                const response = await apiFetch('/api/v1/settings/currency');
+                if (response.ok) {
+                    const settings = await response.json();
+                    currentCurrency = settings.data.currency || 'BWP';
+                    currencySymbol = settings.data.currency_symbol || 'P';
+                    currencyCode = settings.data.currency || 'BWP';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Format currency amount
+        function formatCurrency(amount) {
+            return `${currencySymbol}${parseFloat(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Fetch bank transactions from database
+        async function fetchBankTransactions() {
+            try {
+                loading = true;
+                showLoadingState();
+                
+                const params = new URLSearchParams();
+                const accountFilter = document.getElementById('accountFilter').value;
+                const typeFilter = document.getElementById('typeFilter').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+                const fromDateFilter = document.getElementById('fromDateFilter').value;
+                const toDateFilter = document.getElementById('toDateFilter').value;
+                const searchFilter = document.getElementById('searchFilter').value;
+
+                if (accountFilter) params.append('account_id', accountFilter);
+                if (typeFilter) params.append('transaction_type', typeFilter);
+                if (statusFilter) params.append('reconciled', statusFilter === 'reconciled');
+                if (fromDateFilter) params.append('start_date', fromDateFilter);
+                if (toDateFilter) params.append('end_date', toDateFilter);
+                if (searchFilter) params.append('search', searchFilter);
+
+                const response = await apiFetch(`${TRANSACTIONS_ENDPOINT}?${params}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                bankTransactions = data.data.map(transaction => ({
+                    id: transaction.id,
+                    date: transaction.date,
+                    description: transaction.description,
+                    amount: transaction.amount || 0,
+                    transactionType: transaction.transaction_type || 'transfer',
+                    reference: transaction.reference || '',
+                    reconciled: transaction.reconciled || false,
+                    vatAmount: transaction.vat_amount || 0,
+                    bankAccountId: transaction.bank_account_id,
+                    created_at: transaction.created_at || new Date().toISOString().split('T')[0]
+                }));
+
+                renderBankTransactions();
+                updateStatistics();
+                
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Bank transactions loaded successfully', 'success');
+                }
+            } catch (error) {
+                console.error('Error fetching bank transactions:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load bank transactions', 'error');
+                }
+                // Show empty state
+                bankTransactions = [];
+                renderBankTransactions();
+                updateStatistics();
+            } finally {
+                loading = false;
+                hideLoadingState();
+            }
+        }
+
+        // Fetch bank accounts for dropdown
+        async function fetchBankAccounts() {
+            try {
+                const response = await apiFetch(ACCOUNTS_ENDPOINT);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                bankAccounts = data.data;
+                
+                // Populate account filter dropdown
+                const accountFilter = document.getElementById('accountFilter');
+                if (accountFilter) {
+                    accountFilter.innerHTML = '<option value="">All Accounts</option>';
+                    bankAccounts.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.id;
+                        option.textContent = `${account.name} (${account.account_number})`;
+                        accountFilter.appendChild(option);
+                    });
+                }
+                
+                // Populate transaction account dropdown
+                const transactionAccount = document.getElementById('transactionAccount');
+                if (transactionAccount) {
+                    transactionAccount.innerHTML = '<option value="">Select Account</option>';
+                    bankAccounts.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.id;
+                        option.textContent = `${account.name} (${account.account_number})`;
+                        transactionAccount.appendChild(option);
+                    });
+                }
+                
+                // Populate destination account dropdown
+                const destinationAccount = document.getElementById('destinationAccount');
+                if (destinationAccount) {
+                    destinationAccount.innerHTML = '<option value="">Select Account (for transfers)</option>';
+                    bankAccounts.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.id;
+                        option.textContent = `${account.name} (${account.account_number})`;
+                        destinationAccount.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching bank accounts:', error);
+            }
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            const table = document.getElementById('transactionsTable');
+            if (table) {
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading bank transactions...</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Hide loading state
+        function hideLoadingState() {
+            // Loading state will be replaced by render functions
+        }
+
+        // Load data from database
+        function loadData() {
+            // Transactions will be loaded from database
+            renderTransactions();
+            updateStatistics();
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const totalTransactions = bankTransactions.length;
+            const reconciledTransactions = bankTransactions.filter(t => t.reconciled).length;
+            const totalCredits = bankTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+            const totalDebits = bankTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+            document.getElementById('totalTransactions').textContent = totalTransactions;
+            document.getElementById('reconciledCount').textContent = reconciledTransactions;
+            document.getElementById('totalCredits').textContent = formatCurrency(totalCredits);
+            document.getElementById('totalDebits').textContent = formatCurrency(totalDebits);
+        }
+        
+        // Load reconciliation summary
+        async function loadReconciliationSummary() {
+            try {
+                const accountFilter = document.getElementById('accountFilter').value;
+                const params = new URLSearchParams();
+                if (accountFilter) params.append('account_id', accountFilter);
+                
+                const response = await apiFetch(`${BANKING_ENDPOINT}/reconciliation/summary?${params}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const summary = data.data;
+                    
+                    // Update statistics with reconciliation data
+                    document.getElementById('totalTransactions').textContent = summary.total_transactions;
+                    document.getElementById('reconciledCount').textContent = summary.reconciled_transactions;
+                    document.getElementById('totalCredits').textContent = formatCurrency(summary.reconciled_amount);
+                    document.getElementById('totalDebits').textContent = formatCurrency(summary.unreconciled_amount);
+                }
+            } catch (error) {
+                console.error('Error loading reconciliation summary:', error);
+            }
+        }
+
+        // Render bank transactions
+        function renderBankTransactions(transactionsToRender = bankTransactions) {
+            const tbody = document.getElementById('transactionsTable');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+
+            if (transactionsToRender.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div class="py-4">
+                                <i class="bi bi-bank fs-1 text-muted"></i>
+                                <h5 class="mt-3">No bank transactions found</h5>
+                                <p class="text-muted">No transactions match your current filters.</p>
+                                <button class="btn btn-primary" onclick="clearFilters()">
+                                    <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            transactionsToRender.forEach(transaction => {
+                const row = document.createElement('tr');
+                const amountClass = transaction.amount >= 0 ? 'amount-positive' : 'amount-negative';
+                const typeClass = transaction.transactionType === 'deposit' ? 'success' : 
+                                transaction.transactionType === 'withdrawal' ? 'danger' : 'info';
+                const reconciledClass = transaction.reconciled ? 'success' : 'warning';
+                
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="form-check-input" value="${transaction.id}">
+                    </td>
+                    <td>${transaction.date}</td>
+                    <td>${transaction.reference || 'N/A'}</td>
+                    <td>${transaction.description || 'No description'}</td>
+                    <td>
+                        <span class="badge bg-${typeClass}">${transaction.transactionType}</span>
+                    </td>
+                    <td class="text-end ${amountClass}">
+                        ${formatCurrency(Math.abs(transaction.amount))}
+                    </td>
+                    <td class="text-end">${formatCurrency(transaction.vatAmount)}</td>
+                    <td>
+                        <span class="badge bg-${reconciledClass}">
+                            ${transaction.reconciled ? 'Reconciled' : 'Pending'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-primary btn-sm" onclick="viewTransaction('${transaction.id}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="editTransaction('${transaction.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteTransaction('${transaction.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Filter transactions
+        async function filterTransactions() {
+            await fetchBankTransactions();
+            await loadReconciliationSummary();
+        }
+        
+        // Search transactions (client-side filtering)
+        function searchTransactions() {
+            const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+            const filteredTransactions = bankTransactions.filter(transaction => {
+                return (
+                    (transaction.reference && transaction.reference.toLowerCase().includes(searchTerm)) ||
+                    (transaction.description && transaction.description.toLowerCase().includes(searchTerm)) ||
+                    (transaction.transactionType && transaction.transactionType.toLowerCase().includes(searchTerm))
+                );
+            });
+            renderBankTransactions(filteredTransactions);
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('accountFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('fromDateFilter').value = '';
+            document.getElementById('toDateFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            fetchBankTransactions();
+        }
+
+        // View transaction
+        function viewTransaction(id) {
+            const transaction = bankTransactions.find(t => t.id === id);
+            if (transaction) {
+                // Populate modal with transaction details
+                document.getElementById('transactionDetailsReference').textContent = transaction.reference || 'N/A';
+                document.getElementById('transactionDetailsDate').textContent = transaction.date || 'N/A';
+                document.getElementById('transactionDetailsDescription').textContent = transaction.description || 'No description';
+                document.getElementById('transactionDetailsType').textContent = transaction.transactionType || 'N/A';
+                document.getElementById('transactionDetailsAmount').textContent = formatCurrency(transaction.amount || 0);
+                document.getElementById('transactionDetailsVat').textContent = formatCurrency(transaction.vatAmount || 0);
+                document.getElementById('transactionDetailsStatus').textContent = transaction.reconciled ? 'Reconciled' : 'Pending';
+                
+                // Format and display creation date
+                const createdDate = transaction.created_at ? new Date(transaction.created_at).toLocaleDateString() : 'N/A';
+                document.getElementById('transactionDetailsCreated').textContent = createdDate;
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('transactionDetailsModal')).show();
+            }
+        }
+
+        // Edit transaction
+        function editTransaction(id) {
+            if (window.modernUI) {
+                window.modernUI.showNotification('Edit functionality will be implemented in the next phase', 'info');
+            } else {
+                alert(`Editing transaction ${id}...`);
+            }
+        }
+
+        // Delete transaction
+        function deleteTransaction(id) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Delete functionality will be implemented in the next phase', 'info');
+                } else {
+                    alert(`Deleting transaction ${id}...`);
+                }
+            }
+        }
+
+        // Create transaction
+        async function createTransaction() {
+            const form = document.getElementById('addTransactionForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            try {
+                const transactionData = {
+                    bank_account_id: document.getElementById('transactionAccount').value,
+                    date: document.getElementById('transactionDate').value,
+                    amount: parseFloat(document.getElementById('transactionAmount').value),
+                    description: document.getElementById('transactionDescription').value,
+                    transaction_type: document.getElementById('transactionType').value,
+                    reference: document.getElementById('transactionReference').value || '',
+                    vat_amount: parseFloat(document.getElementById('transactionVAT').value) || 0,
+                    reconciled: false
+                };
+
+                const response = await apiFetch(TRANSACTIONS_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(transactionData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to create transaction');
+                }
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Transaction created successfully', 'success');
+                } else {
+                    alert('Transaction created successfully!');
+                }
+
+                // Clear form and close modal
+                form.reset();
+                bootstrap.Modal.getInstance(document.getElementById('addTransactionModal')).hide();
+                
+                // Reload transactions
+                fetchBankTransactions();
+            } catch (error) {
+                console.error('Error creating transaction:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to create transaction: ' + error.message, 'error');
+                } else {
+                    alert('Error creating transaction: ' + error.message);
+                }
+            }
+        }
+
+        // Reconcile transactions
+        async function reconcileTransactions() {
+            const selectedCheckboxes = document.querySelectorAll('#transactionsTable input[type="checkbox"]:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Please select transactions to reconcile', 'warning');
+                } else {
+                    alert('Please select transactions to reconcile');
+                }
+                return;
+            }
+            
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+            
+            // Show reconciliation modal
+            const modal = new bootstrap.Modal(document.getElementById('reconciliationModal'));
+            modal.show();
+            
+            // Store selected transaction IDs for reconciliation
+            window.selectedTransactionIds = selectedIds;
+        }
+        
+        // Perform reconciliation
+        async function performReconciliation() {
+            const selectedIds = window.selectedTransactionIds || [];
+            const isBankInitiated = document.getElementById('isBankInitiated').checked;
+            const reconciliationNotes = document.getElementById('reconciliationNotes').value;
+            
+            if (selectedIds.length === 0) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('No transactions selected for reconciliation', 'warning');
+                } else {
+                    alert('No transactions selected for reconciliation');
+                }
+                return;
+            }
+            
+            try {
+                const reconciliationData = {
+                    transaction_ids: selectedIds,
+                    is_bank_initiated: isBankInitiated,
+                    notes: reconciliationNotes
+                };
+                
+                const response = await apiFetch(`${BANKING_ENDPOINT}/transactions/bulk-reconcile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reconciliationData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to reconcile transactions');
+                }
+                
+                const result = await response.json();
+                
+                if (window.modernUI) {
+                    window.modernUI.showNotification(`Successfully reconciled ${result.reconciled_count} transactions`, 'success');
+                } else {
+                    alert(`Successfully reconciled ${result.reconciled_count} transactions`);
+                }
+                
+                // Close modal and reload data
+                bootstrap.Modal.getInstance(document.getElementById('reconciliationModal')).hide();
+                await fetchBankTransactions();
+                
+            } catch (error) {
+                console.error('Error reconciling transactions:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to reconcile transactions: ' + error.message, 'error');
+                } else {
+                    alert('Error reconciling transactions: ' + error.message);
+                }
+            }
+        }
+
+        // Export transactions
+        function exportTransactions() {
+            // Get selected transactions or all if none selected
+            const selectedCheckboxes = document.querySelectorAll('#transactionsTable input[type="checkbox"]:checked');
+            let transactionsToExport = bankTransactions;
+            
+            if (selectedCheckboxes.length > 0) {
+                const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+                transactionsToExport = bankTransactions.filter(t => selectedIds.includes(t.id));
+            }
+            
+            if (transactionsToExport.length === 0) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('No transactions to export', 'warning');
+                } else {
+                    alert('No transactions to export');
+                }
+                return;
+            }
+            
+            // Create CSV content
+            const headers = ['Date', 'Reference', 'Description', 'Type', 'Amount', 'VAT Amount', 'Status'];
+            const csvContent = [
+                headers.join(','),
+                ...transactionsToExport.map(transaction => [
+                    transaction.date,
+                    transaction.reference || '',
+                    transaction.description || '',
+                    transaction.transactionType,
+                    transaction.amount,
+                    transaction.vatAmount,
+                    transaction.reconciled ? 'Reconciled' : 'Pending'
+                ].join(','))
+            ].join('\n');
+
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bank_transactions_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            if (window.modernUI) {
+                window.modernUI.showNotification(`Exported ${transactionsToExport.length} transactions successfully`, 'success');
+            }
+        }
+
+        // Add event listeners
+        document.getElementById('accountFilter').addEventListener('change', filterTransactions);
+        document.getElementById('typeFilter').addEventListener('change', filterTransactions);
+        document.getElementById('statusFilter').addEventListener('change', filterTransactions);
+        document.getElementById('fromDateFilter').addEventListener('change', filterTransactions);
+        document.getElementById('toDateFilter').addEventListener('change', filterTransactions);
+        document.getElementById('searchFilter').addEventListener('input', searchTransactions);
+        
+        // Add save transaction button event listener
+        document.getElementById('saveTransactionBtn').addEventListener('click', createTransaction);
+        
+        // Add select all functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('#transactionsTable input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        // Initialize data loading
+        async function initializeData() {
+            try {
+                await loadSettings();
+                await Promise.all([
+                    fetchBankTransactions(),
+                    fetchBankAccounts(),
+                    loadReconciliationSummary()
+                ]);
+            } catch (error) {
+                console.error('Error initializing data:', error);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeData();
+        });
+    </script>
+    
+    <!-- Include modern UI for navbar -->
+    
+    <script>
+        // Initialize navbar
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof createNavbar === 'function') {
+                createNavbar('bank-transactions');
+            }
+        });
+    </script>
+</body>
+</html>

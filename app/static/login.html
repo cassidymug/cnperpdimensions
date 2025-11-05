@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNPERP - Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background: #f5f7fa; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .login-card { max-width:420px; width:100%; background:#fff; padding:2rem 2.25rem; border-radius:1rem; box-shadow:0 10px 25px -5px rgba(0,0,0,.08),0 8px 10px -6px rgba(0,0,0,.04);}    
+    .brand { font-weight:600; font-size:1.25rem; display:flex; align-items:center; gap:.5rem; }
+    .brand i { font-size:1.4rem; color:#0d6efd; }
+    .form-control { border-radius:.75rem; }
+    .btn-primary { border-radius:.75rem; font-weight:500; }
+    .role-badge { font-size:.75rem; }
+    .spinner-border { width:1.2rem; height:1.2rem; }
+    .fade-enter { opacity:0; transform: translateY(8px); animation:fadeIn .4s ease forwards; }
+    @keyframes fadeIn { to { opacity:1; transform:none; } }
+  </style>
+  <!-- No navbar on login page -->
+</head>
+<body>
+  <!-- Navbar intentionally omitted on login page -->
+  <div class="login-card fade-enter">
+    <div class="brand mb-3"><i class="bi bi-building"></i> CNPERP ERP</div>
+    <h5 class="mb-4">Sign in to your account</h5>
+    <div id="alertContainer"></div>
+    <form id="loginForm" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <!-- Dummy hidden inputs to reduce browser autofill of real credentials -->
+      <input type="text" style="display:none" aria-hidden="true" />
+      <input type="password" style="display:none" aria-hidden="true" />
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-control" name="username" id="usernameField" required autofocus autocomplete="off" autocapitalize="none" />
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Password</label>
+        <div class="input-group">
+          <input type="password" class="form-control" name="password" id="passwordField" required autocomplete="new-password" />
+          <button class="btn btn-outline-secondary" type="button" id="togglePw"><i class="bi bi-eye"></i></button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Branch</label>
+        <select class="form-select" name="branch_code" id="branchSelect">
+          <option value="" disabled selected>Loading branches...</option>
+        </select>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="1" id="rememberMe" />
+          <label class="form-check-label" for="rememberMe">Remember me</label>
+        </div>
+        <a href="#" class="small text-decoration-none disabled" tabindex="-1" aria-disabled="true">Forgot password?</a>
+      </div>
+      <button class="btn btn-primary w-100 mb-3" type="submit" id="loginBtn">
+        <span class="btn-text">Sign In</span>
+        <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+      </button>
+      <p class="text-center text-muted small mb-0">© <span id="year"></span> CNP Solutions</p>
+    </form>
+  </div>
+  <script src="/static/js/auth-bootstrap.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    // Clear any residual autofilled values for security
+    window.addEventListener('DOMContentLoaded', ()=>{
+      const u = document.getElementById('usernameField');
+      const p = document.getElementById('passwordField');
+      if (u) u.value = '';
+      if (p) p.value = '';
+      // If page was restored from bfcache after logout, force reset
+      window.addEventListener('pageshow', (e)=>{ if(e.persisted){ document.getElementById('loginForm').reset(); if(u) u.value=''; if(p) p.value=''; } });
+    });
+    const pwField = document.getElementById('passwordField');
+    document.getElementById('togglePw').addEventListener('click', ()=>{
+      const is = pwField.type === 'password';
+      pwField.type = is ? 'text' : 'password';
+      event.currentTarget.querySelector('i').className = is ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+
+    // Redirect if already logged in
+    if (auth.isAuthenticated()) {
+      window.location.replace('/static/index.html');
+    }
+
+  // Removed logout reason banner display to simplify UX after logout
+  try { localStorage.removeItem('logout_reason'); } catch {}
+
+    // Populate branch list
+    async function loadBranches(retry=0){
+      const sel = document.getElementById('branchSelect');
+      const maxRetries = 3;
+      const url = '/api/v1/auth/login-branches';
+      try {
+        const t0 = performance.now();
+        const res = await fetch(url + (retry? ('?r='+retry):''), { cache: 'no-store' });
+        const dt = (performance.now()-t0).toFixed(0);
+        if(!res.ok) throw new Error('HTTP '+res.status+' after '+dt+'ms');
+        let data = await res.json();
+        if (!Array.isArray(data)) {
+          console.warn('login: non-array branch response', data);
+          // If wrapped object {data:...}
+            if (Array.isArray(data.data)) data = data.data; else throw new Error('Unexpected response shape');
+        }
+        sel.innerHTML='';
+        if (data.length===0){
+          sel.innerHTML='<option value="" disabled>No active branches found</option>';
+          return;
+        }
+        data.forEach(b=>{
+          const opt=document.createElement('option');
+          opt.value=b.code||b.id;
+          opt.textContent=`${b.code||'BR-'+b.id.substring(0,6)}${b.name?' - '+b.name:''}`;
+          sel.appendChild(opt);
+        });
+        if (data.length>1){
+          sel.insertAdjacentHTML('afterbegin','<option value="" selected>Select branch (optional)</option>');
+        }
+        console.debug('login: branches loaded', {count:data.length, ms:dt});
+      } catch(err){
+        console.error('login: branch load failed attempt', retry, err);
+        if (retry < maxRetries){
+          sel.innerHTML = `<option value="" disabled>Retrying... (${retry+1}/${maxRetries})</option>`;
+          setTimeout(()=>loadBranches(retry+1), 400 * (retry+1));
+        } else {
+          sel.innerHTML = '<option value="" disabled>Error loading branches</option>';
+          const diag = document.createElement('div');
+          diag.className='text-danger small mt-2';
+          diag.textContent='Branch list failed. Check /api/v1/auth/login-branches or run health_check.';
+          sel.parentElement.appendChild(diag);
+        }
+      }
+    }
+    loadBranches();
+
+    document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const form = e.target;
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.querySelector('.spinner-border').classList.remove('d-none');
+      try {
+        const formData = new FormData(form);
+        const username = formData.get('username');
+        const password = formData.get('password');
+        const branch_code = formData.get('branch_code');
+        const data = await auth.login(username, password, branch_code);
+        if (data) {
+          window.location.href = '/static/index.html';
+        }
+      } catch (err) {
+        showAlert(err.message || 'Login failed', 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.querySelector('.spinner-border').classList.add('d-none');
+      }
+    });
+
+    function showAlert(msg, type='danger') {
+      const c = document.getElementById('alertContainer');
+      c.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+    }
+  </script>
+</body>
+</html>

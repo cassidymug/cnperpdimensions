@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CNPERP ERP System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --accent-color: #198754;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 12px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            border: none;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .settings-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        .system-health {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .health-good { background-color: #d4edda; color: #155724; }
+        .health-warning { background-color: #fff3cd; color: #856404; }
+        .health-error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-0">
+                <div class="p-3">
+                    <h4 class="text-white mb-4">
+                        <i class="bi bi-gear-fill me-2"></i>
+                        Admin Panel
+                    </h4>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            Dashboard
+                        </a>
+                        <a class="nav-link" href="#settings" data-bs-toggle="tab">
+                            <i class="bi bi-gear me-2"></i>
+                            Application Settings
+                        </a>
+                        <a class="nav-link" href="#users" data-bs-toggle="tab">
+                            <i class="bi bi-people me-2"></i>
+                            User Management
+                        </a>
+                        <a class="nav-link" href="#theme" data-bs-toggle="tab">
+                            <i class="bi bi-palette me-2"></i>
+                            Theme Settings
+                        </a>
+                        <a class="nav-link" href="#roles" data-bs-toggle="tab">
+                            <i class="bi bi-shield-lock me-2"></i>
+                            Roles & Permissions
+                        </a>
+                        <a class="nav-link" href="#system" data-bs-toggle="tab">
+                            <i class="bi bi-cpu me-2"></i>
+                            System Info
+                        </a>
+                        <a class="nav-link" href="/static/backup-management.html">
+                            <i class="bi bi-cloud-arrow-up me-2"></i>
+                            Backup Management
+                        </a>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 p-4">
+                <div class="tab-content">
+                    <!-- Dashboard Tab -->
+                    <div class="tab-pane fade show active" id="dashboard">
+                        <h2 class="mb-4">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            Admin Dashboard
+                        </h2>
+                        
+                        <!-- Statistics Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mt-2">Total Users</h5>
+                                        <h3 class="text-primary" id="totalUsers">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <i class="bi bi-box text-success" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mt-2">Total Products</h5>
+                                        <h3 class="text-success" id="totalProducts">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <i class="bi bi-cart text-warning" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mt-2">Total Sales</h5>
+                                        <h3 class="text-warning" id="totalSales">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <i class="bi bi-person text-info" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mt-2">Total Customers</h5>
+                                        <h3 class="text-info" id="totalCustomers">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- System Health -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-heart-pulse me-2"></i>
+                                            System Health
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="system-health health-good">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            System Status: Healthy
+                                        </div>
+                                        <div class="system-health health-good">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            Database: Connected
+                                        </div>
+                                        <div class="system-health health-good">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            API: Operational
+                                        </div>
+                                        <div class="system-health health-warning">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            Memory Usage: 75%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-bell me-2"></i>
+                                            Recent Activity
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>New user registered</span>
+                                            <small class="text-muted">2 minutes ago</small>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Sale completed</span>
+                                            <small class="text-muted">5 minutes ago</small>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Product updated</span>
+                                            <small class="text-muted">10 minutes ago</small>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Backup completed</span>
+                                            <small class="text-muted">1 hour ago</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Settings Tab -->
+                    <div class="tab-pane fade" id="settings">
+                        <h2 class="mb-4">
+                            <i class="bi bi-gear me-2"></i>
+                            Application Settings
+                        </h2>
+                        
+                        <form id="settingsForm">
+                            <!-- Company Information -->
+                            <div class="settings-section">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-building me-2"></i>
+                                    Company Information
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Application Name</label>
+                                            <input type="text" class="form-control" name="app_name" value="CNPERP ERP System">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Company Name</label>
+                                            <input type="text" class="form-control" name="company_name" value="Your Company Name">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" name="email" placeholder="Enter business email">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Phone</label>
+                                            <input type="text" class="form-control" name="phone" placeholder="Enter business phone">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Address</label>
+                                    <textarea class="form-control" name="address" rows="2" placeholder="Enter business address"></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Financial Settings -->
+                            <div class="settings-section">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-currency-dollar me-2"></i>
+                                    Financial Settings
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Currency</label>
+                                            <select class="form-select" name="currency">
+                                                <option value="BWP">Botswana Pula (BWP)</option>
+                                                <option value="USD">US Dollar (USD)</option>
+                                                <option value="EUR">Euro (EUR)</option>
+                                                <option value="GBP">British Pound (GBP)</option>
+                                                <option value="ZAR">South African Rand (ZAR)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">VAT Rate (%)</label>
+                                            <input type="number" class="form-control" name="vat_rate" value="14.0" step="0.1" min="0" max="100">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Country</label>
+                                            <select class="form-select" name="country">
+                                                <option value="BW">Botswana</option>
+                                                <option value="ZA">South Africa</option>
+                                                <option value="NA">Namibia</option>
+                                                <option value="ZM">Zambia</option>
+                                                <option value="ZW">Zimbabwe</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Regional Settings -->
+                            <div class="settings-section">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-globe me-2"></i>
+                                    Regional Settings
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Locale</label>
+                                            <select class="form-select" name="locale">
+                                                <option value="en">English</option>
+                                                <option value="af">Afrikaans</option>
+                                                <option value="zu">Zulu</option>
+                                                <option value="xh">Xhosa</option>
+                                                <option value="st">Sotho</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Timezone</label>
+                                            <select class="form-select" name="timezone">
+                                                <option value="Africa/Gaborone">Africa/Gaborone</option>
+                                                <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+                                                <option value="Africa/Windhoek">Africa/Windhoek</option>
+                                                <option value="Africa/Lusaka">Africa/Lusaka</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Measurement System</label>
+                                            <select class="form-select" name="measurement_system">
+                                                <option value="metric">Metric</option>
+                                                <option value="imperial">Imperial</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- System Settings -->
+                            <div class="settings-section">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-cpu me-2"></i>
+                                    System Settings
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="debug_mode" id="debugMode">
+                                                <label class="form-check-label" for="debugMode">
+                                                    Debug Mode
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="maintenance_mode" id="maintenanceMode">
+                                                <label class="form-check-label" for="maintenanceMode">
+                                                    Maintenance Mode
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Session Timeout (minutes)</label>
+                                            <input type="number" class="form-control" name="session_timeout" value="30" min="1" max="1440">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">User Limit</label>
+                                            <input type="number" class="form-control" name="user_limit" value="10" min="1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>
+                                    Save Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Users Tab -->
+                    <div class="tab-pane fade" id="users">
+                        <h2 class="mb-4">
+                            <i class="bi bi-people me-2"></i>
+                            User Management
+                        </h2>
+                        
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Users</h5>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                    <i class="bi bi-plus me-2"></i>
+                                    Add User
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Role</th>
+                                                <th>Status</th>
+                                                <th>Created</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="usersTableBody">
+                                            <!-- Users will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Theme Tab -->
+                    <div class="tab-pane fade" id="theme">
+                        <h2 class="mb-4">
+                            <i class="bi bi-palette me-2"></i>
+                            Theme Settings
+                        </h2>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Theme Configuration</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Theme Mode</label>
+                                                    <select class="form-select" id="themeMode">
+                                                        <option value="light">Light</option>
+                                                        <option value="dark">Dark</option>
+                                                        <option value="auto">Auto</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="darkModeEnabled">
+                                                        <label class="form-check-label" for="darkModeEnabled">
+                                                            Enable Dark Mode
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Primary Color</label>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="color-preview" id="primaryColorPreview" style="background-color: #0d6efd;"></div>
+                                                        <input type="color" class="form-control form-control-color" id="primaryColor" value="#0d6efd">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Secondary Color</label>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="color-preview" id="secondaryColorPreview" style="background-color: #6c757d;"></div>
+                                                        <input type="color" class="form-control form-control-color" id="secondaryColor" value="#6c757d">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Accent Color</label>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="color-preview" id="accentColorPreview" style="background-color: #198754;"></div>
+                                                        <input type="color" class="form-control form-control-color" id="accentColor" value="#198754">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="text-end">
+                                            <button class="btn btn-primary" onclick="saveThemeSettings()">
+                                                <i class="bi bi-save me-2"></i>
+                                                Save Theme
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Color Schemes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <button class="btn btn-outline-primary w-100 mb-2" onclick="applyColorScheme('default')">
+                                                Default
+                                            </button>
+                                            <button class="btn btn-outline-info w-100 mb-2" onclick="applyColorScheme('ocean')">
+                                                Ocean
+                                            </button>
+                                            <button class="btn btn-outline-success w-100 mb-2" onclick="applyColorScheme('forest')">
+                                                Forest
+                                            </button>
+                                            <button class="btn btn-outline-warning w-100 mb-2" onclick="applyColorScheme('sunset')">
+                                                Sunset
+                                            </button>
+                                            <button class="btn btn-outline-secondary w-100 mb-2" onclick="applyColorScheme('purple')">
+                                                Purple
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Roles Tab -->
+                    <div class="tab-pane fade" id="roles">
+                        <h2 class="mb-4">
+                            <i class="bi bi-shield-lock me-2"></i>
+                            Roles & Permissions
+                        </h2>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Permission Matrix</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Permission</th>
+                                                <th>Super Admin</th>
+                                                <th>Admin</th>
+                                                <th>Manager</th>
+                                                <th>Staff</th>
+                                                <th>Viewer</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Edit Product</td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Manage Users</td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                            </tr>
+                                            <tr>
+                                                <td>View Reports</td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Manage Settings</td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-check-circle text-success"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                                <td><i class="bi bi-x-circle text-danger"></i></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- System Tab -->
+                    <div class="tab-pane fade" id="system">
+                        <h2 class="mb-4">
+                            <i class="bi bi-cpu me-2"></i>
+                            System Information
+                        </h2>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">System Details</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Application Name:</span>
+                                            <span id="appName">CNPERP ERP System</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Version:</span>
+                                            <span>1.0.0</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Environment:</span>
+                                            <span>Production</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Uptime:</span>
+                                            <span id="uptime">24 hours</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Memory Usage:</span>
+                                            <span id="memoryUsage">75%</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Disk Usage:</span>
+                                            <span id="diskUsage">45%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">System Actions</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <button class="btn btn-outline-primary w-100 mb-2" onclick="createBackup()">
+                                            <i class="bi bi-download me-2"></i>
+                                            Create Backup
+                                        </button>
+                                        <button class="btn btn-outline-warning w-100 mb-2" onclick="toggleMaintenanceMode()">
+                                            <i class="bi bi-tools me-2"></i>
+                                            Toggle Maintenance Mode
+                                        </button>
+                                        <button class="btn btn-outline-info w-100 mb-2" onclick="viewSystemLogs()">
+                                            <i class="bi bi-file-text me-2"></i>
+                                            View System Logs
+                                        </button>
+                                        <button class="btn btn-outline-success w-100 mb-2" onclick="testEmailSettings()">
+                                            <i class="bi bi-envelope me-2"></i>
+                                            Test Email Settings
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="full_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" name="role" required>
+                                <option value="staff">Staff</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                                <option value="super_admin">Super Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addUser()">Add User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Load dashboard data
+        function loadDashboardData() {
+            // Simulate API call
+            document.getElementById('totalUsers').textContent = '25';
+            document.getElementById('totalProducts').textContent = '150';
+            document.getElementById('totalSales').textContent = '1,234';
+            document.getElementById('totalCustomers').textContent = '89';
+        }
+        
+        // Save settings
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Simulate API call
+            alert('Settings saved successfully!');
+        });
+        
+        // Theme color preview
+        document.getElementById('primaryColor').addEventListener('input', function(e) {
+            document.getElementById('primaryColorPreview').style.backgroundColor = e.target.value;
+        });
+        
+        document.getElementById('secondaryColor').addEventListener('input', function(e) {
+            document.getElementById('secondaryColorPreview').style.backgroundColor = e.target.value;
+        });
+        
+        document.getElementById('accentColor').addEventListener('input', function(e) {
+            document.getElementById('accentColorPreview').style.backgroundColor = e.target.value;
+        });
+        
+        // Save theme settings
+        function saveThemeSettings() {
+            alert('Theme settings saved successfully!');
+        }
+        
+        // Apply color scheme
+        function applyColorScheme(scheme) {
+            const schemes = {
+                default: { primary: '#0d6efd', secondary: '#6c757d', accent: '#198754' },
+                ocean: { primary: '#0dcaf0', secondary: '#6c757d', accent: '#20c997' },
+                forest: { primary: '#198754', secondary: '#6c757d', accent: '#ffc107' },
+                sunset: { primary: '#fd7e14', secondary: '#6c757d', accent: '#dc3545' },
+                purple: { primary: '#6f42c1', secondary: '#6c757d', accent: '#e83e8c' }
+            };
+            
+            const colors = schemes[scheme];
+            document.getElementById('primaryColor').value = colors.primary;
+            document.getElementById('secondaryColor').value = colors.secondary;
+            document.getElementById('accentColor').value = colors.accent;
+            
+            document.getElementById('primaryColorPreview').style.backgroundColor = colors.primary;
+            document.getElementById('secondaryColorPreview').style.backgroundColor = colors.secondary;
+            document.getElementById('accentColorPreview').style.backgroundColor = colors.accent;
+        }
+        
+        // System actions
+        function createBackup() {
+            alert('Backup created successfully!');
+        }
+        
+        function toggleMaintenanceMode() {
+            const enabled = confirm('Toggle maintenance mode?');
+            if (enabled) {
+                alert('Maintenance mode enabled');
+            }
+        }
+        
+        function viewSystemLogs() {
+            alert('System logs would be displayed here');
+        }
+        
+        function testEmailSettings() {
+            // Get email settings from form
+            const email = document.querySelector('input[name="email"]').value;
+            const smtpHost = document.querySelector('input[name="smtp_host"]')?.value;
+            const smtpPort = document.querySelector('input[name="smtp_port"]')?.value;
+            
+            if (!email) {
+                alert('Please configure email settings first');
+                return;
+            }
+            
+            // Send test email to backend
+            fetch('/api/v1/admin/test-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    smtp_host: smtpHost,
+                    smtp_port: smtpPort
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Test email sent successfully!');
+                } else {
+                    alert('Failed to send test email: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error sending test email:', error);
+                alert('Error sending test email. Please check your settings.');
+            });
+        }
+        
+        // Add user
+        function addUser() {
+            const form = document.getElementById('addUserForm');
+            const formData = new FormData(form);
+            
+            // Simulate API call
+            alert('User added successfully!');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+            modal.hide();
+            
+            // Reset form
+            form.reset();
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+    </script>
+    
+    <!-- Include modern UI for navbar -->
+    
+    <script>
+        // Initialize navbar
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof createNavbar === 'function') {
+                createNavbar('admin-panel');
+            }
+        });
+    </script>
+</body>
+</html> 

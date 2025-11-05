@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory Allocation - CNPERP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Custom Styles for better tab visibility -->
+  <style>
+    .nav-tabs .nav-link {
+      color: #0d6efd !important;
+      font-weight: 500;
+    }
+
+    .nav-tabs .nav-link:hover {
+      color: #0a58ca !important;
+      border-color: #dee2e6 #dee2e6 #fff;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: #495057 !important;
+      background-color: #fff;
+      border-color: #dee2e6 #dee2e6 #fff;
+    }
+
+    .nav-tabs .nav-link i {
+      margin-right: 0.5rem;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- Include Standardized Navbar -->
+  <div id="navbar-container"></div>
+  <!-- Spacer to prevent content from being hidden under fixed navbar -->
+  <div style="height: 70px;"></div>
+
+  <!-- Auth and Navbar Scripts -->
+  <script src="/static/js/auth-bootstrap.js"></script>
+  <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+
+  <script src="js/branch-switcher.js"></script>
+  <script src="/static/js/ui-guard.js"></script>
+  <!-- End Navbar Scripts -->
+
+
+  <div class="container-fluid mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0"><i class="bi bi-box-seam me-2"></i>Inventory Allocation</h3>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" id="btnReceive" data-bs-toggle="modal" data-bs-target="#receiveModal"><i
+            class="bi bi-download me-1"></i> Receive at HQ</button>
+        <button class="btn btn-success" id="btnAllocate" data-bs-toggle="modal" data-bs-target="#allocateModal"><i
+            class="bi bi-arrow-left-right me-1"></i> Allocate to Branch</button>
+        <button class="btn btn-outline-secondary" id="btnRefresh"><i class="bi bi-arrow-clockwise me-1"></i>
+          Refresh</button>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="allocTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#hq" type="button" role="tab">
+          <i class="bi bi-building"></i> HQ Inventory
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#branches" type="button" role="tab">
+          <i class="bi bi-diagram-3"></i> Branch Inventory
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#requests" type="button" role="tab">
+          <i class="bi bi-envelope"></i> Allocation Requests
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#allocations" type="button" role="tab">
+          <i class="bi bi-list-check"></i> Allocations
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#movements" type="button" role="tab">
+          <i class="bi bi-arrows-move"></i> Movements
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="hq" role="tabpanel">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Headquarters Inventory</strong>
+            <div class="d-flex gap-2 align-items-center">
+              <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#receiveModal">
+                <i class="bi bi-download me-1"></i> Receive Inventory
+              </button>
+              <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#allocateModal">
+                <i class="bi bi-arrow-left-right me-1"></i> Allocate to Branch
+              </button>
+              <div class="input-group" style="max-width: 360px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchHQ" class="form-control" placeholder="Search by name or SKU" />
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle" id="hqTable">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th class="text-end">Available</th>
+                    <th class="text-end">Allocated</th>
+                    <th class="text-end">Avg Cost</th>
+                    <th class="text-end">Total Cost</th>
+                    <th>Last Received</th>
+                    <th>Last Allocated</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="branches" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-header"><strong>Branch Filter</strong></div>
+              <div class="card-body">
+                <label class="form-label">Branch</label>
+                <select class="form-select" id="branchSelect"></select>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Branch Inventory</strong>
+                <div id="branchSummary" class="text-muted small">Select a branch</div>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped align-middle" id="branchInvTable">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th class="text-end">Available</th>
+                        <th class="text-end">Reserved</th>
+                        <th class="text-end">Cost</th>
+                        <th class="text-end">Value</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <strong>Allocations for Branch</strong>
+                  <button class="btn btn-outline-secondary btn-sm" id="btnBranchAllocRefresh"
+                    title="Refresh branch allocations"><i class="bi bi-arrow-clockwise"></i></button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle" id="branchAllocTable">
+                    <thead>
+                      <tr>
+                        <th>Reference</th>
+                        <th>Product</th>
+                        <th class="text-end">Allocated</th>
+                        <th class="text-end">Received</th>
+                        <th class="text-end">Available</th>
+                        <th>Status</th>
+                        <th>Tracking</th>
+                        <th>Expected</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="requests" role="tabpanel">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Pending Allocation Requests</strong>
+            <button class="btn btn-outline-primary btn-sm" id="btnNewRequest"><i class="bi bi-plus-circle me-1"></i> New
+              Request</button>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle" id="requestsTable">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Branch</th>
+                    <th>Product</th>
+                    <th class="text-end">Qty</th>
+                    <th>Priority</th>
+                    <th>Requested</th>
+                    <th>Required By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="allocations" role="tabpanel">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Allocations</strong>
+            <div class="d-flex gap-2">
+              <select id="allocStatusFilter" class="form-select form-select-sm" style="width:auto">
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="shipped">Shipped</option>
+                <option value="received">Received</option>
+              </select>
+              <button class="btn btn-outline-secondary btn-sm" id="btnAllocRefresh"><i
+                  class="bi bi-arrow-clockwise"></i></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle" id="allocationsTable">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Product</th>
+                    <th>Branch</th>
+                    <th class="text-end">Allocated</th>
+                    <th class="text-end">Received</th>
+                    <th class="text-end">Available</th>
+                    <th>Status</th>
+                    <th>Tracking</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="movements" role="tabpanel">
+        <div class="alert alert-info mb-0">Movement report coming soon.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receive at HQ Modal -->
+  <div class="modal fade" id="receiveModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-download me-2"></i>Receive Inventory at HQ</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="receiveForm">
+            <div class="mb-3">
+              <label class="form-label">Product</label>
+              <select class="form-select" id="receiveProduct" required></select>
+            </div>
+            <div class="row g-3">
+              <div class="col">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="receiveQty" min="1" required />
+              </div>
+              <div class="col">
+                <label class="form-label">Cost / Unit</label>
+                <input type="number" class="form-control" id="receiveCost" min="0" step="0.01" required />
+              </div>
+            </div>
+            <div class="mt-3">
+              <label class="form-label">Supplier Reference (optional)</label>
+              <input type="text" class="form-control" id="receiveRef" />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" id="receiveSubmit">Receive</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Allocate to Branch Modal -->
+  <div class="modal fade" id="allocateModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-arrow-left-right me-2"></i>Allocate to Branch</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="allocateForm">
+            <div class="mb-3">
+              <label class="form-label">Product</label>
+              <select class="form-select" id="allocProduct" required></select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Branch</label>
+              <select class="form-select" id="allocBranch" required></select>
+            </div>
+            <div class="row g-3">
+              <div class="col">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="allocQty" min="1" required />
+              </div>
+              <div class="col">
+                <label class="form-label">Expected Delivery</label>
+                <input type="date" class="form-control" id="allocExpected" />
+              </div>
+            </div>
+            <div class="mt-3">
+              <label class="form-label">Transport Method</label>
+              <input type="text" class="form-control" id="allocTransport" placeholder="truck, courier, pickup" />
+            </div>
+            <div class="mt-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" id="allocNotes" rows="2"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-success" id="allocSubmit">Allocate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ship Allocation Modal -->
+  <div class="modal fade" id="shipModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-truck me-2"></i>Ship Allocation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="shipAllocId" />
+          <div class="mb-3">
+            <label class="form-label">Tracking Number</label>
+            <input type="text" class="form-control" id="shipTracking" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Quantity to ship (blank = full)</label>
+            <input type="number" class="form-control" id="shipQty" min="1" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" id="shipSubmit">Ship</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receive Allocation Modal -->
+  <div class="modal fade" id="receiveAllocModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-inboxes me-2"></i>Receive Allocation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="receiveAllocId" />
+          <div class="mb-3">
+            <label class="form-label">Quantity received (blank = full)</label>
+            <input type="number" class="form-control" id="receiveAllocQty" min="1" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Condition notes</label>
+            <textarea class="form-control" id="receiveAllocNotes" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-success" id="receiveAllocSubmit">Mark Received</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API = {
+      HQ_LIST: '/api/v1/inventory-allocation/headquarters/inventory',
+      HQ_RECEIVE: '/api/v1/inventory-allocation/headquarters/receive-inventory',
+      BRANCH_LIST: (branchId) => `/api/v1/inventory-allocation/branch/${branchId}/inventory`,
+      BRANCH_SUMMARY: (branchId) => `/api/v1/inventory-allocation/branch/${branchId}/inventory/summary`,
+      REQUESTS_PENDING: '/api/v1/inventory-allocation/allocation-requests/pending',
+      BRANCHES_PUBLIC: '/api/v1/branches/public',
+      ALLOCATE: '/api/v1/inventory-allocation/allocate-to-branch',
+      PRODUCTS: '/api/v1/inventory/products',
+      ALLOCATIONS: '/api/v1/inventory-allocation/allocations',
+      SHIP: '/api/v1/inventory-allocation/ship-allocation',
+      RECEIVE: '/api/v1/inventory-allocation/receive-allocation'
+    };
+
+    // Utils
+    function authHeaders(extra = {}) {
+      const base = (window.auth && typeof auth.authHeader === 'function') ? auth.authHeader() : {};
+      return { ...base, ...extra };
+    }
+    function formatMoney(n) { try { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'BWP' }).format(n || 0); } catch { return (n || 0).toFixed(2) } }
+    function fmtDate(d) { return d ? new Date(d).toLocaleDateString() : '-' }
+    function fmtDateTime(d) { return d ? new Date(d).toLocaleString() : '-' }
+    function badgePriority(p) {
+      const map = { urgent: 'danger', high: 'warning', normal: 'secondary', low: 'info' };
+      const cls = map[(p || 'normal').toLowerCase()] || 'secondary';
+      return `<span class="badge bg-${cls}">${p}</span>`;
+    }
+    function badgeStatus(s) {
+      const map = { pending: 'secondary', shipped: 'info', received: 'success' };
+      const cls = map[(s || '').toLowerCase()] || 'secondary';
+      return `<span class="badge bg-${cls}">${(s || '').toUpperCase()}</span>`;
+    }
+
+    // Core loaders
+    async function loadHQInventory() {
+      const tbody = document.querySelector('#hqTable tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">Loading...</td></tr>';
+      try {
+        const r = await fetch(API.HQ_LIST, { headers: authHeaders() });
+        const rows = await r.json();
+        tbody.innerHTML = rows.map(item => `
+          <tr>
+            <td>${item.product_name}</td>
+            <td>${item.sku ?? ''}</td>
+            <td class="text-end">${item.available_for_allocation}</td>
+            <td class="text-end">${item.total_allocated}</td>
+            <td class="text-end">${formatMoney(item.average_cost_per_unit)}</td>
+            <td class="text-end">${formatMoney(item.total_cost_value)}</td>
+            <td>${fmtDate(item.last_received_date)}</td>
+            <td>${fmtDate(item.last_allocated_date)}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-3">Failed to load HQ inventory</td></tr>';
+      }
+    }
+
+    async function loadBranches() {
+      try {
+        const r = await fetch(API.BRANCHES_PUBLIC, { headers: authHeaders() });
+        const data = await r.json();
+        const branchSel = document.getElementById('branchSelect');
+        if (branchSel) branchSel.innerHTML = '<option value="">Select a branch</option>' + data.map(b => `<option value="${b.id}">${b.code} - ${b.name}</option>`).join('');
+        const allocBranch = document.getElementById('allocBranch');
+        if (allocBranch) allocBranch.innerHTML = '<option value="">Select a branch</option>' + data.map(b => `<option value="${b.id}">${b.code} - ${b.name}</option>`).join('');
+      } catch { }
+    }
+
+    async function loadProductsInto(selectIds = []) {
+      try {
+        const r = await fetch(API.PRODUCTS, { headers: authHeaders() });
+        const products = await r.json();
+        selectIds.forEach(id => {
+          const sel = document.getElementById(id);
+          if (!sel) return;
+          sel.innerHTML = '<option value="">Select a product</option>' + products.map(p => `<option value="${p.id}">${p.sku ?? ''} ${p.name}</option>`).join('');
+        });
+      } catch { }
+    }
+
+    async function loadBranchInventory(branchId) {
+      const tbody = document.querySelector('#branchInvTable tbody');
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Loading...</td></tr>';
+      try {
+        const r = await fetch(API.BRANCH_LIST(branchId), { headers: authHeaders() });
+        const rows = await r.json();
+        tbody.innerHTML = rows.map(item => `
+          <tr>
+            <td>${item.product_name}</td>
+            <td>${item.sku ?? ''}</td>
+            <td class="text-end">${item.available_quantity}</td>
+            <td class="text-end">${item.reserved_quantity}</td>
+            <td class="text-end">${formatMoney(item.cost_per_unit)}</td>
+            <td class="text-end">${formatMoney(item.total_value)}</td>
+            <td>${item.is_low_stock ? '<span class="badge bg-warning text-dark">Low</span>' : '<span class="badge bg-success">OK</span>'}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-3">Failed to load branch inventory</td></tr>';
+      }
+    }
+
+    async function loadBranchSummary(branchId) {
+      try {
+        const r = await fetch(API.BRANCH_SUMMARY(branchId), { headers: authHeaders() });
+        const s = await r.json();
+        document.getElementById('branchSummary').textContent = `Products: ${s.total_products} • Value: ${formatMoney(s.total_inventory_value)} • Low: ${s.low_stock_count}`;
+      } catch { }
+    }
+
+    async function loadPendingRequests() {
+      const tbody = document.querySelector('#requestsTable tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">Loading...</td></tr>';
+      try {
+        const r = await fetch(API.REQUESTS_PENDING, { headers: authHeaders() });
+        const rows = await r.json();
+        tbody.innerHTML = rows.map(item => `
+          <tr>
+            <td>${item.request_reference}</td>
+            <td>${item.branch_name}</td>
+            <td>${item.product_name}</td>
+            <td class="text-end">${item.requested_quantity}</td>
+            <td>${badgePriority(item.priority_level)}</td>
+            <td>${fmtDateTime(item.request_date)}</td>
+            <td>${item.required_by_date ? fmtDate(item.required_by_date) : '-'}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-success" title="Approve" onclick="approveRequest('${item.request_id}', ${item.requested_quantity})"><i class="bi bi-check2"></i></button>
+              <button class="btn btn-sm btn-outline-danger" title="Reject" disabled><i class="bi bi-x"></i></button>
+            </td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-3">Failed to load requests</td></tr>';
+      }
+    }
+
+    async function approveRequest(requestId, defaultQty) {
+      const qty = parseInt(prompt('Approve quantity:', String(defaultQty)) || '0', 10);
+      if (!qty || qty <= 0) return;
+      const approved_by = 'system';
+      try {
+        const r = await fetch(`/api/v1/inventory-allocation/allocation-requests/${requestId}/approve`, {
+          method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ approved_quantity: qty, approved_by })
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({ detail: 'error' }));
+          throw new Error(err.detail || 'Approve failed');
+        }
+        await loadPendingRequests();
+        await loadHQInventory();
+        const currentBranch = document.getElementById('branchSelect').value;
+        if (currentBranch) { await loadBranchInventory(currentBranch); await loadBranchSummary(currentBranch); }
+        alert('Request approved. Allocation created/updated.');
+      } catch (e) { alert('Failed to approve: ' + e.message); }
+    }
+
+    async function loadAllocations() {
+      const tbody = document.querySelector('#allocationsTable tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">Loading...</td></tr>';
+      try {
+        const status = document.getElementById('allocStatusFilter').value;
+        const url = status ? `${API.ALLOCATIONS}?status=${encodeURIComponent(status)}` : API.ALLOCATIONS;
+        const r = await fetch(url, { headers: authHeaders() });
+        const rows = await r.json();
+        tbody.innerHTML = rows.map(a => `
+          <tr>
+            <td>${a.allocation_reference || a.allocation_id}</td>
+            <td>${a.product_name}</td>
+            <td>${a.branch_name}</td>
+            <td class="text-end">${a.allocated_quantity}</td>
+            <td class="text-end">${a.received_quantity}</td>
+            <td class="text-end">${a.available_quantity}</td>
+            <td>${badgeStatus(a.status)}</td>
+            <td>${a.tracking_number ?? '-'}</td>
+            <td>
+              ${actionButtons(a)}
+            </td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger py-3">Failed to load allocations</td></tr>';
+      }
+    }
+
+    // Load allocations for a specific branch (any status)
+    async function loadAllocationsForBranch(branchId) {
+      const tbody = document.querySelector('#branchAllocTable tbody');
+      if (!tbody || !branchId) return;
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">Loading...</td></tr>';
+      try {
+        const url = `${API.ALLOCATIONS}?branch_id=${encodeURIComponent(branchId)}`;
+        const r = await fetch(url, { headers: authHeaders() });
+        const rows = await r.json();
+        tbody.innerHTML = rows.map(a => `
+          <tr>
+            <td>${a.allocation_reference || a.allocation_id}</td>
+            <td>${a.product_name || a.product_id}</td>
+            <td class="text-end">${a.allocated_quantity ?? ''}</td>
+            <td class="text-end">${a.received_quantity ?? ''}</td>
+            <td class="text-end">${a.available_quantity ?? ''}</td>
+            <td>${badgeStatus(a.status)}</td>
+            <td>${a.tracking_number ?? '-'}</td>
+            <td>${a.expected_delivery_date ? fmtDate(a.expected_delivery_date) : '-'}</td>
+          </tr>`).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-3">Failed to load branch allocations</td></tr>';
+      }
+    }
+
+    function actionButtons(a) {
+      if (a.status === 'pending') {
+        return `<button class="btn btn-sm btn-outline-primary" onclick="openShipModal('${a.allocation_id}')"><i class=\"bi bi-truck\"></i> Ship</button>`;
+      }
+      if (a.status === 'shipped') {
+        return `<button class="btn btn-sm btn-outline-success" onclick="openReceiveModal('${a.allocation_id}')"><i class=\"bi bi-inboxes\"></i> Receive</button>`;
+      }
+      return '<span class="text-muted">—</span>';
+    }
+
+    function openShipModal(id) {
+      document.getElementById('shipAllocId').value = id;
+      document.getElementById('shipTracking').value = '';
+      document.getElementById('shipQty').value = '';
+      new bootstrap.Modal(document.getElementById('shipModal')).show();
+    }
+
+    async function submitShipAllocation() {
+      const allocation_id = document.getElementById('shipAllocId').value;
+      const tracking_number = document.getElementById('shipTracking').value || null;
+      const actual_quantity_shipped = parseInt(document.getElementById('shipQty').value || '0', 10) || null;
+      try {
+        const r = await fetch(API.SHIP, { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ allocation_id, tracking_number, actual_quantity_shipped }) });
+        if (!r.ok) throw new Error('Ship failed');
+        bootstrap.Modal.getInstance(document.getElementById('shipModal')).hide();
+        await loadAllocations();
+      } catch (e) { alert('Failed to ship: ' + e.message); }
+    }
+
+    function openReceiveModal(id) {
+      document.getElementById('receiveAllocId').value = id;
+      document.getElementById('receiveAllocQty').value = '';
+      document.getElementById('receiveAllocNotes').value = '';
+      new bootstrap.Modal(document.getElementById('receiveAllocModal')).show();
+    }
+
+    async function submitReceiveAllocation() {
+      const allocation_id = document.getElementById('receiveAllocId').value;
+      const actual_quantity_received = parseInt(document.getElementById('receiveAllocQty').value || '0', 10) || null;
+      const condition_notes = document.getElementById('receiveAllocNotes').value || null;
+      try {
+        const r = await fetch(API.RECEIVE, { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ allocation_id, actual_quantity_received, condition_notes }) });
+        if (!r.ok) throw new Error('Receive failed');
+        bootstrap.Modal.getInstance(document.getElementById('receiveAllocModal')).hide();
+        await loadAllocations();
+        const currentBranch = document.getElementById('branchSelect').value;
+        if (currentBranch) { await loadBranchInventory(currentBranch); await loadBranchSummary(currentBranch); }
+      } catch (e) { alert('Failed to receive: ' + e.message); }
+    }
+
+    async function receiveAtHQ() {
+      const product_id = document.getElementById('receiveProduct').value;
+      const quantity = parseInt(document.getElementById('receiveQty').value || '0', 10);
+      const cost_per_unit = parseFloat(document.getElementById('receiveCost').value || '0');
+      const supplier_reference = document.getElementById('receiveRef').value || null;
+      if (!product_id || quantity <= 0 || cost_per_unit < 0) return;
+      try {
+        const r = await fetch(API.HQ_RECEIVE, { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ product_id, quantity, cost_per_unit, supplier_reference }) });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({ detail: 'error' }));
+          throw new Error(err.detail || 'Receive failed');
+        }
+        bootstrap.Modal.getInstance(document.getElementById('receiveModal')).hide();
+        await loadHQInventory();
+      } catch (e) { alert('Failed to receive: ' + e.message); }
+    }
+
+    async function allocateToBranch() {
+      const product_id = document.getElementById('allocProduct').value;
+      const branch_id = document.getElementById('allocBranch').value;
+      const quantity = parseInt(document.getElementById('allocQty').value || '0', 10);
+      const expected_delivery_date = document.getElementById('allocExpected').value || null;
+      const transport_method = document.getElementById('allocTransport').value || null;
+      const notes = document.getElementById('allocNotes').value || null;
+      if (!product_id || !branch_id || quantity <= 0) return;
+      try {
+        const r = await fetch(API.ALLOCATE, { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ product_id, branch_id, quantity, expected_delivery_date, transport_method, notes }) });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({ detail: 'error' }));
+          throw new Error(err.detail || 'Allocate failed');
+        }
+        bootstrap.Modal.getInstance(document.getElementById('allocateModal')).hide();
+        const currentBranch = document.getElementById('branchSelect').value;
+        if (currentBranch) { await loadBranchInventory(currentBranch); await loadBranchSummary(currentBranch); await loadAllocationsForBranch(currentBranch); }
+        await loadHQInventory();
+        await loadAllocations();
+      } catch (e) { alert('Failed to allocate: ' + e.message); }
+    }
+
+    // Wire up events
+    document.addEventListener('DOMContentLoaded', () => {
+      loadHQInventory();
+      loadBranches();
+      loadPendingRequests();
+      loadProductsInto(['receiveProduct', 'allocProduct']);
+
+      document.getElementById('receiveSubmit').addEventListener('click', receiveAtHQ);
+      document.getElementById('allocSubmit').addEventListener('click', allocateToBranch);
+
+      document.getElementById('branchSelect').addEventListener('change', (e) => {
+        const branchId = e.target.value;
+        if (branchId) {
+          loadBranchInventory(branchId);
+          loadBranchSummary(branchId);
+          loadAllocationsForBranch(branchId);
+        }
+      });
+
+      document.getElementById('btnRefresh').addEventListener('click', () => {
+        const active = document.querySelector('#allocTabs .nav-link.active');
+        if (active && active.getAttribute('data-bs-target') === '#hq') loadHQInventory();
+        if (active && active.getAttribute('data-bs-target') === '#allocations') loadAllocations();
+      });
+
+      document.getElementById('btnAllocRefresh').addEventListener('click', loadAllocations);
+      const btnBranchAllocRefresh = document.getElementById('btnBranchAllocRefresh');
+      if (btnBranchAllocRefresh) {
+        btnBranchAllocRefresh.addEventListener('click', () => {
+          const branchId = document.getElementById('branchSelect').value;
+          if (branchId) loadAllocationsForBranch(branchId);
+        });
+      }
+      document.getElementById('allocStatusFilter').addEventListener('change', loadAllocations);
+      document.getElementById('shipSubmit').addEventListener('click', submitShipAllocation);
+      document.getElementById('receiveAllocSubmit').addEventListener('click', submitReceiveAllocation);
+
+      // Preload allocations
+      loadAllocations();
+    });
+  </script>
+
+  <!-- Navbar Script -->
+  <script src="js/navbar.js?v=20250106001"></script>
+</body>
+
+</html>

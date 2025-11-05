@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNPERP - POS Cash Reconciliation</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <script src="/static/js/auth-bootstrap.js"></script>
+  <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif;
+      background-color: #f5f6fa;
+      color: #212529;
+    }
+
+    .page-subtitle {
+      max-width: 540px;
+    }
+
+    .summary-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, #ffffff 0%, #f3f6ff 100%);
+    }
+
+    .summary-card .card-body {
+      padding: 1.5rem;
+    }
+
+    .summary-label {
+      letter-spacing: 0.08em;
+      font-size: 0.75rem;
+    }
+
+    .variance-positive {
+      color: #28a745;
+    }
+
+    .variance-negative {
+      color: #dc3545;
+    }
+
+    .variance-warning {
+      color: #fd7e14;
+    }
+
+    .status-badge {
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+    }
+
+    .table thead th {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .table tbody td {
+      vertical-align: middle;
+    }
+
+    .session-meta {
+      font-size: 0.8rem;
+    }
+
+    .btn-record {
+      border-radius: 999px;
+    }
+
+    @media (max-width: 992px) {
+      .filters-stack {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .filters-stack .form-control,
+      .filters-stack .form-select {
+        width: 100% !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="navbar-container"></div>
+  <div style="height: 70px;"></div>
+
+  <div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+      <div>
+        <h1 class="h3 mb-2"><i class="bi bi-cash-coin text-primary me-2"></i>POS Cash Reconciliation</h1>
+        <p class="text-muted mb-0 page-subtitle">Record floats, confirm end-of-shift cash counts, and track variances
+          for every POS cashier across branches.</p>
+      </div>
+      <div class="d-flex filters-stack flex-wrap align-items-center gap-2">
+        <input type="date" id="shiftDate" class="form-control" style="min-width: 180px;">
+        <select id="branchFilter" class="form-select" style="min-width: 200px;">
+          <option value="">All Branches</option>
+        </select>
+        <button class="btn btn-outline-secondary" id="todayButton"><i class="bi bi-calendar-day me-1"></i>Today</button>
+        <button class="btn btn-primary" id="reloadButton"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+      </div>
+    </div>
+
+    <div id="feedbackContainer"></div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-xl-3 col-md-6">
+        <div class="card summary-card">
+          <div class="card-body">
+            <div class="summary-label text-muted">Total Sessions</div>
+            <div class="display-6 fw-semibold" id="totalSessionsValue">0</div>
+            <div class="text-muted small">Balanced: <span id="balancedSessionsValue">0</span> • Variance: <span
+                id="varianceSessionsValue">0</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card summary-card">
+          <div class="card-body">
+            <div class="summary-label text-muted">Pending Review</div>
+            <div class="display-6 fw-semibold" id="pendingSessionsValue">0</div>
+            <div class="text-muted small">Open sessions: <span id="openSessionsValue">0</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card summary-card">
+          <div class="card-body">
+            <div class="summary-label text-muted">Float &amp; Expectations</div>
+            <div class="display-6 fw-semibold" id="totalFloatValue">P 0.00</div>
+            <div class="text-muted small">Expected cash: <span id="totalExpectedValue">P 0.00</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="card summary-card">
+          <div class="card-body">
+            <div class="summary-label text-muted">Cash Collected</div>
+            <div class="display-6 fw-semibold" id="totalCashCollectedValue">P 0.00</div>
+            <div class="text-muted small">Variance: <span id="totalVarianceValue">P 0.00</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h2 class="h5 mb-0">Shift Sessions</h2>
+          <small class="text-muted" id="activeFilters">&nbsp;</small>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="showOnlyPending">
+          <label class="form-check-label" for="showOnlyPending">Show pending only</label>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="reconciliationTable">
+            <thead class="table-light">
+              <tr>
+                <th>Cashier / Branch</th>
+                <th>Float</th>
+                <th>Cash Sales</th>
+                <th>Card Sales</th>
+                <th>Manager Verified</th>
+                <th>Variance</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="text-center py-5 d-none">
+          <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+          <p class="text-muted mt-3">No shift sessions found for the selected date and filters.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reconciliation Modal -->
+  <div class="modal fade" id="reconciliationModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <div>
+            <h5 class="modal-title" id="modalTitle"><i class="bi bi-clipboard-check text-primary me-2"></i>Manager Shift
+              Reconciliation</h5>
+            <p class="text-muted small mb-0" id="modalSubtitle">Branch • Till • Cashier</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="reconciliationForm">
+          <div class="modal-body">
+            <div class="alert alert-danger d-none" id="modalError"></div>
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              <strong>Manager Verification Required:</strong> Verify cash handover, count physical cash, verify card
+              slips, and confirm float return.
+            </div>
+
+            <!-- Float Section -->
+            <div class="card mb-3">
+              <div class="card-header bg-primary text-white">
+                <i class="bi bi-cash-stack me-2"></i>Float Management
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="floatGivenInput" class="form-label fw-semibold">Float Given <span
+                        class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text" id="modalCurrencyPrefix">P</span>
+                      <input type="number" step="0.01" class="form-control" id="floatGivenInput" required>
+                    </div>
+                    <small class="form-text text-muted">Starting cash provided to cashier at shift start</small>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="floatReturnedInput" class="form-label fw-semibold">Float Returned <span
+                        class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text" id="modalCurrencyPrefixFloatReturned">P</span>
+                      <input type="number" step="0.01" class="form-control" id="floatReturnedInput" required>
+                    </div>
+                    <small class="form-text text-muted">Float amount returned by cashier at shift end</small>
+                  </div>
+                </div>
+                <div class="alert alert-warning mb-0" id="floatVarianceAlert" style="display: none;">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  <strong>Float Variance:</strong> <span id="floatVarianceAmount">P 0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cash Verification Section -->
+            <div class="card mb-3">
+              <div class="card-header bg-success text-white">
+                <i class="bi bi-currency-exchange me-2"></i>Cash Handover & Verification
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="cashCollectedInput" class="form-label fw-semibold">Cash Collected (Cashier Declared)
+                      <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text" id="modalCurrencyPrefixCollected">P</span>
+                      <input type="number" step="0.01" class="form-control" id="cashCollectedInput" required>
+                    </div>
+                    <small class="form-text text-muted">Amount declared by cashier</small>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="cashVerifiedInput" class="form-label fw-semibold">Cash Verified (Manager Counted) <span
+                        class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text" id="modalCurrencyPrefixVerified">P</span>
+                      <input type="number" step="0.01" class="form-control" id="cashVerifiedInput" required>
+                    </div>
+                    <small class="form-text text-muted">Actual amount counted by manager</small>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="managerNameInput" class="form-label fw-semibold">Manager Name <span
+                      class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="managerNameInput" required
+                    placeholder="Name of manager receiving cash">
+                  <small class="form-text text-muted">Full name of manager verifying and accepting cash</small>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="cashHandoverConfirmed" required>
+                  <label class="form-check-label fw-semibold" for="cashHandoverConfirmed">
+                    <i class="bi bi-hand-thumbs-up text-success me-1"></i>
+                    I confirm cash handover has been received and counted <span class="text-danger">*</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Transactions Section -->
+            <div class="card mb-3">
+              <div class="card-header bg-info text-white">
+                <i class="bi bi-credit-card-2-front me-2"></i>Card Transaction Verification
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="cardSalesInput" class="form-label fw-semibold">Card Sales (System) <span
+                        class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text" id="modalCurrencyPrefixCardSales">P</span>
+                      <input type="number" step="0.01" class="form-control" id="cardSalesInput" required>
+                    </div>
+                    <small class="form-text text-muted">Total card sales from POS system</small>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="bankSlipsTotalInput" class="form-label fw-semibold">Bank Slips Total <span
+                        class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <span class="input-group-text" id="modalCurrencyPrefixBankSlips">P</span>
+                      <input type="number" step="0.01" class="form-control" id="bankSlipsTotalInput" required>
+                    </div>
+                    <small class="form-text text-muted">Total amount from physical bank slips</small>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="bankSlipsCountInput" class="form-label fw-semibold">Number of Bank Slips</label>
+                  <input type="number" class="form-control" id="bankSlipsCountInput" min="0" placeholder="0">
+                  <small class="form-text text-muted">Total number of card transaction slips received</small>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="bankSlipsVerified" required>
+                  <label class="form-check-label fw-semibold" for="bankSlipsVerified">
+                    <i class="bi bi-patch-check text-info me-1"></i>
+                    All card slips verified against system records <span class="text-danger">*</span>
+                  </label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="transactionsGenuine" required>
+                  <label class="form-check-label fw-semibold" for="transactionsGenuine">
+                    <i class="bi bi-shield-check text-info me-1"></i>
+                    All transactions appear genuine and went through to bank <span class="text-danger">*</span>
+                  </label>
+                </div>
+                <div class="alert alert-warning mb-0" id="cardVarianceAlert" style="display: none;">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  <strong>Card Transaction Variance:</strong> <span id="cardVarianceAmount">P 0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes & Issues Section -->
+            <div class="card mb-3">
+              <div class="card-header">
+                <i class="bi bi-journal-text me-2"></i>Notes & Discrepancies
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label for="notesInput" class="form-label fw-semibold">Reconciliation Notes</label>
+                  <textarea class="form-control" id="notesInput" rows="3"
+                    placeholder="Add any notes, discrepancies, or issues found during reconciliation..."></textarea>
+                  <small class="form-text text-muted">Document any variances, missing slips, or other issues</small>
+                </div>
+                <div class="mb-3">
+                  <label for="discrepancyReasonInput" class="form-label fw-semibold">Reason for Variance (if
+                    any)</label>
+                  <select class="form-select" id="discrepancyReasonInput">
+                    <option value="">No variance / Not applicable</option>
+                    <option value="counting_error">Counting Error</option>
+                    <option value="missing_slip">Missing Card Slip</option>
+                    <option value="transaction_void">Voided Transaction</option>
+                    <option value="refund">Customer Refund</option>
+                    <option value="cashier_error">Cashier Error</option>
+                    <option value="system_error">System Error</option>
+                    <option value="theft_suspected">Theft Suspected</option>
+                    <option value="other">Other (explain in notes)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="card bg-light border-primary" id="modalVarianceSummary">
+              <div class="card-header bg-primary text-white">
+                <i class="bi bi-calculator me-2"></i>Reconciliation Summary
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Cash Sales (System):</span>
+                      <strong id="summaryExpectedCash">P 0.00</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Cash Verified:</span>
+                      <strong id="summaryCashVerified">P 0.00</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="fw-bold">Cash Variance:</span>
+                      <strong id="summaryCashVariance" class="text-muted">P 0.00</strong>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Card Sales (System):</span>
+                      <strong id="summaryCardSales">P 0.00</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Bank Slips Total:</span>
+                      <strong id="summaryBankSlips">P 0.00</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="fw-bold">Card Variance:</span>
+                      <strong id="summaryCardVariance" class="text-muted">P 0.00</strong>
+                    </div>
+                  </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                  <span class="fs-5 fw-bold">Total Variance:</span>
+                  <strong id="summaryTotalVariance" class="fs-5 text-muted">P 0.00</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle me-1"></i>Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" id="modalSubmitButton">
+              <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+              <span class="default-text"><i class="bi bi-check-circle me-1"></i>Complete Reconciliation</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <template id="sessionRowTemplate">
+    <tr>
+      <td>
+        <div class="fw-semibold session-cashier"></div>
+        <div class="text-muted session-meta">
+          <span class="session-branch"></span>
+          <span class="mx-2">•</span>
+          <span class="session-till"></span>
+          <span class="d-block small">Opened: <span class="session-opened"></span></span>
+          <span class="d-block small">Closed: <span class="session-closed"></span></span>
+        </div>
+      </td>
+      <td>
+        <div class="session-float fw-medium">P 0.00</div>
+        <div class="text-muted small">Given: <span class="session-float-given">P 0.00</span></div>
+        <div class="text-muted small">Returned: <span class="session-float-returned">-</span></div>
+      </td>
+      <td>
+        <div class="session-cash-sales fw-medium">P 0.00</div>
+        <div class="text-muted small">Collected: <span class="session-collected">-</span></div>
+        <div class="text-muted small">Verified: <span class="session-verified">-</span></div>
+      </td>
+      <td>
+        <div class="session-card-sales fw-medium">P 0.00</div>
+        <div class="text-muted small">Slips: <span class="session-bank-slips">-</span></div>
+        <div class="text-muted small">Count: <span class="session-slips-count">-</span></div>
+      </td>
+      <td>
+        <div class="session-manager small"><i class="bi bi-person-badge"></i> <span
+            class="session-manager-name">-</span></div>
+        <div class="text-muted small">
+          <span class="session-cash-verified-badge" style="display: none;"><i
+              class="bi bi-check-circle text-success"></i> Cash</span>
+          <span class="session-slips-verified-badge" style="display: none;"><i
+              class="bi bi-check-circle text-success"></i> Slips</span>
+        </div>
+        <div class="text-muted small">Updated: <span class="session-updated">-</span></div>
+      </td>
+      <td>
+        <div class="session-variance fw-semibold">P 0.00</div>
+        <div class="text-muted small">Cash: <span class="session-cash-variance">-</span></div>
+        <div class="text-muted small">Card: <span class="session-card-variance">-</span></div>
+      </td>
+      <td>
+        <span class="badge rounded-pill status-badge session-status bg-secondary">Pending</span>
+      </td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-outline-primary btn-record">
+          <i class="bi bi-clipboard-check me-1"></i>Verify
+        </button>
+      </td>
+    </tr>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/navbar.js?v=20250106001"></script>
+  <script>
+    (function () {
+      const API_BASE = '/api/v1/pos/reconciliation/shifts';
+      const BRANCHES_ENDPOINT = '/api/v1/branches/public';
+      const APP_SETTINGS_ENDPOINT = '/api/v1/app-settings/';
+
+      const state = {
+        sessions: [],
+        summary: {},
+        appSettings: null,
+        currencySymbol: 'P',
+        currencyCode: 'BWP',
+        locale: 'en-US',
+        timezone: undefined,
+        decimalPlaces: 2,
+        selectedDate: new Date().toISOString().slice(0, 10),
+        branchId: '',
+        showPendingOnly: false,
+        currencyFormatter: null,
+        companyName: null
+      };
+
+      const elements = {
+        shiftDate: document.getElementById('shiftDate'),
+        branchFilter: document.getElementById('branchFilter'),
+        todayButton: document.getElementById('todayButton'),
+        reloadButton: document.getElementById('reloadButton'),
+        showOnlyPending: document.getElementById('showOnlyPending'),
+        tableBody: document.querySelector('#reconciliationTable tbody'),
+        emptyState: document.getElementById('emptyState'),
+        feedbackContainer: document.getElementById('feedbackContainer'),
+        activeFilters: document.getElementById('activeFilters'),
+        summary: {
+          totalSessions: document.getElementById('totalSessionsValue'),
+          balancedSessions: document.getElementById('balancedSessionsValue'),
+          varianceSessions: document.getElementById('varianceSessionsValue'),
+          pendingSessions: document.getElementById('pendingSessionsValue'),
+          openSessions: document.getElementById('openSessionsValue'),
+          totalFloat: document.getElementById('totalFloatValue'),
+          totalExpected: document.getElementById('totalExpectedValue'),
+          totalCashCollected: document.getElementById('totalCashCollectedValue'),
+          totalVariance: document.getElementById('totalVarianceValue')
+        },
+        modal: {
+          element: document.getElementById('reconciliationModal'),
+          title: document.getElementById('modalTitle'),
+          subtitle: document.getElementById('modalSubtitle'),
+          floatGiven: document.getElementById('floatGivenInput'),
+          floatReturned: document.getElementById('floatReturnedInput'),
+          cashCollected: document.getElementById('cashCollectedInput'),
+          cashVerified: document.getElementById('cashVerifiedInput'),
+          managerName: document.getElementById('managerNameInput'),
+          cashHandoverConfirmed: document.getElementById('cashHandoverConfirmed'),
+          cardSales: document.getElementById('cardSalesInput'),
+          bankSlipsTotal: document.getElementById('bankSlipsTotalInput'),
+          bankSlipsCount: document.getElementById('bankSlipsCountInput'),
+          bankSlipsVerified: document.getElementById('bankSlipsVerified'),
+          transactionsGenuine: document.getElementById('transactionsGenuine'),
+          notes: document.getElementById('notesInput'),
+          discrepancyReason: document.getElementById('discrepancyReasonInput'),
+          floatVarianceAlert: document.getElementById('floatVarianceAlert'),
+          floatVarianceAmount: document.getElementById('floatVarianceAmount'),
+          cardVarianceAlert: document.getElementById('cardVarianceAlert'),
+          cardVarianceAmount: document.getElementById('cardVarianceAmount'),
+          varianceSummary: document.getElementById('modalVarianceSummary'),
+          form: document.getElementById('reconciliationForm'),
+          error: document.getElementById('modalError'),
+          submitButton: document.getElementById('modalSubmitButton'),
+          submitSpinner: document.querySelector('#modalSubmitButton .spinner-border'),
+          submitText: document.querySelector('#modalSubmitButton .default-text'),
+          currencyPrefixes: document.querySelectorAll('#modalCurrencyPrefix, #modalCurrencyPrefixFloatReturned, #modalCurrencyPrefixCollected, #modalCurrencyPrefixVerified, #modalCurrencyPrefixCardSales, #modalCurrencyPrefixBankSlips')
+        }
+      };
+
+      const modalInstance = new bootstrap.Modal(elements.modal.element, { backdrop: 'static' });
+      let activeSessionId = null;
+
+      const currencySymbolMap = {
+        BWP: 'P',
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+        ZAR: 'R',
+        NAD: 'N$',
+        ZMW: 'K',
+        ZWL: 'Z$',
+        MWK: 'MK',
+        TZS: 'TSh',
+        KES: 'KSh',
+        NGN: '₦',
+        GHS: '₵',
+        CAD: '$',
+        AUD: '$'
+      };
+
+      function normalizeLocale(locale) {
+        if (!locale || typeof locale !== 'string') {
+          return 'en-US';
+        }
+        return locale.replace(/_/g, '-');
+      }
+
+      function deriveCurrencySymbol(code) {
+        if (!code || typeof code !== 'string') {
+          return '';
+        }
+        const upper = code.toUpperCase();
+        return currencySymbolMap[upper] || upper;
+      }
+
+      function updateCurrencyContextFromPayload(payload) {
+        if (!payload || typeof payload !== 'object') {
+          return false;
+        }
+
+        let changed = false;
+        const sources = [payload];
+        if (payload.currency && typeof payload.currency === 'object') {
+          sources.push(payload.currency);
+        }
+        if (payload.currency_settings && typeof payload.currency_settings === 'object') {
+          sources.push(payload.currency_settings);
+        }
+
+        for (const source of sources) {
+          if (!source) continue;
+          if (source.currency_symbol && source.currency_symbol !== state.currencySymbol) {
+            state.currencySymbol = source.currency_symbol;
+            changed = true;
+          }
+          const currencyCodeCandidate = source.currency_code || source.currency;
+          if (currencyCodeCandidate) {
+            const normalizedCode = typeof currencyCodeCandidate === 'string'
+              ? currencyCodeCandidate.toUpperCase()
+              : currencyCodeCandidate;
+            if (normalizedCode && normalizedCode !== state.currencyCode) {
+              state.currencyCode = normalizedCode;
+              changed = true;
+            }
+          }
+          if (source.locale) {
+            const normalized = normalizeLocale(source.locale);
+            if (normalized !== state.locale) {
+              state.locale = normalized;
+              changed = true;
+            }
+          }
+          if (source.timezone && source.timezone !== state.timezone) {
+            state.timezone = source.timezone;
+            changed = true;
+          }
+          if (typeof source.decimal_places === 'number' && source.decimal_places !== state.decimalPlaces) {
+            state.decimalPlaces = source.decimal_places;
+            changed = true;
+          }
+        }
+
+        if (!state.currencySymbol) {
+          state.currencySymbol = deriveCurrencySymbol(state.currencyCode);
+        }
+
+        return changed;
+      }
+
+      function updateCurrencyContextFromSettings(settings) {
+        if (!settings || typeof settings !== 'object') {
+          return false;
+        }
+
+        state.companyName = settings.business?.company_name
+          || settings.general?.company_name
+          || settings.general?.app_name
+          || state.companyName;
+
+        const changedFromCurrency = updateCurrencyContextFromPayload(settings.currency || settings.currency_settings || {});
+
+        if (settings.general && typeof settings.general === 'object') {
+          if (typeof settings.general.decimal_places === 'number' && settings.general.decimal_places !== state.decimalPlaces) {
+            state.decimalPlaces = settings.general.decimal_places;
+            return true;
+          }
+        }
+
+        return changedFromCurrency;
+      }
+
+      function initializeCurrencyFormatter() {
+        const decimals = Number.isInteger(state.decimalPlaces) ? state.decimalPlaces : 2;
+        const locale = normalizeLocale(state.locale);
+        const currencyCode = state.currencyCode && typeof state.currencyCode === 'string'
+          ? state.currencyCode
+          : 'USD';
+
+        try {
+          state.currencyFormatter = new Intl.NumberFormat(locale, {
+            style: 'currency',
+            currency: currencyCode,
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+          });
+        } catch (error) {
+          console.warn('Falling back to default currency formatter', error);
+          state.currencyFormatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+          });
+        }
+
+        try {
+          const formattedZero = state.currencyFormatter.format(0);
+          const inferredSymbol = formattedZero.replace(/[-0-9.,\s\u00A0]/g, '').trim();
+          if (inferredSymbol && (!state.currencySymbol || state.currencySymbol === state.currencyCode)) {
+            state.currencySymbol = inferredSymbol;
+          }
+        } catch (error) {
+          if (!state.currencySymbol) {
+            state.currencySymbol = deriveCurrencySymbol(currencyCode);
+          }
+        }
+      }
+
+      function applySettingsToUI() {
+        if (state.companyName) {
+          document.title = `${state.companyName} - POS Cash Reconciliation`;
+        } else {
+          document.title = 'CNPERP - POS Cash Reconciliation';
+        }
+
+        elements.modal.currencyPrefixes.forEach(el => {
+          if (el) {
+            el.textContent = state.currencySymbol || deriveCurrencySymbol(state.currencyCode) || '';
+          }
+        });
+
+        updateSummary(state.summary || {});
+      }
+
+      async function loadAppSettings() {
+        try {
+          const response = await fetch(APP_SETTINGS_ENDPOINT, {
+            headers: window.auth?.authHeader?.() || {}
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to load application settings (${response.status})`);
+          }
+
+          const payload = await response.json().catch(() => null);
+          const settings = payload?.data || payload;
+          if (settings) {
+            state.appSettings = settings;
+            updateCurrencyContextFromSettings(settings);
+          }
+        } catch (error) {
+          console.warn('Unable to fetch application settings, continuing with defaults.', error);
+        } finally {
+          initializeCurrencyFormatter();
+          applySettingsToUI();
+        }
+      }
+
+      function formatCurrency(value) {
+        const amount = Number(value) || 0;
+        const decimals = Number.isInteger(state.decimalPlaces) ? state.decimalPlaces : 2;
+
+        try {
+          if (!state.currencyFormatter) {
+            initializeCurrencyFormatter();
+          }
+          return state.currencyFormatter.format(amount);
+        } catch (error) {
+          const symbol = state.currencySymbol || deriveCurrencySymbol(state.currencyCode) || '';
+          return `${symbol}${amount.toFixed(decimals)}`;
+        }
+      }
+
+      function formatDateTime(value) {
+        if (!value) return '-';
+
+        try {
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) {
+            return value;
+          }
+
+          const options = {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+          };
+
+          if (state.timezone) {
+            options.timeZone = state.timezone;
+          }
+
+          const locale = normalizeLocale(state.locale);
+          return new Intl.DateTimeFormat(locale, options).format(date);
+        } catch (error) {
+          try {
+            return new Date(value).toLocaleString();
+          } catch (fallbackError) {
+            return value;
+          }
+        }
+      }
+
+      function showFeedback(type, message) {
+        if (!message) {
+          elements.feedbackContainer.innerHTML = '';
+          return;
+        }
+        elements.feedbackContainer.innerHTML = `
+          <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>`;
+      }
+
+      function toggleLoading(isLoading) {
+        elements.reloadButton.disabled = isLoading;
+        elements.reloadButton.innerHTML = isLoading
+          ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>'
+          : '<i class="bi bi-arrow-clockwise me-1"></i>Refresh';
+      }
+
+      async function loadBranches() {
+        try {
+          const response = await fetch(BRANCHES_ENDPOINT, { headers: window.auth?.authHeader?.() || {} });
+          if (!response.ok) return;
+          const branches = await response.json();
+          const frag = document.createDocumentFragment();
+          branches.forEach(branch => {
+            const option = document.createElement('option');
+            option.value = branch.id;
+            option.textContent = `${branch.name || branch.code}`;
+            frag.appendChild(option);
+          });
+          elements.branchFilter.appendChild(frag);
+        } catch (error) {
+          console.error('Failed to load branches', error);
+        }
+      }
+
+      function applyFiltersToSessions() {
+        if (!state.showPendingOnly) {
+          return state.sessions;
+        }
+        return state.sessions.filter(session => ['pending', 'open'].includes(session.status));
+      }
+
+      function updateSummary(summary) {
+        state.summary = summary || {};
+        const safeSummary = state.summary;
+        elements.summary.totalSessions.textContent = safeSummary.session_count || 0;
+        elements.summary.balancedSessions.textContent = safeSummary.balanced_sessions || 0;
+        elements.summary.varianceSessions.textContent = safeSummary.variance_sessions || 0;
+        elements.summary.pendingSessions.textContent = safeSummary.pending_sessions || 0;
+        elements.summary.openSessions.textContent = safeSummary.open_sessions || 0;
+        elements.summary.totalFloat.textContent = formatCurrency(safeSummary.total_float_given || 0);
+        elements.summary.totalExpected.textContent = formatCurrency(safeSummary.total_expected_cash || 0);
+        elements.summary.totalCashCollected.textContent = formatCurrency(safeSummary.total_cash_collected || 0);
+        const varianceValue = safeSummary.total_variance || 0;
+        const varianceClass = varianceValue > 0 ? 'variance-positive' : varianceValue < 0 ? 'variance-negative' : 'text-muted';
+        elements.summary.totalVariance.innerHTML = `<span class="${varianceClass}">${formatCurrency(varianceValue)}</span>`;
+      }
+
+      function updateActiveFiltersDisplay(branchName) {
+        const parts = [];
+        parts.push(`Date: <strong>${state.selectedDate}</strong>`);
+        if (state.branchId) {
+          parts.push(`Branch: <strong>${branchName || state.branchId}</strong>`);
+        }
+        elements.activeFilters.innerHTML = parts.join(' • ');
+      }
+
+      function renderSessions() {
+        if (!elements.tableBody) {
+          console.warn('Reconciliation table body element is missing. Skipping session render.');
+          return;
+        }
+
+        const sessions = applyFiltersToSessions();
+        elements.tableBody.innerHTML = '';
+
+        if (!sessions.length) {
+          if (elements.emptyState) {
+            elements.emptyState.classList.remove('d-none');
+          }
+          return;
+        }
+
+        if (elements.emptyState) {
+          elements.emptyState.classList.add('d-none');
+        }
+
+        const template = document.getElementById('sessionRowTemplate');
+        if (!template) {
+          console.warn('Session row template not found.');
+          return;
+        }
+
+        sessions.forEach(session => {
+          const clone = template.content.firstElementChild.cloneNode(true);
+
+          // Cashier / Branch column
+          clone.querySelector('.session-cashier').textContent = session.cashier_name || 'Unknown cashier';
+          clone.querySelector('.session-branch').textContent = session.branch_name || 'Unassigned branch';
+          clone.querySelector('.session-till').textContent = session.till_id ? `Till ${session.till_id}` : 'Till not set';
+          clone.querySelector('.session-opened').textContent = formatDateTime(session.opened_at);
+          clone.querySelector('.session-closed').textContent = formatDateTime(session.closed_at);
+
+          // Float column
+          const floatGiven = Number(session.float_given || 0);
+          const floatReturned = Number(session.float_returned || 0);
+          clone.querySelector('.session-float').textContent = formatCurrency(floatGiven);
+          clone.querySelector('.session-float-given').textContent = formatCurrency(floatGiven);
+          clone.querySelector('.session-float-returned').textContent = floatReturned > 0 ? formatCurrency(floatReturned) : '-';
+
+          // Cash Sales column
+          const cashSales = Number(session.cash_sales || 0);
+          const cashCollected = Number(session.cash_collected || 0);
+          const cashVerified = Number(session.cash_verified || 0);
+          clone.querySelector('.session-cash-sales').textContent = formatCurrency(cashSales);
+          clone.querySelector('.session-collected').textContent = cashCollected > 0 ? formatCurrency(cashCollected) : '-';
+          clone.querySelector('.session-verified').textContent = cashVerified > 0 ? formatCurrency(cashVerified) : '-';
+
+          // Card Sales column
+          const cardSales = Number(session.card_sales || 0);
+          const bankSlipsTotal = Number(session.bank_slips_total || 0);
+          const bankSlipsCount = session.bank_slips_count || 0;
+          clone.querySelector('.session-card-sales').textContent = formatCurrency(cardSales);
+          clone.querySelector('.session-bank-slips').textContent = bankSlipsTotal > 0 ? formatCurrency(bankSlipsTotal) : '-';
+          clone.querySelector('.session-slips-count').textContent = bankSlipsCount > 0 ? `${bankSlipsCount} slips` : '-';
+
+          // Manager Verified column
+          clone.querySelector('.session-manager-name').textContent = session.manager_name || '-';
+          if (session.cash_handover_confirmed) {
+            clone.querySelector('.session-cash-verified-badge').style.display = 'inline';
+          }
+          if (session.bank_slips_verified && session.transactions_genuine) {
+            clone.querySelector('.session-slips-verified-badge').style.display = 'inline';
+          }
+          clone.querySelector('.session-updated').textContent = formatDateTime(session.last_updated);
+
+          // Variance column
+          const cashVariance = cashVerified > 0 ? (cashVerified - cashSales) : 0;
+          const cardVariance = bankSlipsTotal > 0 ? (cardSales - bankSlipsTotal) : 0;
+          const totalVariance = Number(session.variance) || (cashVariance + cardVariance);
+
+          const varianceEl = clone.querySelector('.session-variance');
+          const varianceClass = totalVariance > 0 ? 'variance-positive' : totalVariance < 0 ? 'variance-negative' : 'text-muted';
+          varianceEl.classList.add(varianceClass);
+          varianceEl.textContent = formatCurrency(totalVariance);
+
+          clone.querySelector('.session-cash-variance').textContent = cashVariance !== 0 ? formatCurrency(cashVariance) : '-';
+          clone.querySelector('.session-card-variance').textContent = cardVariance !== 0 ? formatCurrency(cardVariance) : '-';
+
+          // Status badge
+          const statusBadge = clone.querySelector('.session-status');
+          statusBadge.textContent = session.status.toUpperCase();
+          statusBadge.classList.remove('bg-secondary', 'bg-success', 'bg-warning', 'bg-danger', 'text-dark');
+          switch (session.status) {
+            case 'balanced':
+              statusBadge.classList.add('bg-success');
+              break;
+            case 'variance':
+              statusBadge.classList.add('bg-danger');
+              break;
+            case 'pending':
+              statusBadge.classList.add('bg-warning', 'text-dark');
+              break;
+            case 'open':
+            default:
+              statusBadge.classList.add('bg-secondary');
+              break;
+          }
+
+          const actionButton = clone.querySelector('.btn-record');
+          actionButton.dataset.sessionId = session.session_id;
+          actionButton.addEventListener('click', () => openReconciliationModal(session.session_id));
+
+          elements.tableBody.appendChild(clone);
+        });
+      }
+
+      function populateStateFromResponse(data) {
+        const payload = data || {};
+        state.sessions = payload.sessions || [];
+        state.summary = payload.summary || {};
+
+        updateCurrencyContextFromPayload(payload);
+        initializeCurrencyFormatter();
+        applySettingsToUI();
+
+        updateActiveFiltersDisplay(payload.branch_name);
+        renderSessions();
+      }
+
+      async function loadReconciliation() {
+        toggleLoading(true);
+        showFeedback(null, '');
+
+        try {
+          const params = new URLSearchParams();
+          if (state.selectedDate) params.append('date', state.selectedDate);
+          if (state.branchId) params.append('branch_id', state.branchId);
+
+          const response = await fetch(`${API_BASE}?${params.toString()}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(window.auth?.authHeader?.() || {})
+            }
+          });
+
+          if (!response.ok) {
+            const detail = await response.json().catch(() => ({}));
+            throw new Error(detail.detail || 'Failed to load reconciliation data');
+          }
+
+          const payload = await response.json();
+          populateStateFromResponse(payload.data || {});
+        } catch (error) {
+          console.error('Reconciliation load failed', error);
+          showFeedback('danger', error.message || 'Unable to load reconciliation data.');
+          if (elements.tableBody) {
+            elements.tableBody.innerHTML = '';
+          }
+          if (elements.emptyState) {
+            elements.emptyState.classList.remove('d-none');
+          }
+        } finally {
+          toggleLoading(false);
+        }
+      }
+
+      function openReconciliationModal(sessionId) {
+        const session = state.sessions.find(item => item.session_id === sessionId);
+        if (!session) return;
+
+        activeSessionId = sessionId;
+        elements.modal.title.innerHTML = `<i class="bi bi-clipboard-check text-primary me-2"></i>Manager Shift Reconciliation`;
+        elements.modal.subtitle.textContent = `${session.branch_name || 'Branch'} • Till ${session.till_id || 'N/A'} • ${session.cashier_name || 'Cashier'}`;
+
+        // Float fields
+        elements.modal.floatGiven.value = Number(session.float_given || 0).toFixed(2);
+        elements.modal.floatReturned.value = Number(session.float_returned || session.float_given || 0).toFixed(2);
+
+        // Cash fields
+        elements.modal.cashCollected.value = Number(session.cash_collected || 0).toFixed(2);
+        elements.modal.cashVerified.value = Number(session.cash_verified || session.cash_collected || 0).toFixed(2);
+
+        // Manager fields
+        elements.modal.managerName.value = session.manager_name || '';
+        elements.modal.cashHandoverConfirmed.checked = Boolean(session.cash_handover_confirmed);
+
+        // Card fields
+        elements.modal.cardSales.value = Number(session.card_sales || 0).toFixed(2);
+        elements.modal.bankSlipsTotal.value = Number(session.bank_slips_total || session.card_sales || 0).toFixed(2);
+        elements.modal.bankSlipsCount.value = session.bank_slips_count || '';
+        elements.modal.bankSlipsVerified.checked = Boolean(session.bank_slips_verified);
+        elements.modal.transactionsGenuine.checked = Boolean(session.transactions_genuine);
+
+        // Notes
+        elements.modal.notes.value = session.notes || '';
+        elements.modal.discrepancyReason.value = session.discrepancy_reason || '';
+
+        elements.modal.error.classList.add('d-none');
+
+        updateVarianceSummary();
+        modalInstance.show();
+      }
+
+      function updateVarianceSummary() {
+        const session = state.sessions.find(item => item.session_id === activeSessionId);
+        const cashSales = session ? Number(session.cash_sales || 0) : 0;
+
+        // Float calculations
+        const floatGiven = Number(elements.modal.floatGiven.value) || 0;
+        const floatReturned = Number(elements.modal.floatReturned.value) || 0;
+        const floatVariance = floatGiven - floatReturned;
+
+        // Cash calculations
+        const cashCollected = Number(elements.modal.cashCollected.value) || 0;
+        const cashVerified = Number(elements.modal.cashVerified.value) || 0;
+        const expectedCash = cashSales;
+        const cashVariance = cashVerified - expectedCash;
+
+        // Card calculations
+        const cardSales = Number(elements.modal.cardSales.value) || 0;
+        const bankSlipsTotal = Number(elements.modal.bankSlipsTotal.value) || 0;
+        const cardVariance = cardSales - bankSlipsTotal;
+
+        // Total variance
+        const totalVariance = cashVariance + cardVariance;
+
+        // Update float variance alert
+        if (Math.abs(floatVariance) > 0.01) {
+          elements.modal.floatVarianceAlert.style.display = 'block';
+          elements.modal.floatVarianceAmount.textContent = formatCurrency(floatVariance);
+          elements.modal.floatVarianceAmount.className = floatVariance > 0 ? 'text-danger' : 'text-warning';
+        } else {
+          elements.modal.floatVarianceAlert.style.display = 'none';
+        }
+
+        // Update card variance alert
+        if (Math.abs(cardVariance) > 0.01) {
+          elements.modal.cardVarianceAlert.style.display = 'block';
+          elements.modal.cardVarianceAmount.textContent = formatCurrency(cardVariance);
+          elements.modal.cardVarianceAmount.className = cardVariance > 0 ? 'text-success' : 'text-danger';
+        } else {
+          elements.modal.cardVarianceAlert.style.display = 'none';
+        }
+
+        // Update summary display
+        const cashVarianceClass = cashVariance > 0 ? 'text-success' : cashVariance < 0 ? 'text-danger' : 'text-muted';
+        const cardVarianceClass = cardVariance > 0 ? 'text-success' : cardVariance < 0 ? 'text-danger' : 'text-muted';
+        const totalVarianceClass = totalVariance > 0 ? 'text-success' : totalVariance < 0 ? 'text-danger' : 'text-muted';
+
+        document.getElementById('summaryExpectedCash').textContent = formatCurrency(expectedCash);
+        document.getElementById('summaryCashVerified').textContent = formatCurrency(cashVerified);
+        document.getElementById('summaryCashVariance').textContent = formatCurrency(cashVariance);
+        document.getElementById('summaryCashVariance').className = `fw-bold ${cashVarianceClass}`;
+
+        document.getElementById('summaryCardSales').textContent = formatCurrency(cardSales);
+        document.getElementById('summaryBankSlips').textContent = formatCurrency(bankSlipsTotal);
+        document.getElementById('summaryCardVariance').textContent = formatCurrency(cardVariance);
+        document.getElementById('summaryCardVariance').className = `fw-bold ${cardVarianceClass}`;
+
+        document.getElementById('summaryTotalVariance').textContent = formatCurrency(totalVariance);
+        document.getElementById('summaryTotalVariance').className = `fs-5 fw-bold ${totalVarianceClass}`;
+      }
+
+      async function submitReconciliation(event) {
+        event.preventDefault();
+        if (!activeSessionId) return;
+
+        // Validate required fields
+        const floatGiven = Number(elements.modal.floatGiven.value);
+        const floatReturned = Number(elements.modal.floatReturned.value);
+        const cashCollected = Number(elements.modal.cashCollected.value);
+        const cashVerified = Number(elements.modal.cashVerified.value);
+        const cardSales = Number(elements.modal.cardSales.value);
+        const bankSlipsTotal = Number(elements.modal.bankSlipsTotal.value);
+        const managerName = elements.modal.managerName.value.trim();
+
+        if (Number.isNaN(floatGiven) || Number.isNaN(floatReturned) || Number.isNaN(cashCollected) ||
+          Number.isNaN(cashVerified) || Number.isNaN(cardSales) || Number.isNaN(bankSlipsTotal)) {
+          elements.modal.error.textContent = 'Please provide valid numeric values for all amount fields.';
+          elements.modal.error.classList.remove('d-none');
+          return;
+        }
+
+        if (!managerName) {
+          elements.modal.error.textContent = 'Please enter the manager name.';
+          elements.modal.error.classList.remove('d-none');
+          return;
+        }
+
+        if (!elements.modal.cashHandoverConfirmed.checked) {
+          elements.modal.error.textContent = 'Please confirm cash handover has been received and counted.';
+          elements.modal.error.classList.remove('d-none');
+          return;
+        }
+
+        if (!elements.modal.bankSlipsVerified.checked || !elements.modal.transactionsGenuine.checked) {
+          elements.modal.error.textContent = 'Please verify all card transaction slips and confirm transactions are genuine.';
+          elements.modal.error.classList.remove('d-none');
+          return;
+        }
+
+        elements.modal.error.classList.add('d-none');
+        elements.modal.submitButton.disabled = true;
+        elements.modal.submitSpinner.classList.remove('d-none');
+        elements.modal.submitText.classList.add('d-none');
+
+        try {
+          const payload = {
+            session_id: activeSessionId,
+            float_given: floatGiven,
+            float_returned: floatReturned,
+            cash_collected: cashCollected,
+            cash_verified: cashVerified,
+            manager_name: managerName,
+            cash_handover_confirmed: elements.modal.cashHandoverConfirmed.checked,
+            card_sales: cardSales,
+            bank_slips_total: bankSlipsTotal,
+            bank_slips_count: parseInt(elements.modal.bankSlipsCount.value) || null,
+            bank_slips_verified: elements.modal.bankSlipsVerified.checked,
+            transactions_genuine: elements.modal.transactionsGenuine.checked,
+            shift_date: state.selectedDate,
+            discrepancy_reason: elements.modal.discrepancyReason.value || null,
+            notes: elements.modal.notes.value || null
+          };
+
+          const response = await fetch(API_BASE, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(window.auth?.authHeader?.() || {})
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const detail = await response.json().catch(() => ({}));
+            throw new Error(detail.detail || 'Failed to save reconciliation');
+          }
+
+          const result = await response.json();
+          showFeedback('success', result.message || 'Shift reconciliation saved.');
+          modalInstance.hide();
+          await loadReconciliation();
+        } catch (error) {
+          console.error('Failed to record reconciliation', error);
+          elements.modal.error.textContent = error.message || 'Unable to save reconciliation.';
+          elements.modal.error.classList.remove('d-none');
+        } finally {
+          elements.modal.submitButton.disabled = false;
+          elements.modal.submitSpinner.classList.add('d-none');
+          elements.modal.submitText.classList.remove('d-none');
+        }
+      }
+
+      function initEventListeners() {
+        elements.shiftDate.value = state.selectedDate;
+        elements.shiftDate.addEventListener('change', () => {
+          state.selectedDate = elements.shiftDate.value || state.selectedDate;
+          loadReconciliation();
+        });
+
+        elements.branchFilter.addEventListener('change', () => {
+          state.branchId = elements.branchFilter.value;
+          loadReconciliation();
+        });
+
+        elements.todayButton.addEventListener('click', () => {
+          state.selectedDate = new Date().toISOString().slice(0, 10);
+          elements.shiftDate.value = state.selectedDate;
+          loadReconciliation();
+        });
+
+        elements.reloadButton.addEventListener('click', () => loadReconciliation());
+
+        elements.showOnlyPending.addEventListener('change', () => {
+          state.showPendingOnly = elements.showOnlyPending.checked;
+          renderSessions();
+        });
+
+        // Add input listeners for variance calculations
+        elements.modal.floatGiven.addEventListener('input', updateVarianceSummary);
+        elements.modal.floatReturned.addEventListener('input', updateVarianceSummary);
+        elements.modal.cashCollected.addEventListener('input', updateVarianceSummary);
+        elements.modal.cashVerified.addEventListener('input', updateVarianceSummary);
+        elements.modal.cardSales.addEventListener('input', updateVarianceSummary);
+        elements.modal.bankSlipsTotal.addEventListener('input', updateVarianceSummary);
+
+        elements.modal.form.addEventListener('submit', submitReconciliation);
+
+        elements.modal.element.addEventListener('hidden.bs.modal', () => {
+          activeSessionId = null;
+          // Reset form
+          elements.modal.form.reset();
+          elements.modal.cashHandoverConfirmed.checked = false;
+          elements.modal.bankSlipsVerified.checked = false;
+          elements.modal.transactionsGenuine.checked = false;
+        });
+      }
+
+      async function bootstrap() {
+        if (window.auth && !auth.isAuthenticated()) {
+          auth.requireAuth();
+          return;
+        }
+        await loadAppSettings();
+        initEventListeners();
+        await loadBranches();
+        await loadReconciliation();
+      }
+
+      document.addEventListener('DOMContentLoaded', bootstrap);
+    })();
+  </script>
+</body>
+
+</html>

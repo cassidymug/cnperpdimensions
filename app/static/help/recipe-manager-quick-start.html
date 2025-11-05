@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Manager - Quick Start Guide | CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .help-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .help-header {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        .help-header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .help-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .help-content {
+            padding: 3rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        .section h2 {
+            color: #330867;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #30cfd0;
+        }
+        .section h3 {
+            color: #30cfd0;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .step-card {
+            background: #f8f9fa;
+            border-left: 4px solid #30cfd0;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+        }
+        .step-card h4 {
+            color: #330867;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #30cfd0, #330867);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .example-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        .tip-box {
+            background: #d1ecf1;
+            border-left: 4px solid #0dcaf0;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        .cost-breakdown {
+            background: white;
+            border: 2px solid #30cfd0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .cost-breakdown table {
+            margin: 0;
+        }
+        .code-snippet {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+        }
+        .icon-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #30cfd0, #330867);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #dee2e6;
+        }
+        ul.checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+        ul.checklist li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+        ul.checklist li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .ingredient-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .ingredient-table table {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="help-container">
+        <div class="help-header">
+            <h1><i class="bi bi-rocket-takeoff me-3"></i>Recipe Manager - Quick Start Guide</h1>
+            <p>Get started in 5 minutes and create your first recipe!</p>
+        </div>
+
+        <div class="help-content">
+            <!-- Introduction -->
+            <div class="section">
+                <div class="icon-badge">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>What You'll Learn</span>
+                </div>
+                <p class="lead">This guide will walk you through creating your first recipe, producing a batch, and tracking costs. Perfect for bakeries, manufacturers, workshops, and any business that transforms raw materials into finished products.</p>
+            </div>
+
+            <!-- Step 1: Access -->
+            <div class="section">
+                <h2><i class="bi bi-1-circle-fill text-primary me-2"></i>Access Recipe Manager</h2>
+                <p><strong>Time needed:</strong> 30 seconds</p>
+                
+                <div class="step-card">
+                    <h4><i class="bi bi-link-45deg me-2"></i>Option A: Direct URL</h4>
+                    <div class="code-snippet">
+                        http://localhost:8010/static/recipes.html
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <h4><i class="bi bi-menu-button-wide me-2"></i>Option B: Navigation Menu</h4>
+                    <p>Click: <strong>Inventory → Recipe Manager</strong></p>
+                </div>
+            </div>
+
+            <!-- Step 2: Create Recipe -->
+            <div class="section">
+                <h2><i class="bi bi-2-circle-fill text-primary me-2"></i>Create Your First Recipe</h2>
+                <p><strong>Time needed:</strong> 2 minutes</p>
+
+                <div class="step-card">
+                    <h4><span class="step-number">1</span>Click "New Recipe" Button</h4>
+                    <p>Located at the top right of the page</p>
+                </div>
+
+                <div class="step-card">
+                    <h4><span class="step-number">2</span>Select Finished Product</h4>
+                    <p>Choose the product you want to manufacture from the dropdown:</p>
+                    <ul>
+                        <li>Example: "Burger Buns", "Custom Cabinet", "T-Shirt"</li>
+                    </ul>
+                </div>
+
+                <div class="step-card">
+                    <h4><span class="step-number">3</span>Set Batch Size</h4>
+                    <p>How many units does this recipe make?</p>
+                    <ul>
+                        <li>Example: 10 buns, 1 cabinet, 5 t-shirts</li>
+                    </ul>
+                </div>
+
+                <div class="step-card">
+                    <h4><span class="step-number">4</span>Add Ingredients</h4>
+                    <p>Click "Add Ingredient" for each raw material needed:</p>
+                    
+                    <div class="ingredient-table">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Ingredient</th>
+                                    <th>Quantity</th>
+                                    <th>UOM</th>
+                                    <th>Cost</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Flour</td>
+                                    <td>5</td>
+                                    <td>kg</td>
+                                    <td>P 25.00</td>
+                                    <td>Use bread flour</td>
+                                </tr>
+                                <tr>
+                                    <td>Milk</td>
+                                    <td>2</td>
+                                    <td>liters</td>
+                                    <td>P 30.00</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>Eggs</td>
+                                    <td>50</td>
+                                    <td>pieces</td>
+                                    <td>P 100.00</td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <h4><span class="step-number">5</span>Add Labor Costs (Optional)</h4>
+                    <ul>
+                        <li>Hours: 4</li>
+                        <li>Rate: P 50.00 per hour</li>
+                        <li>System calculates: 4 × 50 = <strong>P 200</strong></li>
+                    </ul>
+                </div>
+
+                <div class="step-card">
+                    <h4><span class="step-number">6</span>Add Overhead (Optional)</h4>
+                    <ul>
+                        <li>Utilities, rent, equipment: P 100</li>
+                        <li>Other costs (packaging, QC): P 50</li>
+                    </ul>
+                </div>
+
+                <div class="step-card">
+                    <h4><span class="step-number">7</span>Review Auto-Calculated Costs</h4>
+                    <div class="cost-breakdown">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <td>Material Cost:</td>
+                                <td class="text-end"><strong>P 155.00</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Labor Cost:</td>
+                                <td class="text-end"><strong>P 200.00</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Additional Costs:</td>
+                                <td class="text-end"><strong>P 150.00</strong></td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td><strong>Total Cost:</strong></td>
+                                <td class="text-end"><strong>P 505.00</strong></td>
+                            </tr>
+                            <tr class="table-info">
+                                <td><strong>Cost per Unit:</strong></td>
+                                <td class="text-end"><strong>P 50.50</strong></td>
+                            </tr>
+                            <tr class="table-success">
+                                <td><strong>Suggested Price (50% markup):</strong></td>
+                                <td class="text-end"><strong>P 75.75</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <h4><span class="step-number">8</span>Click "Save Recipe"</h4>
+                    <p class="text-success mb-0"><i class="bi bi-check-circle-fill me-2"></i><strong>Done! Your first recipe is created.</strong></p>
+                </div>
+            </div>
+
+            <!-- Step 3: Use Recipe -->
+            <div class="section">
+                <h2><i class="bi bi-3-circle-fill text-primary me-2"></i>Use Your Recipe</h2>
+                <p><strong>Time needed:</strong> 2 minutes</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="step-card">
+                            <h4><i class="bi bi-gear-wide-connected me-2"></i>Option A: Produce a Batch</h4>
+                            <ol>
+                                <li>Click eye icon on recipe row</li>
+                                <li>Click "Produce Batch" button</li>
+                                <li>System redirects to Manufacturing module</li>
+                                <li>Enter quantity to produce</li>
+                                <li>System validates inventory</li>
+                                <li>Click "Post to HQ"</li>
+                                <li class="text-success"><strong>✓ Inventory updated automatically!</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="step-card">
+                            <h4><i class="bi bi-clipboard-check me-2"></i>Option B: Create Job Card</h4>
+                            <ol>
+                                <li>Click eye icon on recipe row</li>
+                                <li>Click "Use in Job Card" button</li>
+                                <li>System redirects to Job Cards</li>
+                                <li>Materials pre-filled from recipe</li>
+                                <li>Add customer information</li>
+                                <li>Add job details</li>
+                                <li>Click "Create Job Card"</li>
+                                <li class="text-success"><strong>✓ Ready to track work!</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Check Results -->
+            <div class="section">
+                <h2><i class="bi bi-4-circle-fill text-primary me-2"></i>Check Results</h2>
+                <p><strong>Time needed:</strong> 30 seconds</p>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-book me-2"></i>View Recipe
+                            </div>
+                            <div class="card-body">
+                                <ul class="checklist">
+                                    <li>See all ingredients</li>
+                                    <li>See cost breakdown</li>
+                                    <li>Check profit margins</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-box-seam me-2"></i>Check Inventory
+                            </div>
+                            <div class="card-body">
+                                <ul class="checklist">
+                                    <li>Raw materials reduced</li>
+                                    <li>Finished goods increased</li>
+                                    <li>All tracked in transactions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-calculator me-2"></i>Review COGS
+                            </div>
+                            <div class="card-body">
+                                <ul class="checklist">
+                                    <li>Cost entries created</li>
+                                    <li>Unit costs calculated</li>
+                                    <li>Ready for profit analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Common Examples -->
+            <div class="section">
+                <h2><i class="bi bi-lightbulb-fill text-warning me-2"></i>Common Examples</h2>
+
+                <h3><i class="bi bi-1-circle me-2"></i>Example 1: Bakery - Burger Buns</h3>
+                <div class="example-box">
+                    <h5><strong>Product:</strong> Burger Buns (10 units)</h5>
+                    
+                    <h6 class="mt-3">Ingredients:</h6>
+                    <ul>
+                        <li>5 kg Flour @ P5/kg = P25</li>
+                        <li>2 L Milk @ P15/L = P30</li>
+                        <li>500 g Sugar @ P8/kg = P4</li>
+                        <li>50 Eggs @ P2/egg = P100</li>
+                    </ul>
+
+                    <h6>Costs:</h6>
+                    <ul>
+                        <li>Labor: 3 hours @ P40/hr = P120</li>
+                        <li>Overhead: P50</li>
+                    </ul>
+
+                    <div class="cost-breakdown mt-3">
+                        <table class="table table-sm mb-0">
+                            <tr><td>Total Cost:</td><td class="text-end"><strong>P329 (P32.90 per bun)</strong></td></tr>
+                            <tr class="table-success"><td>Selling Price:</td><td class="text-end"><strong>P50 per bun</strong></td></tr>
+                            <tr class="table-info"><td>Profit per batch:</td><td class="text-end"><strong>P171 (52%)</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <h3><i class="bi bi-2-circle me-2"></i>Example 2: Workshop - Custom Furniture</h3>
+                <div class="example-box">
+                    <h5><strong>Product:</strong> Wooden Cabinet (1 unit)</h5>
+                    
+                    <h6 class="mt-3">Ingredients:</h6>
+                    <ul>
+                        <li>10 Plywood Sheets @ P150 = P1,500</li>
+                        <li>5 kg Wood Glue @ P20/kg = P100</li>
+                        <li>1 L Paint @ P100 = P100</li>
+                        <li>100 Screws @ P0.50 = P50</li>
+                        <li>4 Hinges @ P25 = P100</li>
+                    </ul>
+
+                    <h6>Costs:</h6>
+                    <ul>
+                        <li>Labor: 8 hours @ P50/hr = P400</li>
+                        <li>Overhead: P200</li>
+                    </ul>
+
+                    <div class="cost-breakdown mt-3">
+                        <table class="table table-sm mb-0">
+                            <tr><td>Total Cost:</td><td class="text-end"><strong>P2,450 per cabinet</strong></td></tr>
+                            <tr class="table-success"><td>Selling Price:</td><td class="text-end"><strong>P4,000</strong></td></tr>
+                            <tr class="table-info"><td>Profit:</td><td class="text-end"><strong>P1,550 (39%)</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <h3><i class="bi bi-3-circle me-2"></i>Example 3: Garment Factory - T-Shirts</h3>
+                <div class="example-box">
+                    <h5><strong>Product:</strong> Cotton T-Shirt (5 units)</h5>
+                    
+                    <h6 class="mt-3">Ingredients:</h6>
+                    <ul>
+                        <li>3 meters Cotton Fabric @ P50/m = P150</li>
+                        <li>1 Spool Thread @ P10 = P10</li>
+                        <li>5 Labels @ P2 = P10</li>
+                    </ul>
+
+                    <h6>Costs:</h6>
+                    <ul>
+                        <li>Labor: 2 hours @ P35/hr = P70</li>
+                        <li>Overhead: P30</li>
+                    </ul>
+
+                    <div class="cost-breakdown mt-3">
+                        <table class="table table-sm mb-0">
+                            <tr><td>Total Cost:</td><td class="text-end"><strong>P270 (P54 per shirt)</strong></td></tr>
+                            <tr class="table-success"><td>Selling Price:</td><td class="text-end"><strong>P120 per shirt</strong></td></tr>
+                            <tr class="table-info"><td>Profit per batch:</td><td class="text-end"><strong>P330 (55%)</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Tips -->
+            <div class="section">
+                <h2><i class="bi bi-star-fill text-warning me-2"></i>Pro Tips</h2>
+
+                <div class="tip-box">
+                    <h5><i class="bi bi-1-circle-fill me-2"></i>Use Consistent Units</h5>
+                    <p>Choose units your staff understands:</p>
+                    <ul>
+                        <li>Kitchen staff? Use kg, liters</li>
+                        <li>Workshop staff? Use meters, pieces</li>
+                        <li><strong>System handles conversions automatically</strong></li>
+                    </ul>
+                </div>
+
+                <div class="tip-box">
+                    <h5><i class="bi bi-2-circle-fill me-2"></i>Update Costs Regularly</h5>
+                    <p>Market prices change:</p>
+                    <ul>
+                        <li>Review recipes monthly</li>
+                        <li>Update ingredient costs</li>
+                        <li>Adjust selling prices accordingly</li>
+                    </ul>
+                </div>
+
+                <div class="tip-box">
+                    <h5><i class="bi bi-3-circle-fill me-2"></i>Track Actual vs. Estimated</h5>
+                    <p>Use Job Cards to compare:</p>
+                    <ul>
+                        <li>Estimated from recipe</li>
+                        <li>Actual from production</li>
+                        <li>Identify where to improve</li>
+                    </ul>
+                </div>
+
+                <div class="tip-box">
+                    <h5><i class="bi bi-4-circle-fill me-2"></i>Account for Waste</h5>
+                    <p>Add 5-10% extra to quantities:</p>
+                    <ul>
+                        <li>Spillage</li>
+                        <li>Breakage</li>
+                        <li>Quality issues</li>
+                        <li><strong>Better to have extra than run short</strong></li>
+                    </ul>
+                </div>
+
+                <div class="tip-box">
+                    <h5><i class="bi bi-5-circle-fill me-2"></i>Clone Recipes</h5>
+                    <p>Similar products?</p>
+                    <ul>
+                        <li>Clone existing recipe</li>
+                        <li>Modify ingredients</li>
+                        <li>Save time!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="section">
+                <h2><i class="bi bi-tools text-danger me-2"></i>Troubleshooting</h2>
+
+                <div class="accordion" id="troubleshootingAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#problem1">
+                                <i class="bi bi-x-circle text-danger me-2"></i>Problem: Can't save recipe
+                            </button>
+                        </h2>
+                        <div id="problem1" class="accordion-collapse collapse show" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <h6>Solutions:</h6>
+                                <ul class="checklist">
+                                    <li>Check product selected</li>
+                                    <li>Add at least one ingredient</li>
+                                    <li>Quantity must be greater than 0</li>
+                                    <li>Check browser console for errors</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#problem2">
+                                <i class="bi bi-x-circle text-danger me-2"></i>Problem: Wrong costs calculated
+                            </button>
+                        </h2>
+                        <div id="problem2" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <h6>Solutions:</h6>
+                                <ul class="checklist">
+                                    <li>Verify ingredient costs entered</li>
+                                    <li>Check quantity × cost = total</li>
+                                    <li>Refresh page and try again</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#problem3">
+                                <i class="bi bi-x-circle text-danger me-2"></i>Problem: Can't produce (insufficient inventory)
+                            </button>
+                        </h2>
+                        <div id="problem3" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <h6>Solutions:</h6>
+                                <ul class="checklist">
+                                    <li>Check HQ inventory levels</li>
+                                    <li>Transfer stock to HQ if needed</li>
+                                    <li>Purchase more raw materials</li>
+                                    <li>Verify UOM conversions correct</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#problem4">
+                                <i class="bi bi-x-circle text-danger me-2"></i>Problem: Inventory not updating
+                            </button>
+                        </h2>
+                        <div id="problem4" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <h6>Solutions:</h6>
+                                <ul class="checklist">
+                                    <li>Check production completed successfully</li>
+                                    <li>View inventory transactions</li>
+                                    <li>Verify recipe saved correctly</li>
+                                    <li>Check API responses for errors</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- You're Ready -->
+            <div class="section">
+                <div class="alert alert-success" role="alert">
+                    <h3 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>You're Ready!</h3>
+                    <hr>
+                    <h5>What You Can Do Now:</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="checklist">
+                                <li>Create unlimited recipes</li>
+                                <li>Manage complex BOMs</li>
+                                <li>Track all costs</li>
+                                <li>Produce batches</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="checklist">
+                                <li>Create job cards</li>
+                                <li>Analyze profits</li>
+                                <li>Integrate with full ERP system</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-rocket-takeoff-fill me-2"></i>Start Creating:</h5>
+                        <ol>
+                            <li>Think of a product you manufacture</li>
+                            <li>List all ingredients needed</li>
+                            <li>Estimate costs</li>
+                            <li>Create recipe</li>
+                            <li><strong>Start producing!</strong></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="nav-buttons">
+                <a href="/static/help-center.html" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+                <a href="/static/recipes.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-arrow-right me-2"></i>Open Recipe Manager
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

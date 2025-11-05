@@ -1,0 +1,3679 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="light-mode">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Journal Entries & IFRS Integration</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        .dark-mode {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        .entry-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .entry-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .debit-amount {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .credit-amount {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .filter-section {
+            background-color: var(--bg-primary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .journal-line {
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .balance-indicator {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .balance-balanced {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .balance-unbalanced {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .accounting-code-option {
+            font-weight: 500;
+        }
+
+        .accounting-code-option.sub-account {
+            padding-left: 20px;
+            font-style: italic;
+        }
+
+        .accounting-code-option.parent-account {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Scrollable dropdown styles */
+        .dropdown-menu.scrollable-dropdown {
+            max-height: 400px;
+            overflow-y: auto;
+            width: 350px;
+        }
+
+        .dropdown-menu.scrollable-dropdown .dropdown-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .dropdown-menu.scrollable-dropdown .dropdown-item {
+            white-space: nowrap;
+        }
+
+        .dropdown-menu.scrollable-dropdown .dropdown-item i {
+            width: 16px;
+            text-align: center;
+        }
+
+        /* Dark theme for scrollable dropdown */
+        body[data-theme="dark"] .dropdown-menu.scrollable-dropdown {
+            background-color: #343a40;
+            border-color: #495057;
+        }
+
+        body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-header {
+            background-color: #495057;
+            border-bottom-color: #6c757d;
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-item {
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-item:hover {
+            background-color: #495057;
+            color: #ffffff;
+        }
+
+        /* Phase 1 IFRS Styling */
+        .ifrs-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        #templateInfo .badge {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+    <script src="js/navbar.js?v=20250106001"></script>
+
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-journal-text me-2"></i>Journal Entries & IFRS Integration
+                    <span class="badge bg-danger ms-2">Phase 4 Complete</span>
+                    <span class="badge bg-warning text-dark ms-1">83 Templates</span>
+                    <span class="badge bg-success ms-1">Enterprise Edition</span>
+                </h1>
+                <p class="text-muted mb-0">
+                    Enterprise-grade IFRS system with automation & workflow
+                    <br>
+                    <span class="badge bg-info ms-2">✓ IAS 16</span>
+                    <span class="badge bg-info">✓ IAS 2</span>
+                    <span class="badge bg-info">✓ IAS 19</span>
+                    <span class="badge bg-info">✓ IAS 12</span>
+                    <span class="badge bg-info">✓ IAS 1</span>
+                    <span class="badge bg-success ms-2">✓ IFRS 9</span>
+                    <span class="badge bg-success">✓ IAS 36</span>
+                    <span class="badge bg-success">✓ IAS 37</span>
+                    <span class="badge bg-success">✓ IFRS 15</span>
+                    <span class="badge bg-success">✓ IAS 23</span>
+                    <span class="badge bg-success">✓ IFRS 16</span>
+                    <span class="badge bg-primary ms-2">✓ IAS 21</span>
+                    <span class="badge bg-primary">✓ IFRS 13</span>
+                    <span class="badge bg-primary">✓ IFRS 2</span>
+                    <span class="badge bg-primary">✓ IAS 38</span>
+                    <span class="badge bg-primary">✓ IAS 20</span>
+                    <span class="badge bg-danger ms-2">✓ IFRS 10</span>
+                    <span class="badge bg-danger">✓ IAS 8</span>
+                    <span class="badge bg-danger">✓ Recurring</span>
+                    <span class="badge bg-danger">✓ Workflow</span>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-danger" onclick="togglePhase1Help()"
+                    title="Show Phase 4 Implementation Guide">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Phase 4 Guide
+                </button>
+                <button class="btn btn-outline-info" onclick="openIntegrationDashboard()">
+                    <i class="bi bi-diagram-3 me-2"></i>Integration Dashboard
+                </button>
+                <button class="btn btn-primary" onclick="openAddEntryModal()">
+                    <i class="bi bi-plus-circle me-2"></i>New Journal Entry
+                </button>
+            </div>
+        </div>
+
+        <!-- IFRS Integration Dashboard -->
+        <div class="row mb-4" id="integrationDashboard" style="display: none;">
+            <div class="col-12">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-diagram-3 me-2"></i>IFRS Compliance & Module Integration Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Sales Integration -->
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0"><i class="bi bi-cart me-1"></i>Sales Integration</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Auto Journal Entries:</span>
+                                            <span class="badge bg-success">Active</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>IFRS Compliance:</span>
+                                            <span class="badge bg-success">Compliant</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>VAT Integration:</span>
+                                            <span class="badge bg-success">Active</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-success w-100"
+                                            onclick="viewSalesIntegration()">
+                                            View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Inventory Integration -->
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-warning">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h6 class="mb-0"><i class="bi bi-box-seam me-1"></i>Inventory Integration</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Stock Movements:</span>
+                                            <span class="badge bg-warning">Partial</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>COGS Calculation:</span>
+                                            <span class="badge bg-success">Active</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Valuation Method:</span>
+                                            <span class="badge bg-info">FIFO</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-warning w-100"
+                                            onclick="viewInventoryIntegration()">
+                                            Configure
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Banking Integration -->
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-info">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0"><i class="bi bi-bank me-1"></i>Banking Integration</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Auto Entries:</span>
+                                            <span class="badge bg-info">Active</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Reconciliation:</span>
+                                            <span class="badge bg-success">Integrated</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Cash Flow:</span>
+                                            <span class="badge bg-success">Tracked</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-info w-100"
+                                            onclick="viewBankingIntegration()">
+                                            View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VAT Integration -->
+                            <div class="col-md-3 mb-3">
+                                <div class="card border-danger">
+                                    <div class="card-header bg-danger text-white">
+                                        <h6 class="mb-0"><i class="bi bi-receipt me-1"></i>VAT Integration</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Auto Calculation:</span>
+                                            <span class="badge bg-success">Active</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Reporting:</span>
+                                            <span class="badge bg-success">IFRS</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Reconciliation:</span>
+                                            <span class="badge bg-warning">Pending</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger w-100"
+                                            onclick="viewVATIntegration()">
+                                            Configure
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Integration Summary -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-info-circle me-2"></i>Integration Summary</h6>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <strong>Total Transactions Today:</strong> <span
+                                                id="todayTransactions">0</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Journal Entries Generated:</strong> <span
+                                                id="autoGeneratedEntries">0</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>IFRS Compliance Score:</strong> <span
+                                                id="ifrsComplianceScore">95%</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Last Sync:</strong> <span id="lastSyncTime">Just now</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Entries</h6>
+                            <h3 class="mb-0" id="totalEntries">0</h3>
+                        </div>
+                        <i class="bi bi-journal-text fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Posted</h6>
+                            <h3 class="mb-0" id="postedEntries">0</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Draft</h6>
+                            <h3 class="mb-0" id="draftEntries">0</h3>
+                        </div>
+                        <i class="bi bi-pencil fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Debits</h6>
+                            <h3 class="mb-0" id="totalDebits">P 0.00</h3>
+                        </div>
+                        <i class="bi bi-arrow-down-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Credits</h6>
+                            <h3 class="mb-0" id="totalCredits">P 0.00</h3>
+                        </div>
+                        <i class="bi bi-arrow-up-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">This Month</h6>
+                            <h3 class="mb-0" id="thisMonth">P 0.00</h3>
+                        </div>
+                        <i class="bi bi-calendar fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 4 Implementation Notice -->
+        <div class="row mb-4" id="phase1HelpPanel" style="display: none;">
+            <div class="col-12">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-rocket-takeoff-fill me-2"></i>Phase 4: Automation & Workflow - Enterprise
+                            Features Complete!
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success mb-3">
+                            <strong><i class="bi bi-trophy-fill me-2"></i>Enterprise-Grade IFRS System - 83 Templates
+                                Total!</strong>
+                            <p class="mb-0 mt-2">All four phases complete! Your system now includes recurring entries,
+                                workflow automation, batch processing, and consolidation features.</p>
+                        </div>
+
+                        <h6 class="text-danger mb-3"><i class="bi bi-gear-fill me-2"></i>Phase 4: Automation &
+                            Enterprise Features</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6 class="text-danger"><i class="bi bi-arrow-repeat me-2"></i>Recurring Entries</h6>
+                                <ul class="small mb-0">
+                                    <li><strong>Monthly (5):</strong> Depreciation, Amortization, Lease, Interest,
+                                        Grants</li>
+                                    <li><strong>Quarterly (3):</strong> Tax, Impairment, Provisions</li>
+                                    <li><strong>Annual (2):</strong> Bonuses, Leave</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-danger"><i class="bi bi-workflow me-2"></i>Workflow & Period-End</h6>
+                                <ul class="small mb-0">
+                                    <li>Reversing Entries (Auto)</li>
+                                    <li>Period-End Closing</li>
+                                    <li>Opening Balances</li>
+                                    <li>Reclassification</li>
+                                    <li>Error Correction (IAS 8)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-danger"><i class="bi bi-stack me-2"></i>Batch Processing</h6>
+                                <ul class="small mb-0">
+                                    <li>Customer Receipts</li>
+                                    <li>Supplier Payments</li>
+                                    <li>Payroll Processing</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-danger"><i class="bi bi-building me-2"></i>Consolidation (IFRS 10)</h6>
+                                <ul class="small mb-0">
+                                    <li>Intercompany Elimination</li>
+                                    <li>Goodwill Impairment</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-info"><i class="bi bi-check-circle me-2"></i>Phase 1: Critical
+                                            (15)</h6>
+                                        <small>Daily operations</small>
+                                        <div class="progress mt-2" style="height: 5px;">
+                                            <div class="progress-bar bg-info" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-success"><i class="bi bi-check-circle me-2"></i>Phase 2:
+                                            Important (20)</h6>
+                                        <small>Periodic adjustments</small>
+                                        <div class="progress mt-2" style="height: 5px;">
+                                            <div class="progress-bar bg-success" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-primary"><i class="bi bi-check-circle me-2"></i>Phase 3:
+                                            Advanced (24)</h6>
+                                        <small>Financial instruments</small>
+                                        <div class="progress mt-2" style="height: 5px;">
+                                            <div class="progress-bar bg-primary" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-danger"><i class="bi bi-check-circle me-2"></i>Phase 4:
+                                            Automation (24)</h6>
+                                        <small>Recurring & workflow</small>
+                                        <div class="progress mt-2" style="height: 5px;">
+                                            <div class="progress-bar bg-danger" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3 mb-0">
+                            <h6><i class="bi bi-lightbulb me-2"></i>Key Phase 4 Features:</h6>
+                            <ul class="small mb-0">
+                                <li><strong>Recurring Entry Scheduler:</strong> Automate monthly, quarterly, and annual
+                                    entries</li>
+                                <li><strong>Workflow Automation:</strong> Auto-reversing entries, period-end closing,
+                                    error corrections</li>
+                                <li><strong>Batch Processing:</strong> Process multiple transactions in single
+                                    consolidated entries</li>
+                                <li><strong>Group Accounting:</strong> IFRS 10 consolidation with intercompany
+                                    eliminations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="posted">Posted</option>
+                        <option value="reversed">Reversed</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" id="typeFilter">
+                        <option value="">All Types</option>
+                        <option value="manual">Manual</option>
+                        <option value="system">System</option>
+                        <option value="reversal">Reversal</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="fromDateFilter">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="toDateFilter">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Search entries...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                        <i class="bi bi-arrow-clockwise"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Journal Entries Table -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h5 class="mb-0">Journal Entries</h5>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Sort journal entries"
+                            id="journalSortToggle">
+                            <button type="button" class="btn btn-secondary active" data-sort-option="chronological">
+                                <i class="bi bi-clock-history me-1"></i>Chronological
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-sort-option="datetime">
+                                <i class="bi bi-calendar-week me-1"></i>Date/Time
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-sort-option="value">
+                                <i class="bi bi-currency-dollar me-1"></i>Value
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-sort-option="alphabetical">
+                                <i class="bi bi-sort-alpha-down me-1"></i>Alphabetical
+                            </button>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="exportEntries()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="postEntries()">
+                            <i class="bi bi-check-circle"></i> Post Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="journalEntriesTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th>Entry #</th>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Debit Total</th>
+                                <th>Credit Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Journal entries will be dynamically generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Entry Modal -->
+    <div class="modal fade" id="addEntryModal" tabindex="-1" aria-labelledby="addEntryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addEntryModalLabel">
+                        <i class="bi bi-plus-circle"></i> New Journal Entry
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEntryForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Entry Date *</label>
+                                    <input type="date" class="form-control" id="entryDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Reference</label>
+                                    <input type="text" class="form-control" id="entryReference"
+                                        placeholder="Optional reference">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-control" id="entryDescription" rows="2" required
+                                placeholder="Enter entry description"></textarea>
+                        </div>
+
+                        <!-- Transaction Type Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Type <span class="badge bg-info">IFRS
+                                    Compliant</span></label>
+                            <select class="form-select" id="transactionType" onchange="handleTransactionTypeChange()">
+                                <option value="">Select Transaction Type</option>
+
+                                <optgroup label="💰 Operating Activities">
+                                    <option value="sale">Sale - Credit (Revenue Recognition)</option>
+                                    <option value="purchase">Purchase - Credit</option>
+                                    <option value="cost_of_sales">Cost of Goods Sold (IAS 2)</option>
+                                    <option value="expense">Expense Payment</option>
+                                    <option value="payroll">Payroll Accrual (IAS 19)</option>
+                                    <option value="payroll_payment">Payroll Payment (IAS 19)</option>
+                                </optgroup>
+
+                                <optgroup label="🏢 Fixed Assets (IAS 16)">
+                                    <option value="asset_acquisition">Asset Purchase (PPE)</option>
+                                    <option value="depreciation">Depreciation Expense</option>
+                                </optgroup>
+
+                                <optgroup label="📊 Period-End Adjustments">
+                                    <option value="accrued_expense">Accrued Expense (IAS 1)</option>
+                                    <option value="accrued_income">Accrued Income (IAS 1)</option>
+                                    <option value="prepaid_expense">Prepaid Expense</option>
+                                    <option value="prepaid_amortization">Prepaid Amortization (IAS 1)</option>
+                                    <option value="inventory_adjustment">Inventory Write-down (IAS 2)</option>
+                                </optgroup>
+
+                                <optgroup label="💼 Employee Benefits (IAS 19)">
+                                    <option value="employee_benefits_provision">Leave/Gratuity Provision</option>
+                                </optgroup>
+
+                                <optgroup label="🏦 Taxation (IAS 12)">
+                                    <option value="income_tax_provision">Income Tax Provision</option>
+                                    <option value="tax_payment">Tax Payment</option>
+                                </optgroup>
+
+                                <optgroup label="� Financial Instruments (IFRS 9)">
+                                    <option value="impairment_loss">Impairment Loss (ECL Model)</option>
+                                    <option value="bad_debt_writeoff">Bad Debt Write-off</option>
+                                    <option value="impairment_reversal">Impairment Reversal</option>
+                                </optgroup>
+
+                                <optgroup label="⚠️ Asset Impairment (IAS 36)">
+                                    <option value="asset_impairment">Asset Impairment Loss</option>
+                                </optgroup>
+
+                                <optgroup label="📋 Provisions (IAS 37)">
+                                    <option value="provision_creation">Create Provision</option>
+                                    <option value="provision_utilization">Use Provision</option>
+                                    <option value="provision_reversal">Reverse Provision</option>
+                                </optgroup>
+
+                                <optgroup label="📊 Revenue Recognition (IFRS 15)">
+                                    <option value="deferred_revenue_receipt">Deferred Revenue Receipt</option>
+                                    <option value="deferred_revenue_recognition">Recognize Deferred Revenue</option>
+                                    <option value="contract_asset">Contract Asset (Unbilled Revenue)</option>
+                                </optgroup>
+
+                                <optgroup label="💰 Borrowing Costs (IAS 23)">
+                                    <option value="interest_expense_accrual">Interest Expense Accrual</option>
+                                    <option value="interest_payment">Interest Payment</option>
+                                    <option value="capitalized_borrowing_costs">Capitalize Borrowing Costs</option>
+                                </optgroup>
+
+                                <optgroup label="🔄 Asset Disposal (IAS 16)">
+                                    <option value="asset_disposal_gain">Asset Disposal - Gain</option>
+                                    <option value="asset_disposal_loss">Asset Disposal - Loss</option>
+                                    <option value="asset_scrapping">Asset Scrapping (No Proceeds)</option>
+                                </optgroup>
+
+                                <optgroup label="🏢 Leases (IFRS 16)">
+                                    <option value="lease_initial_recognition">Lease Initial Recognition</option>
+                                    <option value="lease_payment">Lease Payment</option>
+                                    <option value="lease_depreciation">ROU Asset Depreciation</option>
+                                </optgroup>
+
+                                <optgroup label="�💵 Banking & Cash">
+                                    <option value="bank_deposit">Bank Deposit</option>
+                                    <option value="bank_withdrawal">Bank Withdrawal</option>
+                                </optgroup>
+
+                                <optgroup label="💸 Financing Activities">
+                                    <option value="capital_contribution">Capital Contribution (Share Capital)</option>
+                                    <option value="loan">Loan Transaction</option>
+                                </optgroup>
+
+                                <optgroup label="� Foreign Currency (IAS 21)">
+                                    <option value="forex_transaction">Foreign Currency Transaction</option>
+                                    <option value="forex_gain">Foreign Exchange Gain</option>
+                                    <option value="forex_loss">Foreign Exchange Loss</option>
+                                    <option value="forex_revaluation">Period-End FX Revaluation</option>
+                                </optgroup>
+
+                                <optgroup label="⚖️ Fair Value Measurement (IFRS 13)">
+                                    <option value="fair_value_gain_fvpl">Fair Value Gain (FVPL)</option>
+                                    <option value="fair_value_loss_fvpl">Fair Value Loss (FVPL)</option>
+                                    <option value="fair_value_gain_fvoci">Fair Value Gain (FVOCI)</option>
+                                    <option value="fair_value_loss_fvoci">Fair Value Loss (FVOCI)</option>
+                                </optgroup>
+
+                                <optgroup label="📋 Deferred Tax (IAS 12)">
+                                    <option value="deferred_tax_asset_recognition">Recognize Deferred Tax Asset</option>
+                                    <option value="deferred_tax_liability_recognition">Recognize Deferred Tax Liability
+                                    </option>
+                                    <option value="deferred_tax_reversal">Deferred Tax Reversal</option>
+                                </optgroup>
+
+                                <optgroup label="🎁 Share-Based Payments (IFRS 2)">
+                                    <option value="share_based_compensation_expense">Share-Based Compensation Expense
+                                    </option>
+                                    <option value="share_option_exercise">Share Option Exercise</option>
+                                    <option value="share_option_forfeiture">Share Option Forfeiture</option>
+                                </optgroup>
+
+                                <optgroup label="💡 Intangible Assets (IAS 38)">
+                                    <option value="intangible_asset_acquisition">Intangible Asset Acquisition</option>
+                                    <option value="intangible_amortization">Intangible Amortization</option>
+                                    <option value="research_expense">Research Expense</option>
+                                    <option value="development_capitalization">Development Capitalization</option>
+                                </optgroup>
+
+                                <optgroup label="🏛️ Government Grants (IAS 20)">
+                                    <option value="grant_income_method">Receive Grant (Income Method)</option>
+                                    <option value="grant_recognition">Recognize Grant Income</option>
+                                    <option value="grant_deduction_method">Receive Grant (Deduction Method)</option>
+                                </optgroup>
+                                <optgroup label="ðŸ”„ Recurring Entries (Monthly)">
+                                    <option value="monthly_depreciation_batch">Monthly Depreciation (All Assets)
+                                    </option>
+                                    <option value="monthly_amortization_batch">Monthly Amortization (Intangibles)
+                                    </option>
+                                    <option value="monthly_lease_depreciation_batch">Monthly Lease Depreciation</option>
+                                    <option value="monthly_interest_accrual">Monthly Interest Accrual</option>
+                                    <option value="monthly_grant_recognition">Monthly Grant Recognition</option>
+                                </optgroup>
+
+                                <optgroup label="ðŸ“… Recurring Entries (Quarterly)">
+                                    <option value="quarterly_tax_provision">Quarterly Tax Provision</option>
+                                    <option value="quarterly_impairment_review">Quarterly Impairment Review</option>
+                                    <option value="quarterly_provision_review">Quarterly Provision Review</option>
+                                </optgroup>
+
+                                <optgroup label="ðŸ“† Recurring Entries (Annual)">
+                                    <option value="annual_bonus_accrual">Annual Bonus Accrual</option>
+                                    <option value="annual_leave_provision">Annual Leave Provision</option>
+                                </optgroup>
+
+                                <optgroup label="âš™ï¸ Workflow & Period-End">
+                                    <option value="reversing_entry">Reversing Entry (Auto-Reverse)</option>
+                                    <option value="period_end_closing">Period-End Closing</option>
+                                    <option value="opening_balance_entry">Opening Balances</option>
+                                    <option value="reclassification_entry">Reclassification</option>
+                                    <option value="error_correction_entry">Error Correction (IAS 8)</option>
+                                </optgroup>
+
+                                <optgroup label="ðŸ“¦ Batch Processing">
+                                    <option value="batch_customer_receipts">Batch Customer Receipts</option>
+                                    <option value="batch_supplier_payments">Batch Supplier Payments</option>
+                                    <option value="batch_payroll_processing">Batch Payroll Processing</option>
+                                </optgroup>
+
+                                <optgroup label="ðŸ¢ Consolidation (IFRS 10)">
+                                    <option value="intercompany_elimination">Intercompany Elimination</option>
+                                    <option value="goodwill_impairment">Goodwill Impairment</option>
+                                </optgroup>
+
+                                <optgroup label="&#128295; Other">
+                                    <option value="custom">Custom Transaction</option>
+                                </optgroup>
+                            </select>
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle text-primary"></i> Templates follow IFRS standards for
+                                proper classification
+                                <span class="ms-3">
+                                    <button type="button" class="btn btn-link btn-sm p-0"
+                                        onclick="refreshAccountingCodes()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh Codes
+                                    </button>
+                                    <button type="button" class="btn btn-link btn-sm p-0 ms-2"
+                                        onclick="toggleDebugPanel()">
+                                        <i class="bi bi-bug"></i> Debug
+                                    </button>
+                                </span>
+                            </small>
+                        </div>
+
+                        <!-- Transaction Template Info -->
+                        <div class="mb-3" id="templateInfo" style="display: none;">
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-info-circle"></i> Transaction Template</h6>
+                                <p id="templateDescription" class="mb-0"></p>
+                            </div>
+                        </div>
+
+                        <!-- Debug Panel -->
+                        <div class="mb-3" id="debugPanel" style="display: none;">
+                            <div class="alert alert-warning">
+                                <h6><i class="bi bi-bug"></i> Debug Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Accounting Codes:</strong> <span id="debugCodeCount">0</span><br>
+                                        <strong>Bank Accounts:</strong> <span id="debugBankCount">0</span><br>
+                                        <strong>Current Transaction Type:</strong> <span
+                                            id="debugTransactionType">None</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="showAllAccountingCodes()">
+                                            Show All Codes
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-1"
+                                            onclick="showExpenseCodes()">
+                                            Show Expense Codes
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-1"
+                                            onclick="exportAccountingCodes()">
+                                            Export Codes
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accounting Dimensions Section -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">
+                                    <i class="bi bi-grid-3x3-gap me-2"></i>Accounting Dimensions
+                                    <span class="badge bg-info">Multi-dimensional Analysis</span>
+                                </label>
+                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                    onclick="addDimensionAssignment()">
+                                    <i class="bi bi-plus-circle"></i> Add Dimension
+                                </button>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <small>Assign dimensions to enable multi-dimensional business analysis across
+                                    departments, projects, regions, and product lines.</small>
+                            </div>
+                            <div id="dimensionAssignments">
+                                <!-- Dimension assignments will be dynamically added here -->
+                            </div>
+                        </div>
+
+                        <!-- Entry Lines -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">Entry Lines</label>
+                                <div>
+                                    <button type="button" class="btn btn-outline-success btn-sm me-2"
+                                        onclick="addDebitLine()">
+                                        <i class="bi bi-plus-circle"></i> Add Debit
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning btn-sm me-2"
+                                        onclick="addCreditLine()">
+                                        <i class="bi bi-plus-circle"></i> Add Credit
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm"
+                                        onclick="addEntryLine()">
+                                        <i class="bi bi-plus"></i> Add Line
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="entryLines">
+                                <!-- Entry lines will be dynamically added here -->
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Total Debits</label>
+                                    <input type="number" class="form-control" id="entryTotalDebits" step="0.01"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Total Credits</label>
+                                    <input type="number" class="form-control" id="entryTotalCredits" step="0.01"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Difference</label>
+                                    <input type="number" class="form-control" id="entryDifference" step="0.01" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <div id="balanceStatus" class="form-control-plaintext fw-bold">
+                                        <span class="badge bg-secondary">Not Balanced</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-primary" id="saveDraftBtn">
+                        <i class="bi bi-save"></i> Save Draft
+                    </button>
+                    <button type="button" class="btn btn-primary" id="saveEntryBtn">
+                        <i class="bi bi-check"></i> Post Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Entry Details Modal -->
+    <div class="modal fade" id="entryDetailsModal" tabindex="-1" aria-labelledby="entryDetailsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="entryDetailsModalLabel">Journal Entry Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Reference</label>
+                                <p id="entryDetailsReference" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Date</label>
+                                <p id="entryDetailsDate" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <p id="entryDetailsDescription" class="form-control-plaintext"></p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Status</label>
+                                <p id="entryDetailsStatus" class="form-control-plaintext"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-danger">Total Debits</label>
+                                <p id="entryDetailsDebit" class="form-control-plaintext text-danger"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-success">Total Credits</label>
+                                <p id="entryDetailsCredit" class="form-control-plaintext text-success"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="editEntry()">Edit Entry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- API Configuration -->
+    <script src="js/api-config.js"></script>
+
+    <!-- Navbar Scripts (with cache-busting) -->
+
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <script src="js/auth-fetch.js"></script>
+
+    <script src="js/branch-switcher.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', () => { if (window.auth) { auth.requireAuth(); } });</script>
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    <!-- Modern UI -->
+    <script src="js/modern-ui.js"></script>
+
+    <script>
+        // Global variables
+        let journalEntries = [];
+        let currentSortOption = 'chronological';
+        let accountingHierarchy = [];
+        let accountingCodes = [];
+        let bankAccounts = [];
+        let currentEntryId = null;
+        let dimensions = [];
+        let dimensionValues = {};
+        let entryDimensionAssignments = [];
+        let transactionTemplates = {
+            capital_contribution: {
+                description: "Capital contribution from shareholders to bank account. This increases the company's equity and bank balance.",
+                template: [
+                    { type: 'debit', account: 'bank', description: 'Cash received from shareholders' },
+                    { type: 'credit', account: 'equity', description: 'Shareholder capital contribution' }
+                ]
+            },
+            bank_deposit: {
+                description: "Cash deposit into bank account. This transfers cash from petty cash to bank account.",
+                template: [
+                    { type: 'debit', account: 'bank', description: 'Bank deposit' },
+                    { type: 'credit', account: 'cash', description: 'Cash payment' }
+                ]
+            },
+            bank_withdrawal: {
+                description: "Cash withdrawal from bank account. This transfers cash from bank to petty cash.",
+                template: [
+                    { type: 'debit', account: 'cash', description: 'Cash withdrawal' },
+                    { type: 'credit', account: 'bank', description: 'Bank withdrawal' }
+                ]
+            },
+            purchase: {
+                description: "Purchase of goods or services on credit. This increases inventory/assets and creates a payable liability.",
+                template: [
+                    { type: 'debit', account: 'inventory', description: 'Purchase of goods' },
+                    { type: 'credit', account: 'payable', description: 'Amount payable to supplier' }
+                ]
+            },
+            sale: {
+                description: "Sale of goods or services on credit. This creates a receivable asset and recognizes revenue.",
+                template: [
+                    { type: 'debit', account: 'receivable', description: 'Amount receivable from customer' },
+                    { type: 'credit', account: 'revenue', description: 'Sales revenue' }
+                ]
+            },
+            expense: {
+                description: "Payment of business expenses. This recognizes an expense and reduces bank balance.",
+                template: [
+                    { type: 'debit', account: 'expense', description: 'Business expense' },
+                    { type: 'credit', account: 'bank', description: 'Payment from bank account' }
+                ]
+            },
+            loan: {
+                description: "Loan transaction (borrowing or repayment). This increases bank balance and creates a loan liability.",
+                template: [
+                    { type: 'debit', account: 'bank', description: 'Loan proceeds received' },
+                    { type: 'credit', account: 'loan', description: 'Loan liability' }
+                ]
+            },
+
+            // PHASE 1: Critical IFRS Transaction Types
+
+            // IAS 16 - Property, Plant & Equipment
+            depreciation: {
+                description: "IAS 16: Monthly/annual depreciation of fixed assets. Recognizes systematic allocation of depreciable amount over useful life.",
+                ifrs_ref: "IAS 16",
+                template: [
+                    { type: 'debit', account: 'depreciation_expense', description: 'Depreciation expense for period' },
+                    { type: 'credit', account: 'accumulated_depreciation', description: 'Accumulated depreciation' }
+                ]
+            },
+
+            asset_acquisition: {
+                description: "IAS 16: Acquisition of property, plant, or equipment at cost including directly attributable costs.",
+                ifrs_ref: "IAS 16",
+                template: [
+                    { type: 'debit', account: 'ppe_asset', description: 'Asset at cost' },
+                    { type: 'credit', account: 'bank', description: 'Payment for asset' }
+                ]
+            },
+
+            // IAS 2 - Inventories
+            cost_of_sales: {
+                description: "IAS 2: Recognition of cost of goods sold when inventory is sold. Matches cost with revenue.",
+                ifrs_ref: "IAS 2",
+                template: [
+                    { type: 'debit', account: 'cost_of_sales', description: 'Cost of goods sold' },
+                    { type: 'credit', account: 'inventory', description: 'Reduce inventory' }
+                ]
+            },
+
+            inventory_adjustment: {
+                description: "IAS 2: Write-down of inventory to net realizable value (lower of cost and NRV).",
+                ifrs_ref: "IAS 2",
+                template: [
+                    { type: 'debit', account: 'cost_of_sales', description: 'Inventory write-down expense' },
+                    { type: 'credit', account: 'inventory', description: 'Reduce inventory to NRV' }
+                ]
+            },
+
+            // IAS 19 - Employee Benefits
+            payroll: {
+                description: "IAS 19: Employee salary and benefits accrual including gross pay, taxes, and other deductions.",
+                ifrs_ref: "IAS 19",
+                template: [
+                    { type: 'debit', account: 'salary_expense', description: 'Salary expense' },
+                    { type: 'debit', account: 'payroll_tax_expense', description: 'Employer contributions' },
+                    { type: 'credit', account: 'salaries_payable', description: 'Gross salary payable' },
+                    { type: 'credit', account: 'tax_withholding_payable', description: 'Employee tax withholding' },
+                    { type: 'credit', account: 'benefits_payable', description: 'Other deductions (pension, medical)' }
+                ]
+            },
+
+            payroll_payment: {
+                description: "IAS 19: Payment of salaries to employees (net pay after deductions).",
+                ifrs_ref: "IAS 19",
+                template: [
+                    { type: 'debit', account: 'salaries_payable', description: 'Clear salary liability' },
+                    { type: 'credit', account: 'bank', description: 'Net pay to employees' }
+                ]
+            },
+
+            employee_benefits_provision: {
+                description: "IAS 19: Provision for leave pay, gratuity, or pension obligations. Present value of future benefits.",
+                ifrs_ref: "IAS 19",
+                template: [
+                    { type: 'debit', account: 'employee_benefit_expense', description: 'Benefit expense' },
+                    { type: 'credit', account: 'employee_benefit_provision', description: 'Benefit provision liability' }
+                ]
+            },
+
+            // IAS 12 - Income Taxes
+            income_tax_provision: {
+                description: "IAS 12: Current income tax expense for the period based on taxable profit.",
+                ifrs_ref: "IAS 12",
+                template: [
+                    { type: 'debit', account: 'income_tax_expense', description: 'Current tax expense' },
+                    { type: 'credit', account: 'income_tax_payable', description: 'Tax liability' }
+                ]
+            },
+
+            tax_payment: {
+                description: "IAS 12: Payment of income tax to tax authorities.",
+                ifrs_ref: "IAS 12",
+                template: [
+                    { type: 'debit', account: 'income_tax_payable', description: 'Clear tax liability' },
+                    { type: 'credit', account: 'bank', description: 'Tax payment' }
+                ]
+            },
+
+            // Period-End Adjustments (IAS 1)
+            accrued_expense: {
+                description: "IAS 1: Accrual of expense incurred but not yet paid (matching principle).",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'expense', description: 'Expense for period' },
+                    { type: 'credit', account: 'accrued_expense', description: 'Accrued liability' }
+                ]
+            },
+
+            accrued_income: {
+                description: "IAS 1: Accrual of income earned but not yet received (matching principle).",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'accrued_income', description: 'Accrued receivable' },
+                    { type: 'credit', account: 'revenue', description: 'Revenue earned' }
+                ]
+            },
+
+            prepaid_amortization: {
+                description: "IAS 1: Monthly amortization of prepaid expenses to recognize current period cost.",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'expense', description: 'Current period expense' },
+                    { type: 'credit', account: 'prepaid_expense', description: 'Reduce prepaid asset' }
+                ]
+            },
+
+            prepaid_expense: {
+                description: "IAS 1: Payment in advance for future benefit (creates prepaid asset).",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'prepaid_expense', description: 'Prepaid asset' },
+                    { type: 'credit', account: 'bank', description: 'Advance payment' }
+                ]
+            },
+
+            // PHASE 2: Important IFRS Transaction Types
+
+            // IFRS 9 - Financial Instruments (Impairment)
+            impairment_loss: {
+                description: "IFRS 9: Expected credit loss (ECL) provision for trade receivables or loans. Recognizes impairment based on lifetime expected losses.",
+                ifrs_ref: "IFRS 9",
+                template: [
+                    { type: 'debit', account: 'bad_debt_expense', description: 'Impairment loss expense' },
+                    { type: 'credit', account: 'allowance_doubtful_accounts', description: 'ECL provision (contra asset)' }
+                ]
+            },
+
+            bad_debt_writeoff: {
+                description: "IFRS 9: Write-off of uncollectible receivable when recovery is no longer expected.",
+                ifrs_ref: "IFRS 9",
+                template: [
+                    { type: 'debit', account: 'allowance_doubtful_accounts', description: 'Remove provision' },
+                    { type: 'credit', account: 'accounts_receivable', description: 'Write-off receivable' }
+                ]
+            },
+
+            impairment_reversal: {
+                description: "IFRS 9: Reversal of previous impairment loss when credit risk improves.",
+                ifrs_ref: "IFRS 9",
+                template: [
+                    { type: 'debit', account: 'allowance_doubtful_accounts', description: 'Reduce provision' },
+                    { type: 'credit', account: 'bad_debt_expense', description: 'Reversal of impairment' }
+                ]
+            },
+
+            // IAS 36 - Impairment of Assets (Non-financial)
+            asset_impairment: {
+                description: "IAS 36: Impairment loss when carrying amount exceeds recoverable amount (higher of fair value less costs to sell and value in use).",
+                ifrs_ref: "IAS 36",
+                template: [
+                    { type: 'debit', account: 'impairment_loss_expense', description: 'Impairment loss on asset' },
+                    { type: 'credit', account: 'accumulated_impairment', description: 'Accumulated impairment (contra asset)' }
+                ]
+            },
+
+            // IAS 37 - Provisions, Contingent Liabilities
+            provision_creation: {
+                description: "IAS 37: Recognition of provision when there is present obligation from past event, probable outflow, and reliable estimate possible.",
+                ifrs_ref: "IAS 37",
+                template: [
+                    { type: 'debit', account: 'provision_expense', description: 'Provision expense' },
+                    { type: 'credit', account: 'provision_liability', description: 'Provision liability' }
+                ]
+            },
+
+            provision_utilization: {
+                description: "IAS 37: Utilization of provision when obligation is settled (e.g., warranty claim paid, lawsuit settled).",
+                ifrs_ref: "IAS 37",
+                template: [
+                    { type: 'debit', account: 'provision_liability', description: 'Use provision' },
+                    { type: 'credit', account: 'bank', description: 'Settlement payment' }
+                ]
+            },
+
+            provision_reversal: {
+                description: "IAS 37: Reversal of provision no longer needed (obligation no longer probable or amount changed).",
+                ifrs_ref: "IAS 37",
+                template: [
+                    { type: 'debit', account: 'provision_liability', description: 'Reverse provision' },
+                    { type: 'credit', account: 'provision_expense', description: 'Reversal income' }
+                ]
+            },
+
+            // IFRS 15 - Revenue from Contracts with Customers
+            deferred_revenue_receipt: {
+                description: "IFRS 15: Receipt of advance payment before performance obligation satisfied (creates contract liability).",
+                ifrs_ref: "IFRS 15",
+                template: [
+                    { type: 'debit', account: 'bank', description: 'Cash received in advance' },
+                    { type: 'credit', account: 'deferred_revenue', description: 'Unearned revenue (contract liability)' }
+                ]
+            },
+
+            deferred_revenue_recognition: {
+                description: "IFRS 15: Recognition of deferred revenue when performance obligation satisfied (over time or at point in time).",
+                ifrs_ref: "IFRS 15",
+                template: [
+                    { type: 'debit', account: 'deferred_revenue', description: 'Reduce liability' },
+                    { type: 'credit', account: 'revenue', description: 'Recognize earned revenue' }
+                ]
+            },
+
+            contract_asset: {
+                description: "IFRS 15: Contract asset when entity performed but not yet entitled to consideration (unbilled revenue).",
+                ifrs_ref: "IFRS 15",
+                template: [
+                    { type: 'debit', account: 'contract_asset', description: 'Unbilled work in progress' },
+                    { type: 'credit', account: 'revenue', description: 'Revenue from performance' }
+                ]
+            },
+
+            // IAS 23 - Borrowing Costs
+            interest_expense_accrual: {
+                description: "IAS 23: Accrual of interest expense on borrowings (loans, bonds, overdrafts).",
+                ifrs_ref: "IAS 23",
+                template: [
+                    { type: 'debit', account: 'interest_expense', description: 'Interest cost for period' },
+                    { type: 'credit', account: 'interest_payable', description: 'Accrued interest liability' }
+                ]
+            },
+
+            interest_payment: {
+                description: "IAS 23: Payment of accrued interest to lenders.",
+                ifrs_ref: "IAS 23",
+                template: [
+                    { type: 'debit', account: 'interest_payable', description: 'Clear accrued interest' },
+                    { type: 'credit', account: 'bank', description: 'Interest payment' }
+                ]
+            },
+
+            capitalized_borrowing_costs: {
+                description: "IAS 23: Capitalization of borrowing costs directly attributable to acquisition/construction of qualifying asset.",
+                ifrs_ref: "IAS 23",
+                template: [
+                    { type: 'debit', account: 'ppe_asset', description: 'Capitalize interest to asset' },
+                    { type: 'credit', account: 'interest_expense', description: 'Reduce P&L expense' }
+                ]
+            },
+
+            // IAS 16 - Asset Disposal
+            asset_disposal_gain: {
+                description: "IAS 16: Disposal of PPE with gain (proceeds exceed net book value). Remove cost and accumulated depreciation.",
+                ifrs_ref: "IAS 16",
+                template: [
+                    { type: 'debit', account: 'bank', description: 'Disposal proceeds' },
+                    { type: 'debit', account: 'accumulated_depreciation', description: 'Remove accumulated depreciation' },
+                    { type: 'credit', account: 'ppe_asset', description: 'Remove asset cost' },
+                    { type: 'credit', account: 'gain_on_disposal', description: 'Gain on disposal (proceeds > NBV)' }
+                ]
+            },
+
+            asset_disposal_loss: {
+                description: "IAS 16: Disposal of PPE with loss (proceeds less than net book value). Remove cost and accumulated depreciation.",
+                ifrs_ref: "IAS 16",
+                template: [
+                    { type: 'debit', account: 'bank', description: 'Disposal proceeds' },
+                    { type: 'debit', account: 'accumulated_depreciation', description: 'Remove accumulated depreciation' },
+                    { type: 'debit', account: 'loss_on_disposal', description: 'Loss on disposal (proceeds < NBV)' },
+                    { type: 'credit', account: 'ppe_asset', description: 'Remove asset cost' }
+                ]
+            },
+
+            asset_scrapping: {
+                description: "IAS 16: Scrapping/retirement of fully depreciated or obsolete asset with no proceeds.",
+                ifrs_ref: "IAS 16",
+                template: [
+                    { type: 'debit', account: 'accumulated_depreciation', description: 'Remove accumulated depreciation' },
+                    { type: 'debit', account: 'loss_on_disposal', description: 'Loss on scrapping (if not fully depreciated)' },
+                    { type: 'credit', account: 'ppe_asset', description: 'Remove asset cost' }
+                ]
+            },
+
+            // IFRS 16 - Leases (Bonus Phase 2)
+            lease_initial_recognition: {
+                description: "IFRS 16: Initial recognition of lease at commencement. Right-of-use asset and lease liability at present value of lease payments.",
+                ifrs_ref: "IFRS 16",
+                template: [
+                    { type: 'debit', account: 'right_of_use_asset', description: 'ROU asset at PV of lease payments' },
+                    { type: 'credit', account: 'lease_liability', description: 'Lease liability' }
+                ]
+            },
+
+            lease_payment: {
+                description: "IFRS 16: Monthly lease payment split between principal (reduce liability) and interest expense.",
+                ifrs_ref: "IFRS 16",
+                template: [
+                    { type: 'debit', account: 'lease_liability', description: 'Reduce lease liability (principal)' },
+                    { type: 'debit', account: 'interest_expense', description: 'Interest on lease liability' },
+                    { type: 'credit', account: 'bank', description: 'Lease payment' }
+                ]
+            },
+
+            lease_depreciation: {
+                description: "IFRS 16: Depreciation of right-of-use asset over shorter of lease term or useful life.",
+                ifrs_ref: "IFRS 16",
+                template: [
+                    { type: 'debit', account: 'depreciation_expense', description: 'Depreciation of ROU asset' },
+                    { type: 'credit', account: 'accumulated_depreciation_rou', description: 'Accumulated depreciation on ROU' }
+                ]
+            },
+
+            // ========================================
+            // PHASE 3: ADVANCED IFRS TRANSACTION TYPES
+            // ========================================
+
+            // IAS 21: Foreign Currency Transactions
+            forex_transaction: {
+                description: "IAS 21: Record foreign currency transaction at spot exchange rate on transaction date.",
+                ifrs_ref: "IAS 21",
+                template: [
+                    { type: 'debit', account: 'accounts_receivable', description: 'Foreign currency receivable (translated)' },
+                    { type: 'credit', account: 'revenue', description: 'Revenue in functional currency' }
+                ]
+            },
+
+            forex_gain: {
+                description: "IAS 21: Recognize exchange gain when foreign currency monetary item settled or revalued at favorable rate.",
+                ifrs_ref: "IAS 21",
+                template: [
+                    { type: 'debit', account: 'bank_account', description: 'Receipt in functional currency' },
+                    { type: 'credit', account: 'accounts_receivable', description: 'Settlement of FC receivable' },
+                    { type: 'credit', account: 'forex_gain', description: 'Foreign exchange gain' }
+                ]
+            },
+
+            forex_loss: {
+                description: "IAS 21: Recognize exchange loss when foreign currency monetary item settled or revalued at unfavorable rate.",
+                ifrs_ref: "IAS 21",
+                template: [
+                    { type: 'debit', account: 'bank_account', description: 'Receipt in functional currency' },
+                    { type: 'debit', account: 'forex_loss', description: 'Foreign exchange loss' },
+                    { type: 'credit', account: 'accounts_receivable', description: 'Settlement of FC receivable' }
+                ]
+            },
+
+            forex_revaluation: {
+                description: "IAS 21: Revalue foreign currency monetary assets and liabilities at period-end closing rate.",
+                ifrs_ref: "IAS 21",
+                template: [
+                    { type: 'debit', account: 'accounts_receivable', description: 'FC revaluation adjustment' },
+                    { type: 'credit', account: 'forex_gain', description: 'Unrealized FX gain' }
+                ]
+            },
+
+            // IFRS 13: Fair Value Measurement
+            fair_value_gain_fvpl: {
+                description: "IFRS 13 & IFRS 9: Recognize fair value gain on financial assets measured at fair value through profit or loss (FVPL).",
+                ifrs_ref: "IFRS 13",
+                template: [
+                    { type: 'debit', account: 'financial_asset_fvpl', description: 'Increase in fair value' },
+                    { type: 'credit', account: 'fair_value_gain', description: 'Fair value gain (P&L)' }
+                ]
+            },
+
+            fair_value_loss_fvpl: {
+                description: "IFRS 13 & IFRS 9: Recognize fair value loss on financial assets measured at fair value through profit or loss (FVPL).",
+                ifrs_ref: "IFRS 13",
+                template: [
+                    { type: 'debit', account: 'fair_value_loss', description: 'Fair value loss (P&L)' },
+                    { type: 'credit', account: 'financial_asset_fvpl', description: 'Decrease in fair value' }
+                ]
+            },
+
+            fair_value_gain_fvoci: {
+                description: "IFRS 13 & IFRS 9: Recognize fair value gain on equity investments at FVOCI (fair value through other comprehensive income).",
+                ifrs_ref: "IFRS 13",
+                template: [
+                    { type: 'debit', account: 'financial_asset_fvoci', description: 'Increase in fair value' },
+                    { type: 'credit', account: 'fvoci_reserve', description: 'Fair value gain (OCI)' }
+                ]
+            },
+
+            fair_value_loss_fvoci: {
+                description: "IFRS 13 & IFRS 9: Recognize fair value loss on equity investments at FVOCI (fair value through other comprehensive income).",
+                ifrs_ref: "IFRS 13",
+                template: [
+                    { type: 'debit', account: 'fvoci_reserve', description: 'Fair value loss (OCI)' },
+                    { type: 'credit', account: 'financial_asset_fvoci', description: 'Decrease in fair value' }
+                ]
+            },
+
+            // IAS 12: Deferred Tax Assets and Liabilities
+            deferred_tax_asset_recognition: {
+                description: "IAS 12: Recognize deferred tax asset for deductible temporary differences and unused tax losses.",
+                ifrs_ref: "IAS 12",
+                template: [
+                    { type: 'debit', account: 'deferred_tax_asset', description: 'Deferred tax asset' },
+                    { type: 'credit', account: 'deferred_tax_benefit', description: 'Deferred tax income' }
+                ]
+            },
+
+            deferred_tax_liability_recognition: {
+                description: "IAS 12: Recognize deferred tax liability for taxable temporary differences.",
+                ifrs_ref: "IAS 12",
+                template: [
+                    { type: 'debit', account: 'deferred_tax_expense', description: 'Deferred tax expense' },
+                    { type: 'credit', account: 'deferred_tax_liability', description: 'Deferred tax liability' }
+                ]
+            },
+
+            deferred_tax_reversal: {
+                description: "IAS 12: Reverse deferred tax when temporary differences reverse or tax losses utilized.",
+                ifrs_ref: "IAS 12",
+                template: [
+                    { type: 'debit', account: 'deferred_tax_liability', description: 'Reversal of DTL' },
+                    { type: 'credit', account: 'deferred_tax_asset', description: 'Reversal of DTA' }
+                ]
+            },
+
+            // IFRS 2: Share-Based Payment
+            share_based_compensation_expense: {
+                description: "IFRS 2: Recognize share-based payment expense over vesting period based on fair value at grant date.",
+                ifrs_ref: "IFRS 2",
+                template: [
+                    { type: 'debit', account: 'share_based_compensation_expense', description: 'Employee compensation expense' },
+                    { type: 'credit', account: 'share_based_payment_reserve', description: 'Equity reserve for options/RSUs' }
+                ]
+            },
+
+            share_option_exercise: {
+                description: "IFRS 2: Record exercise of share options - transfer from reserve to share capital and premium.",
+                ifrs_ref: "IFRS 2",
+                template: [
+                    { type: 'debit', account: 'bank_account', description: 'Cash received (exercise price)' },
+                    { type: 'debit', account: 'share_based_payment_reserve', description: 'Transfer from equity reserve' },
+                    { type: 'credit', account: 'share_capital', description: 'Increase in share capital (par value)' },
+                    { type: 'credit', account: 'share_premium', description: 'Share premium on exercise' }
+                ]
+            },
+
+            share_option_forfeiture: {
+                description: "IFRS 2: Reverse previously recognized expense when options forfeited (do not vest).",
+                ifrs_ref: "IFRS 2",
+                template: [
+                    { type: 'debit', account: 'share_based_payment_reserve', description: 'Reversal of equity reserve' },
+                    { type: 'credit', account: 'share_based_compensation_expense', description: 'Reversal of expense (prior period)' }
+                ]
+            },
+
+            // IAS 38: Intangible Assets
+            intangible_asset_acquisition: {
+                description: "IAS 38: Capitalize separately acquired intangible asset at cost (software, patents, licenses, trademarks).",
+                ifrs_ref: "IAS 38",
+                template: [
+                    { type: 'debit', account: 'intangible_asset', description: 'Intangible asset (software/patent/license)' },
+                    { type: 'credit', account: 'bank_account', description: 'Payment for intangible' }
+                ]
+            },
+
+            intangible_amortization: {
+                description: "IAS 38: Amortize finite-life intangible assets over useful economic life.",
+                ifrs_ref: "IAS 38",
+                template: [
+                    { type: 'debit', account: 'amortization_expense', description: 'Amortization of intangible' },
+                    { type: 'credit', account: 'accumulated_amortization', description: 'Accumulated amortization' }
+                ]
+            },
+
+            research_expense: {
+                description: "IAS 38: Expense research costs as incurred - cannot be capitalized.",
+                ifrs_ref: "IAS 38",
+                template: [
+                    { type: 'debit', account: 'research_expense', description: 'Research and development costs' },
+                    { type: 'credit', account: 'bank_account', description: 'Payment for research activities' }
+                ]
+            },
+
+            development_capitalization: {
+                description: "IAS 38: Capitalize development costs when technical and commercial feasibility demonstrated.",
+                ifrs_ref: "IAS 38",
+                template: [
+                    { type: 'debit', account: 'development_intangible', description: 'Capitalized development costs' },
+                    { type: 'credit', account: 'bank_account', description: 'Development expenditure' }
+                ]
+            },
+
+            // IAS 20: Government Grants
+            grant_income_method: {
+                description: "IAS 20: Recognize government grant as income when conditions met (income approach).",
+                ifrs_ref: "IAS 20",
+                template: [
+                    { type: 'debit', account: 'bank_account', description: 'Grant received' },
+                    { type: 'credit', account: 'deferred_grant_income', description: 'Deferred government grant' }
+                ]
+            },
+
+            grant_recognition: {
+                description: "IAS 20: Recognize deferred grant income systematically over periods matching related costs.",
+                ifrs_ref: "IAS 20",
+                template: [
+                    { type: 'debit', account: 'deferred_grant_income', description: 'Amortization of grant' },
+                    { type: 'credit', account: 'grant_income', description: 'Grant income recognized' }
+                ]
+            },
+
+            grant_deduction_method: {
+                description: "IAS 20: Deduct government grant from asset cost (deduction approach for asset-related grants).",
+                ifrs_ref: "IAS 20",
+                template: [
+                    { type: 'debit', account: 'bank_account', description: 'Grant received' },
+                    { type: 'credit', account: 'ppe_asset', description: 'Reduce asset carrying amount' }
+                ]
+            },
+
+            // ========================================
+            // PHASE 4: AUTOMATION & RECURRING ENTRIES
+            // ========================================
+
+            // Monthly Recurring Entries
+            monthly_depreciation_batch: {
+                description: "RECURRING: Automated monthly depreciation for all fixed assets - typically scheduled to run on last day of month.",
+                ifrs_ref: "IAS 16",
+                template: [
+                    { type: 'debit', account: 'depreciation_expense', description: 'Monthly depreciation - All assets' },
+                    { type: 'credit', account: 'accumulated_depreciation', description: 'Accumulated depreciation' }
+                ],
+                recurring: true,
+                frequency: 'monthly'
+            },
+
+            monthly_amortization_batch: {
+                description: "RECURRING: Automated monthly amortization for all intangible assets - typically scheduled for month-end.",
+                ifrs_ref: "IAS 38",
+                template: [
+                    { type: 'debit', account: 'amortization_expense', description: 'Monthly amortization - All intangibles' },
+                    { type: 'credit', account: 'accumulated_amortization', description: 'Accumulated amortization' }
+                ],
+                recurring: true,
+                frequency: 'monthly'
+            },
+
+            monthly_lease_depreciation_batch: {
+                description: "RECURRING: Automated monthly ROU asset depreciation - scheduled for month-end processing.",
+                ifrs_ref: "IFRS 16",
+                template: [
+                    { type: 'debit', account: 'depreciation_expense', description: 'Monthly ROU depreciation' },
+                    { type: 'credit', account: 'accumulated_depreciation_rou', description: 'Accumulated ROU depreciation' }
+                ],
+                recurring: true,
+                frequency: 'monthly'
+            },
+
+            monthly_interest_accrual: {
+                description: "RECURRING: Automated monthly interest expense accrual on all borrowings - runs at month-end.",
+                ifrs_ref: "IAS 23",
+                template: [
+                    { type: 'debit', account: 'interest_expense', description: 'Monthly interest accrual' },
+                    { type: 'credit', account: 'interest_payable', description: 'Accrued interest payable' }
+                ],
+                recurring: true,
+                frequency: 'monthly'
+            },
+
+            monthly_grant_recognition: {
+                description: "RECURRING: Automated monthly government grant income recognition - matches grant to related costs/periods.",
+                ifrs_ref: "IAS 20",
+                template: [
+                    { type: 'debit', account: 'deferred_grant_income', description: 'Monthly grant amortization' },
+                    { type: 'credit', account: 'grant_income', description: 'Grant income recognized' }
+                ],
+                recurring: true,
+                frequency: 'monthly'
+            },
+
+            // Quarterly Recurring Entries
+            quarterly_tax_provision: {
+                description: "RECURRING: Automated quarterly income tax provision calculation - runs at quarter-end.",
+                ifrs_ref: "IAS 12",
+                template: [
+                    { type: 'debit', account: 'income_tax_expense', description: 'Quarterly tax provision' },
+                    { type: 'credit', account: 'income_tax_payable', description: 'Income tax payable' }
+                ],
+                recurring: true,
+                frequency: 'quarterly'
+            },
+
+            quarterly_impairment_review: {
+                description: "RECURRING: Quarterly impairment indicator review - if indicators present, record impairment.",
+                ifrs_ref: "IAS 36",
+                template: [
+                    { type: 'debit', account: 'impairment_loss_expense', description: 'Impairment loss identified' },
+                    { type: 'credit', account: 'accumulated_impairment', description: 'Accumulated impairment' }
+                ],
+                recurring: true,
+                frequency: 'quarterly'
+            },
+
+            quarterly_provision_review: {
+                description: "RECURRING: Quarterly review and adjustment of provisions for changes in estimates.",
+                ifrs_ref: "IAS 37",
+                template: [
+                    { type: 'debit', account: 'provision_expense', description: 'Provision adjustment' },
+                    { type: 'credit', account: 'provision_liability', description: 'Updated provision liability' }
+                ],
+                recurring: true,
+                frequency: 'quarterly'
+            },
+
+            // Annual Recurring Entries
+            annual_bonus_accrual: {
+                description: "RECURRING: Annual employee bonus accrual based on performance - typically recorded at year-end.",
+                ifrs_ref: "IAS 19",
+                template: [
+                    { type: 'debit', account: 'employee_benefit_expense', description: 'Annual bonus accrual' },
+                    { type: 'credit', account: 'benefits_payable', description: 'Bonus payable' }
+                ],
+                recurring: true,
+                frequency: 'annual'
+            },
+
+            annual_leave_provision: {
+                description: "RECURRING: Annual leave liability calculation and adjustment - year-end process.",
+                ifrs_ref: "IAS 19",
+                template: [
+                    { type: 'debit', account: 'employee_benefit_expense', description: 'Annual leave provision adjustment' },
+                    { type: 'credit', account: 'employee_benefit_provision', description: 'Leave provision liability' }
+                ],
+                recurring: true,
+                frequency: 'annual'
+            },
+
+            // Workflow & Approval Templates
+            reversing_entry: {
+                description: "WORKFLOW: Create reversing entry for previous period accrual - automatically reverses at period start.",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'accrued_expense', description: 'Reverse accrued expense' },
+                    { type: 'credit', account: 'expense', description: 'Reverse expense' }
+                ],
+                workflow: 'auto-reverse'
+            },
+
+            period_end_closing: {
+                description: "WORKFLOW: Transfer P&L balances to retained earnings - part of year-end closing process.",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'revenue', description: 'Close revenue accounts' },
+                    { type: 'credit', account: 'retained_earnings', description: 'Transfer to retained earnings' }
+                ],
+                workflow: 'period-close'
+            },
+
+            opening_balance_entry: {
+                description: "WORKFLOW: Record opening balances for new period or system implementation.",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'bank_account', description: 'Opening balance' },
+                    { type: 'credit', account: 'retained_earnings', description: 'Opening equity' }
+                ],
+                workflow: 'opening-balances'
+            },
+
+            reclassification_entry: {
+                description: "WORKFLOW: Reclassify amounts between accounts for proper presentation - requires approval.",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'accounts_receivable', description: 'Reclassification to correct account' },
+                    { type: 'credit', account: 'other_receivables', description: 'Reclassification from incorrect account' }
+                ],
+                workflow: 'reclassification'
+            },
+
+            error_correction_entry: {
+                description: "WORKFLOW: Correct prior period error identified - may require restatement disclosure.",
+                ifrs_ref: "IAS 8",
+                template: [
+                    { type: 'debit', account: 'retained_earnings', description: 'Prior period correction' },
+                    { type: 'credit', account: 'expense', description: 'Correction of error' }
+                ],
+                workflow: 'error-correction'
+            },
+
+            // Batch Processing Templates
+            batch_customer_receipts: {
+                description: "BATCH: Process multiple customer receipts in single entry - from cash receipts batch.",
+                ifrs_ref: "IFRS 15",
+                template: [
+                    { type: 'debit', account: 'bank_account', description: 'Total receipts deposited' },
+                    { type: 'credit', account: 'accounts_receivable', description: 'Customer payments received' }
+                ],
+                workflow: 'batch-processing'
+            },
+
+            batch_supplier_payments: {
+                description: "BATCH: Process multiple supplier payments in single entry - from payment run.",
+                ifrs_ref: "IAS 1",
+                template: [
+                    { type: 'debit', account: 'accounts_payable', description: 'Supplier payments' },
+                    { type: 'credit', account: 'bank_account', description: 'Total payments made' }
+                ],
+                workflow: 'batch-processing'
+            },
+
+            batch_payroll_processing: {
+                description: "BATCH: Process entire payroll in consolidated entry - from payroll system integration.",
+                ifrs_ref: "IAS 19",
+                template: [
+                    { type: 'debit', account: 'salary_expense', description: 'Total gross salaries' },
+                    { type: 'debit', account: 'payroll_tax_expense', description: 'Employer contributions' },
+                    { type: 'credit', account: 'salaries_payable', description: 'Net pay to employees' },
+                    { type: 'credit', account: 'tax_withholding_payable', description: 'Taxes withheld' },
+                    { type: 'credit', account: 'benefits_payable', description: 'Benefits withheld' }
+                ],
+                workflow: 'batch-processing'
+            },
+
+            // Consolidation & Group Accounting
+            intercompany_elimination: {
+                description: "CONSOLIDATION: Eliminate intercompany transactions for group financial statements.",
+                ifrs_ref: "IFRS 10",
+                template: [
+                    { type: 'debit', account: 'intercompany_payable', description: 'Eliminate interco payable' },
+                    { type: 'credit', account: 'intercompany_receivable', description: 'Eliminate interco receivable' }
+                ],
+                workflow: 'consolidation'
+            },
+
+            goodwill_impairment: {
+                description: "CONSOLIDATION: Annual goodwill impairment test - record impairment if carrying amount exceeds recoverable amount.",
+                ifrs_ref: "IAS 36",
+                template: [
+                    { type: 'debit', account: 'goodwill_impairment_loss', description: 'Goodwill impairment' },
+                    { type: 'credit', account: 'goodwill', description: 'Reduce goodwill carrying amount' }
+                ],
+                workflow: 'consolidation'
+            }
+        };
+
+        // API endpoints using centralized configuration
+        const JOURNAL_ENDPOINT = API_CONFIG.buildUrl('/general-ledger/general-ledger');
+        const ACCOUNTING_CODES_ENDPOINT = API_CONFIG.buildUrl('/general-ledger/chart-of-accounts');
+        const ACCOUNTING_ENTRIES_ENDPOINT = API_CONFIG.buildUrl('/accounting/entries');
+        const BANK_ACCOUNTS_ENDPOINT = API_CONFIG.ENDPOINTS.BANKING_ACCOUNTS;
+
+        // Fetch journal entries from the server
+        async function fetchJournalEntries() {
+            try {
+                console.log('Fetching journal entries from:', JOURNAL_ENDPOINT);
+
+                // Get auth token
+                let headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch(JOURNAL_ENDPOINT, { headers });
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Journal entries data received:', data);
+
+                journalEntries = (data.entries || []).map((entry, index) => ({
+                    ...entry,
+                    _originalIndex: index
+                }));
+                console.log('Journal entries count:', journalEntries.length);
+
+                renderJournalEntries();
+                updateStatisticsSummary(data.summary);
+            } catch (error) {
+                console.error('Error fetching journal entries:', error);
+                // Show a more user-friendly error message
+                const tbody = document.getElementById('journalEntriesTable').querySelector('tbody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="text-center">
+                                <div class="py-4">
+                                    <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                                    <h5 class="mt-3 text-danger">Error Loading Journal Entries</h5>
+                                    <p class="text-muted">${error.message}</p>
+                                    <button class="btn btn-primary" onclick="fetchJournalEntries()">
+                                        <i class="bi bi-arrow-clockwise"></i> Retry
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Error fetching entries: ' + error.message, 'error');
+                } else {
+                    alert('Error fetching entries: ' + error.message);
+                }
+            }
+        }
+
+        // Update statistics cards from API-provided summary
+        function updateStatisticsSummary(summary) {
+            if (!summary) {
+                // Fallback if summary is not provided, calculate from entries
+                const totalDebits = journalEntries.reduce((sum, entry) => sum + (parseFloat(entry.debit_amount) || 0), 0);
+                const totalCredits = journalEntries.reduce((sum, entry) => sum + (parseFloat(entry.credit_amount) || 0), 0);
+
+                document.getElementById('totalEntries').textContent = journalEntries.length;
+                document.getElementById('totalDebits').textContent = `P ${totalDebits.toLocaleString()}`;
+                document.getElementById('totalCredits').textContent = `P ${totalCredits.toLocaleString()}`;
+                return;
+            }
+
+            document.getElementById('totalEntries').textContent = summary.entry_count;
+            document.getElementById('postedEntries').textContent = summary.entry_count; // Assuming all are posted for now
+            document.getElementById('draftEntries').textContent = 0;
+            document.getElementById('totalDebits').textContent = `P ${summary.total_debits.toLocaleString()}`;
+            document.getElementById('totalCredits').textContent = `P ${summary.total_credits.toLocaleString()}`;
+        }
+
+        // Save journal entry with enhanced IFRS validation
+        async function saveJournalEntry(status = 'posted') {
+            const entryData = gatherEntryData(status);
+            if (!entryData) return;
+
+            try {
+                // Get auth token
+                let headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch(ACCOUNTING_ENTRIES_ENDPOINT, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(entryData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                currentEntryId = result.id;
+
+                // Refresh the journal entries list
+                await fetchJournalEntries();
+
+                // Log the new entry for audit trail
+                console.log('Journal Entry Created:', result);
+
+                const modalElement = document.getElementById('addEntryModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Journal entry saved successfully', 'success');
+                } else {
+                    alert('Journal entry saved successfully');
+                }
+            } catch (error) {
+                console.error('Error saving journal entry:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Error saving entry: ' + error.message, 'error');
+                } else {
+                    alert('Error saving entry: ' + error.message);
+                }
+            }
+        }
+
+        // Apply current sort option to entries before rendering
+        function sortEntries(entries) {
+            if (!Array.isArray(entries)) {
+                return [];
+            }
+
+            const sorted = [...entries];
+
+            switch (currentSortOption) {
+                case 'datetime':
+                    return sorted.sort((a, b) => {
+                        const dateA = a.date ? new Date(a.date) : new Date(0);
+                        const dateB = b.date ? new Date(b.date) : new Date(0);
+                        return dateB - dateA;
+                    });
+                case 'value':
+                    return sorted.sort((a, b) => {
+                        const valueA = Math.max(Number(a.debit_amount) || 0, Number(a.credit_amount) || 0);
+                        const valueB = Math.max(Number(b.debit_amount) || 0, Number(b.credit_amount) || 0);
+                        return valueB - valueA;
+                    });
+                case 'alphabetical':
+                    return sorted.sort((a, b) => {
+                        const descA = (a.description || '').toLowerCase();
+                        const descB = (b.description || '').toLowerCase();
+                        return descA.localeCompare(descB);
+                    });
+                case 'chronological':
+                default:
+                    return sorted.sort((a, b) => {
+                        const indexA = typeof a._originalIndex === 'number' ? a._originalIndex : 0;
+                        const indexB = typeof b._originalIndex === 'number' ? b._originalIndex : 0;
+                        return indexA - indexB;
+                    });
+            }
+        }
+
+        // Render journal entries
+        function renderJournalEntries(entriesToRender = journalEntries) {
+            const tbody = document.getElementById('journalEntriesTable').querySelector('tbody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (!entriesToRender || entriesToRender.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div class="py-4">
+                                <i class="bi bi-journal-text fs-1 text-muted"></i>
+                                <h5 class="mt-3">No journal entries found</h5>
+                                <p class="text-muted">No entries match your current filters.</p>
+                                <button class="btn btn-primary" onclick="clearFilters()">
+                                    <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const sortedEntries = sortEntries(entriesToRender);
+
+            sortedEntries.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="form-check-input" value="${entry.accounting_entry_id}">
+                    </td>
+                    <td>
+                        <div>
+                            <strong>${entry.reference || `JE-${entry.id.substring(0, 8)}`}</strong><br>
+                            <small class="text-muted">${entry.date}</small>
+                        </div>
+                    </td>
+                    <td>${entry.date}</td>
+                    <td>
+                        <div>
+                            <strong>${entry.description}</strong><br>
+                            <small class="text-muted">${entry.account_name} (${entry.account_code})</small>
+                        </div>
+                    </td>
+                    <td>${entry.entry_type || 'System'}</td>
+                    <td class="text-end debit-amount">P ${entry.debit_amount.toLocaleString()}</td>
+                    <td class="text-end credit-amount">P ${entry.credit_amount.toLocaleString()}</td>
+                    <td>
+                        <span class="badge bg-success">
+                            Posted
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-primary btn-sm" onclick="viewEntry('${entry.id}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="editEntry('${entry.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteEntry('${entry.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Filter journal entries
+        function filterJournalEntries() {
+            const status = document.getElementById('statusFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const fromDate = document.getElementById('fromDateFilter').value;
+            const toDate = document.getElementById('toDateFilter').value;
+            const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+
+            let filteredEntries = journalEntries;
+
+            if (status) {
+                filteredEntries = filteredEntries.filter(entry => entry.status === status);
+            }
+
+            if (type) {
+                filteredEntries = filteredEntries.filter(entry => entry.entry_type === type);
+            }
+
+            if (fromDate) {
+                filteredEntries = filteredEntries.filter(entry => new Date(entry.date) >= new Date(fromDate));
+            }
+
+            if (toDate) {
+                filteredEntries = filteredEntries.filter(entry => new Date(entry.date) <= new Date(toDate));
+            }
+
+            if (searchTerm) {
+                filteredEntries = filteredEntries.filter(entry => {
+                    return entry.description?.toLowerCase().includes(searchTerm) ||
+                        entry.reference?.toLowerCase().includes(searchTerm) ||
+                        entry.account_name.toLowerCase().includes(searchTerm) ||
+                        entry.account_code.toLowerCase().includes(searchTerm);
+                });
+            }
+
+            renderJournalEntries(filteredEntries);
+        }
+
+        function hasActiveFilters() {
+            return Boolean(
+                document.getElementById('statusFilter').value ||
+                document.getElementById('typeFilter').value ||
+                document.getElementById('fromDateFilter').value ||
+                document.getElementById('toDateFilter').value ||
+                document.getElementById('searchFilter').value
+            );
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('fromDateFilter').value = '';
+            document.getElementById('toDateFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+
+            renderJournalEntries(journalEntries);
+        }
+
+        // View entry
+        function viewEntry(entryId) {
+            const entry = journalEntries.find(e => e.id === entryId);
+            if (!entry) return;
+
+            document.getElementById('entryDetailsReference').textContent = entry.reference || `JE-${entry.id.substring(0, 8)}`;
+            document.getElementById('entryDetailsDate').textContent = entry.date;
+            document.getElementById('entryDetailsDescription').textContent = entry.description;
+            document.getElementById('entryDetailsStatus').textContent = 'Posted';
+            document.getElementById('entryDetailsDebit').textContent = `P ${entry.debit_amount.toLocaleString()}`;
+            document.getElementById('entryDetailsCredit').textContent = `P ${entry.credit_amount.toLocaleString()}`;
+
+            const modal = new bootstrap.Modal(document.getElementById('entryDetailsModal'));
+            modal.show();
+        }
+
+        // Edit entry
+        function editEntry(id) {
+            const entry = journalEntries.find(e => e.id === id);
+            if (!entry) return;
+
+            // Find all lines with the same accounting_entry_id
+            const accountingEntryId = entry.accounting_entry_id;
+            const allLines = journalEntries.filter(e => e.accounting_entry_id === accountingEntryId);
+
+            if (allLines.length === 0) return;
+
+            // Use the first line to get common information
+            document.getElementById('entryDate').value = entry.date;
+            document.getElementById('entryReference').value = entry.reference || '';
+            document.getElementById('entryDescription').value = entry.description || entry.particulars || '';
+            document.getElementById('transactionType').value = entry.origin || '';
+
+            // Clear existing lines
+            document.getElementById('entryLines').innerHTML = '';
+
+            // Add existing lines - group by debit/credit
+            allLines.forEach(line => {
+                if (line.entry_type === 'debit' && line.debit_amount > 0) {
+                    addDebitLine(
+                        line.account_code + ' - ' + line.account_name,
+                        line.debit_amount,
+                        line.description || line.particulars || ''
+                    );
+                } else if (line.entry_type === 'credit' && line.credit_amount > 0) {
+                    addCreditLine(
+                        line.account_code + ' - ' + line.account_name,
+                        line.credit_amount,
+                        line.description || line.particulars || ''
+                    );
+                }
+            });
+
+            // Update totals
+            updateTotals();
+
+            const modal = new bootstrap.Modal(document.getElementById('addEntryModal'));
+            modal.show();
+        }
+
+        // Delete entry
+        async function deleteEntry(entryId) {
+            const confirmed = await showDeleteConfirmationModal(entryId);
+            if (!confirmed) return;
+
+            try {
+                // Get auth token
+                let headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch(API_CONFIG.buildUrl(`/accounting/journal/${entryId}`), {
+                    method: 'DELETE',
+                    headers
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Refresh the journal entries list
+                    await fetchJournalEntries();
+
+                    // Log the deletion for audit trail
+                    console.log('Journal Entry Deleted:', result.deleted_entry);
+                } else {
+                    // Handle errors based on status code
+                    const errorMessage = result.detail || 'Unknown error occurred';
+                    if (response.status === 403) {
+                        // Forbidden - show specific message
+                        if (window.modernUI) {
+                            window.modernUI.showNotification('You are not allowed to delete this entry', 'error');
+                        } else {
+                            alert('You are not allowed to delete this entry');
+                        }
+                    } else if (response.status === 404) {
+                        // Not found - entry may have already been deleted
+                        if (window.modernUI) {
+                            window.modernUI.showNotification('Journal entry not found', 'warning');
+                        } else {
+                            alert('Journal entry not found');
+                        }
+                    } else {
+                        // Other errors
+                        if (window.modernUI) {
+                            window.modernUI.showNotification('Error deleting entry: ' + errorMessage, 'error');
+                        } else {
+                            alert('Error deleting entry: ' + errorMessage);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting journal entry:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Error deleting entry: ' + error.message, 'error');
+                } else {
+                    alert('Error deleting entry: ' + error.message);
+                }
+            }
+        }
+
+        // Show delete confirmation modal
+        async function showDeleteConfirmationModal(entryId) {
+            return new Promise(resolve => {
+                if (window.modernUI) {
+                    window.modernUI.showConfirmationModal(
+                        'Confirm Deletion',
+                        `Are you sure you want to delete journal entry ${entryId}? This action cannot be undone.`,
+                        (confirmed) => {
+                            resolve(confirmed);
+                        }
+                    );
+                } else {
+                    resolve(confirm(`Are you sure you want to delete journal entry ${entryId}?`));
+                }
+            });
+        }
+
+        // Force delete entry
+        async function deleteEntryForce(entryId) {
+            try {
+                // Get auth token
+                let headers = {};
+
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch(API_CONFIG.buildUrl(`/accounting/journal/${entryId}?force=true`), {
+                    method: 'DELETE',
+                    headers
+                });
+
+                if (response.ok) {
+                    if (window.modernUI) {
+                        window.modernUI.showNotification('Entry force-deleted successfully', 'success');
+                    }
+                    await fetchJournalEntries();
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Force delete failed');
+                }
+            } catch (error) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Force delete failed: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // Reverse journal entry
+        async function reverseJournalEntry(entryId) {
+            try {
+                // Get auth token
+                let headers = {};
+
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch(API_CONFIG.buildUrl(`/accounting/journal/${entryId}/reverse`), {
+                    method: 'POST',
+                    headers
+                });
+
+                if (response.ok) {
+                    if (window.modernUI) {
+                        window.modernUI.showNotification('Entry reversed successfully', 'success');
+                    }
+                    await fetchJournalEntries();
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Reversal failed');
+                }
+            } catch (error) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Reversal failed: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // Update statistics by recalculating from current entries
+        function updateStatisticsRecalc() {
+            const totalDebits = journalEntries.reduce((sum, entry) => sum + (parseFloat(entry.debit_amount) || 0), 0);
+            const totalCredits = journalEntries.reduce((sum, entry) => sum + (parseFloat(entry.credit_amount) || 0), 0);
+
+            document.getElementById('totalEntries').textContent = journalEntries.length;
+            document.getElementById('postedEntries').textContent = journalEntries.length;
+            document.getElementById('draftEntries').textContent = 0;
+            document.getElementById('totalDebits').textContent = `P ${totalDebits.toLocaleString()}`;
+            document.getElementById('totalCredits').textContent = `P ${totalCredits.toLocaleString()}`;
+        }
+
+        async function ensureSupportingData(force = false) {
+            if (force || accountingCodes.length === 0) {
+                await loadAccountingCodes();
+            }
+            if (force || bankAccounts.length === 0) {
+                await loadBankAccounts();
+            }
+            if (force || dimensions.length === 0) {
+                await loadDimensions();
+            }
+            updateDebugPanel();
+        }
+
+        async function loadAccountingCodes() {
+            try {
+                let headers = {};
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch(ACCOUNTING_CODES_ENDPOINT, { headers });
+                if (!response.ok) {
+                    throw new Error(`Failed to load accounting codes (${response.status})`);
+                }
+
+                const data = await response.json();
+                accountingHierarchy = Array.isArray(data)
+                    ? data
+                    : Array.isArray(data?.items)
+                        ? data.items
+                        : [];
+
+                accountingCodes = flattenAccounts(accountingHierarchy);
+            } catch (error) {
+                console.error('Error loading accounting codes:', error);
+                accountingHierarchy = [];
+                accountingCodes = [];
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Unable to load accounting codes: ' + error.message, 'error');
+                }
+            }
+        }
+
+        async function loadBankAccounts() {
+            if (!BANK_ACCOUNTS_ENDPOINT) {
+                bankAccounts = [];
+                return;
+            }
+
+            try {
+                let headers = {};
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch(BANK_ACCOUNTS_ENDPOINT, { headers });
+                if (!response.ok) {
+                    throw new Error(`Failed to load bank accounts (${response.status})`);
+                }
+
+                const data = await response.json();
+                bankAccounts = Array.isArray(data)
+                    ? data
+                    : Array.isArray(data?.accounts)
+                        ? data.accounts
+                        : [];
+            } catch (error) {
+                console.error('Error loading bank accounts:', error);
+                bankAccounts = [];
+            }
+        }
+
+        // ===== DIMENSIONS FUNCTIONS =====
+
+        async function loadDimensions() {
+            try {
+                let headers = {};
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch('/api/v1/accounting/dimensions', { headers });
+                if (!response.ok) {
+                    throw new Error(`Failed to load dimensions (${response.status})`);
+                }
+
+                dimensions = await response.json();
+
+                // Load dimension values for each dimension
+                for (const dimension of dimensions) {
+                    await loadDimensionValues(dimension.id);
+                }
+
+                console.log('Loaded dimensions:', dimensions);
+            } catch (error) {
+                console.error('Error loading dimensions:', error);
+                dimensions = [];
+            }
+        }
+
+        async function loadDimensionValues(dimensionId) {
+            try {
+                let headers = {};
+                if (window.auth && typeof window.auth.getToken === 'function') {
+                    const token = window.auth.getToken();
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+                }
+
+                const response = await fetch(`/api/v1/accounting/dimensions/${dimensionId}/values`, { headers });
+                if (!response.ok) {
+                    throw new Error(`Failed to load dimension values (${response.status})`);
+                }
+
+                const values = await response.json();
+                dimensionValues[dimensionId] = values;
+            } catch (error) {
+                console.error(`Error loading dimension values for ${dimensionId}:`, error);
+                dimensionValues[dimensionId] = [];
+            }
+        }
+
+        function addDimensionAssignment() {
+            const container = document.getElementById('dimensionAssignments');
+            const assignmentDiv = createDimensionAssignment();
+            container.appendChild(assignmentDiv);
+        }
+
+        function createDimensionAssignment(dimensionId = '', valueId = '', allocation = 100) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'dimension-assignment row g-2 align-items-end mb-2 p-2 border rounded bg-light';
+
+            wrapper.innerHTML = `
+                <div class="col-md-4">
+                    <label class="form-label">Dimension</label>
+                    <select class="form-select dimension-select" required>
+                        <option value="">Select Dimension</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Value</label>
+                    <select class="form-select dimension-value-select" required disabled>
+                        <option value="">Select Value</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Allocation %</label>
+                    <input type="number" class="form-control allocation-input" min="0" max="100" step="0.01" value="${allocation}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-dimension">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Populate dimension dropdown
+            const dimensionSelect = wrapper.querySelector('.dimension-select');
+            const valueSelect = wrapper.querySelector('.dimension-value-select');
+
+            dimensions.forEach(dim => {
+                const option = document.createElement('option');
+                option.value = dim.id;
+                option.textContent = `${dim.name} (${dim.code})`;
+                if (dim.id === dimensionId) {
+                    option.selected = true;
+                }
+                dimensionSelect.appendChild(option);
+            });
+
+            // Handle dimension selection
+            dimensionSelect.addEventListener('change', function () {
+                const selectedDimensionId = this.value;
+                valueSelect.innerHTML = '<option value="">Select Value</option>';
+                valueSelect.disabled = true;
+
+                if (selectedDimensionId && dimensionValues[selectedDimensionId]) {
+                    dimensionValues[selectedDimensionId].forEach(value => {
+                        const option = document.createElement('option');
+                        option.value = value.id;
+                        option.textContent = `${value.name} (${value.code})`;
+                        if (value.id === valueId) {
+                            option.selected = true;
+                        }
+                        valueSelect.appendChild(option);
+                    });
+                    valueSelect.disabled = false;
+                }
+            });
+
+            // Initialize values if dimension is pre-selected
+            if (dimensionId) {
+                dimensionSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Remove button
+            wrapper.querySelector('.remove-dimension').addEventListener('click', () => {
+                wrapper.remove();
+            });
+
+            return wrapper;
+        }
+
+        function addDimensionToLine(lineWrapper) {
+            const dimensionsContainer = lineWrapper.querySelector('.dimension-assignments');
+            const dimensionDiv = createLineDimensionAssignment();
+            dimensionsContainer.appendChild(dimensionDiv);
+        }
+
+        function createLineDimensionAssignment(dimensionId = '', valueId = '') {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'line-dimension d-flex gap-1 mb-1';
+
+            wrapper.innerHTML = `
+                <select class="form-select form-select-sm dimension-select" style="flex: 1;">
+                    <option value="">Select Dimension</option>
+                </select>
+                <select class="form-select form-select-sm dimension-value-select" style="flex: 1;" disabled>
+                    <option value="">Select Value</option>
+                </select>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-line-dimension">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+
+            // Populate dimension dropdown
+            const dimensionSelect = wrapper.querySelector('.dimension-select');
+            const valueSelect = wrapper.querySelector('.dimension-value-select');
+
+            dimensions.forEach(dim => {
+                const option = document.createElement('option');
+                option.value = dim.id;
+                option.textContent = dim.name;
+                if (dim.id === dimensionId) {
+                    option.selected = true;
+                }
+                dimensionSelect.appendChild(option);
+            });
+
+            // Handle dimension selection
+            dimensionSelect.addEventListener('change', function () {
+                const selectedDimensionId = this.value;
+                valueSelect.innerHTML = '<option value="">Select Value</option>';
+                valueSelect.disabled = true;
+
+                if (selectedDimensionId && dimensionValues[selectedDimensionId]) {
+                    dimensionValues[selectedDimensionId].forEach(value => {
+                        const option = document.createElement('option');
+                        option.value = value.id;
+                        option.textContent = value.name;
+                        if (value.id === valueId) {
+                            option.selected = true;
+                        }
+                        valueSelect.appendChild(option);
+                    });
+                    valueSelect.disabled = false;
+                }
+            });
+
+            // Initialize values if dimension is pre-selected
+            if (dimensionId) {
+                dimensionSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Remove button
+            wrapper.querySelector('.remove-line-dimension').addEventListener('click', () => {
+                wrapper.remove();
+            });
+
+            return wrapper;
+        }
+
+        // ===== END DIMENSIONS FUNCTIONS =====
+
+        function flattenAccounts(accounts, level = 0, parentPath = []) {
+            if (!Array.isArray(accounts)) {
+                return [];
+            }
+
+            const flattened = [];
+
+            accounts.forEach(account => {
+                if (!account) return;
+                const { children = [], ...rest } = account;
+                const pathSegments = [...parentPath, `${account.code} - ${account.name}`];
+                const record = {
+                    ...rest,
+                    level,
+                    full_path: account.full_path || pathSegments.join(' / '),
+                    code: account.code,
+                    name: account.name,
+                    id: account.id,
+                    is_parent: account.is_parent,
+                    children: Array.isArray(children) ? children.length : 0
+                };
+                flattened.push(record);
+
+                if (Array.isArray(children) && children.length > 0) {
+                    flattened.push(...flattenAccounts(children, level + 1, pathSegments));
+                }
+            });
+
+            return flattened;
+        }
+
+        function buildAccountOptions(select, selectedAccountId) {
+            select.innerHTML = '<option value="">Select account...</option>';
+            accountingCodes.forEach(code => {
+                const option = document.createElement('option');
+                option.value = code.id || code.account_id || code.code || code.account_code;
+
+                const indent = '\u00a0'.repeat((code.level || 0) * 4);
+                const codeLabel = code.code || code.account_code || code.number || '';
+                const nameLabel = code.name || code.account_name || '';
+                const label = codeLabel ? `${codeLabel} — ${nameLabel}` : nameLabel;
+                option.textContent = `${indent}${label}`;
+                option.title = code.full_path || `${codeLabel} - ${nameLabel}`;
+
+                // Disable selection for parent-only categories
+                if (code.is_parent && code.children > 0) {
+                    option.disabled = true;
+                    option.classList.add('text-muted');
+                }
+
+                option.dataset.accountType = code.account_type || '';
+                option.dataset.category = code.category || '';
+                if (selectedAccountId && option.value === selectedAccountId) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        function createEntryLine(type = 'debit', accountId = '', amount = '', description = '') {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'journal-line row g-2 align-items-end mb-2 p-2 border rounded';
+            wrapper.dataset.lineType = type;
+
+            const typeBadge = type === 'debit'
+                ? '<span class="badge bg-danger">Debit</span>'
+                : type === 'credit'
+                    ? '<span class="badge bg-success">Credit</span>'
+                    : '<span class="badge bg-secondary">Line</span>';
+
+            wrapper.innerHTML = `
+                <div class="col-md-2">
+                    <label class="form-label">Account</label>
+                    <select class="form-select account-select" required></select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Type</label>
+                    <div>${typeBadge}</div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Amount</label>
+                    <input type="number" class="form-control amount-input" step="0.01" min="0" value="${amount}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Description</label>
+                    <input type="text" class="form-control description-input" value="${description}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Dimensions <span class="text-muted">(optional)</span></label>
+                    <div class="dimensions-container">
+                        <button type="button" class="btn btn-outline-primary btn-sm add-dimension-btn">
+                            <i class="bi bi-plus"></i> Add Dimension
+                        </button>
+                        <div class="dimension-assignments mt-1"></div>
+                    </div>
+                </div>
+                <div class="col-md-1 text-end">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-line">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const select = wrapper.querySelector('.account-select');
+            buildAccountOptions(select, accountId);
+
+            select.addEventListener('change', updateTotals);
+            wrapper.querySelector('.amount-input').addEventListener('input', updateTotals);
+            wrapper.querySelector('.remove-line').addEventListener('click', () => {
+                wrapper.remove();
+                updateTotals();
+            });
+
+            // Add dimension functionality
+            wrapper.querySelector('.add-dimension-btn').addEventListener('click', () => {
+                addDimensionToLine(wrapper);
+            });
+
+            return wrapper;
+        }
+
+        function addEntryLine(type = 'debit', accountId = '', amount = '', description = '') {
+            const container = document.getElementById('entryLines');
+            if (!container) {
+                return;
+            }
+
+            const line = createEntryLine(type, accountId, amount, description);
+            container.appendChild(line);
+            updateTotals();
+        }
+
+        function addDebitLine(accountId = '', amount = '', description = '') {
+            addEntryLine('debit', accountId, amount, description);
+        }
+
+        function addCreditLine(accountId = '', amount = '', description = '') {
+            addEntryLine('credit', accountId, amount, description);
+        }
+
+        function resetEntryForm() {
+            const form = document.getElementById('addEntryForm');
+            if (form) {
+                form.reset();
+            }
+            document.getElementById('entryLines').innerHTML = '';
+            document.getElementById('entryTotalDebits').value = '0.00';
+            document.getElementById('entryTotalCredits').value = '0.00';
+            document.getElementById('entryDifference').value = '0.00';
+            updateBalanceStatus(0, 0);
+            updateDebugPanel();
+        }
+
+        async function openAddEntryModal(entry = null) {
+            await ensureSupportingData();
+            resetEntryForm();
+
+            if (entry) {
+                document.getElementById('entryDate').value = entry.date || '';
+                document.getElementById('entryReference').value = entry.reference || '';
+                document.getElementById('entryDescription').value = entry.description || '';
+                document.getElementById('transactionType').value = entry.entry_type || '';
+
+                if (Array.isArray(entry.lines)) {
+                    entry.lines.forEach(line => {
+                        addEntryLine(line.type, line.account_id || line.account, line.amount, line.description);
+                    });
+                }
+                updateTotals();
+            } else {
+                // Default blank debit and credit lines for convenience
+                addDebitLine();
+                addCreditLine();
+                const today = new Date().toISOString().slice(0, 10);
+                document.getElementById('entryDate').value = today;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('addEntryModal'));
+            modal.show();
+        }
+
+        function gatherEntryData(status = 'posted') {
+            const date = document.getElementById('entryDate').value;
+            const description = document.getElementById('entryDescription').value.trim();
+
+            if (!date || !description) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Please provide the entry date and description.', 'warning');
+                } else {
+                    alert('Please provide the entry date and description.');
+                }
+                return null;
+            }
+
+            const reference = document.getElementById('entryReference').value.trim();
+
+            const lines = Array.from(document.querySelectorAll('#entryLines .journal-line')).map(line => {
+                const account = line.querySelector('.account-select').value;
+                const amount = parseFloat(line.querySelector('.amount-input').value || '0');
+                const lineDescription = line.querySelector('.description-input').value.trim();
+                const type = line.dataset.lineType || 'debit';
+
+                // Gather line-level dimension assignments
+                const lineDimensions = Array.from(line.querySelectorAll('.line-dimension')).map(dimElement => {
+                    const dimensionId = dimElement.querySelector('.dimension-select').value;
+                    const valueId = dimElement.querySelector('.dimension-value-select').value;
+
+                    if (dimensionId && valueId) {
+                        return {
+                            dimension_id: dimensionId,
+                            dimension_value_id: valueId,
+                            allocation_percentage: 100.0,
+                            assignment_method: 'manual'
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+
+                return {
+                    account_id: account,
+                    account,
+                    amount,
+                    description: lineDescription,
+                    type,
+                    dimensions: lineDimensions
+                };
+            }).filter(line => line.account && line.amount > 0);
+
+            if (lines.length === 0) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Add at least one entry line with an account and amount.', 'warning');
+                } else {
+                    alert('Add at least one entry line with an account and amount.');
+                }
+                return null;
+            }
+
+            const totals = lines.reduce((acc, line) => {
+                if (line.type === 'credit') {
+                    acc.credits += line.amount;
+                } else {
+                    acc.debits += line.amount;
+                }
+                return acc;
+            }, { debits: 0, credits: 0 });
+
+            if (Math.abs(totals.debits - totals.credits) > 0.005) {
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Journal entry must be balanced before saving.', 'error');
+                } else {
+                    alert('Journal entry must be balanced before saving.');
+                }
+                return null;
+            }
+
+            const particulars = description;
+            const transactionType = document.getElementById('transactionType').value || 'manual';
+
+            const journal_entries = lines.map(line => ({
+                accounting_code_id: line.account_id,
+                narration: line.description || description,
+                description: line.description || description,
+                reference: reference || undefined,
+                entry_type: line.type,
+                debit_amount: line.type === 'debit' ? line.amount : 0,
+                credit_amount: line.type === 'credit' ? line.amount : 0,
+                dimensions: line.dimensions || []
+            }));
+
+            // Gather global dimension assignments
+            const globalDimensions = Array.from(document.querySelectorAll('#dimensionAssignments .dimension-assignment')).map(dimElement => {
+                const dimensionId = dimElement.querySelector('.dimension-select').value;
+                const valueId = dimElement.querySelector('.dimension-value-select').value;
+                const allocation = parseFloat(dimElement.querySelector('.allocation-input').value || '100');
+
+                if (dimensionId && valueId) {
+                    return {
+                        dimension_id: dimensionId,
+                        dimension_value_id: valueId,
+                        allocation_percentage: allocation,
+                        assignment_method: 'manual'
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+
+            return {
+                date_prepared: date,
+                particulars,
+                book: transactionType === 'system' ? 'SYSTEM' : 'GENERAL_JOURNAL',
+                status,
+                journal_entries,
+                dimension_assignments: globalDimensions
+            };
+        }
+
+        function updateTotals() {
+            let totalDebits = 0;
+            let totalCredits = 0;
+
+            document.querySelectorAll('#entryLines .journal-line').forEach(line => {
+                const amount = parseFloat(line.querySelector('.amount-input').value || '0');
+                if (line.dataset.lineType === 'credit') {
+                    totalCredits += amount;
+                } else {
+                    totalDebits += amount;
+                }
+            });
+
+            document.getElementById('entryTotalDebits').value = totalDebits.toFixed(2);
+            document.getElementById('entryTotalCredits').value = totalCredits.toFixed(2);
+            document.getElementById('entryDifference').value = (totalDebits - totalCredits).toFixed(2);
+            updateBalanceStatus(totalDebits, totalCredits);
+        }
+
+        function updateBalanceStatus(totalDebits, totalCredits) {
+            const balanceStatus = document.getElementById('balanceStatus');
+            const difference = Math.abs(totalDebits - totalCredits);
+            if (difference < 0.005) {
+                balanceStatus.innerHTML = '<span class="badge bg-success balance-indicator">Balanced</span>';
+            } else {
+                balanceStatus.innerHTML = `<span class="badge bg-danger balance-indicator">Unbalanced (Δ ${difference.toFixed(2)})</span>`;
+            }
+        }
+
+        function handleTransactionTypeChange() {
+            const type = document.getElementById('transactionType').value;
+            const info = transactionTemplates[type];
+            const infoPanel = document.getElementById('templateInfo');
+            if (info) {
+                // Build description with IFRS reference if available
+                let descriptionHTML = info.description;
+                if (info.ifrs_ref) {
+                    descriptionHTML = `<span class="badge bg-primary me-2">${info.ifrs_ref}</span>${info.description}`;
+                }
+                document.getElementById('templateDescription').innerHTML = descriptionHTML;
+                infoPanel.style.display = 'block';
+                applyTransactionTemplate(info.template);
+            } else {
+                infoPanel.style.display = 'none';
+            }
+        }
+
+        function applyTransactionTemplate(templateLines = []) {
+            if (!Array.isArray(templateLines) || templateLines.length === 0) {
+                return;
+            }
+
+            document.getElementById('entryLines').innerHTML = '';
+            templateLines.forEach(line => {
+                const accountId = guessAccountFromTemplate(line.account);
+                const description = line.description || '';
+                if (line.type === 'credit') {
+                    addCreditLine(accountId, '', description);
+                } else {
+                    addDebitLine(accountId, '', description);
+                }
+            });
+            updateTotals();
+        }
+
+        function guessAccountFromTemplate(keyword) {
+            const normalised = (keyword || '').toLowerCase();
+
+            // Enhanced account mapping for Phase 1 & Phase 2 IFRS accounts
+            const accountMappings = {
+                // Phase 1: Critical Daily Transactions
+                'depreciation_expense': ['depreciation expense', 'depreciation', 'amortization expense'],
+                'accumulated_depreciation': ['accumulated depreciation', 'acc depreciation', 'depreciation accumulated'],
+                'ppe_asset': ['property plant equipment', 'ppe', 'fixed asset', 'plant and equipment', 'equipment', 'machinery'],
+                'cost_of_sales': ['cost of sales', 'cost of goods sold', 'cogs', 'cost sales'],
+                'inventory': ['inventory', 'stock', 'goods'],
+                'salary_expense': ['salary expense', 'salaries expense', 'wage expense', 'wages expense', 'staff cost'],
+                'payroll_tax_expense': ['payroll tax', 'employer contribution', 'paye', 'social security'],
+                'salaries_payable': ['salaries payable', 'wages payable', 'salary payable', 'accrued salaries'],
+                'tax_withholding_payable': ['tax withholding', 'paye payable', 'income tax withholding', 'withheld tax'],
+                'benefits_payable': ['benefits payable', 'pension payable', 'medical aid payable'],
+                'employee_benefit_expense': ['employee benefit expense', 'leave pay expense', 'gratuity expense'],
+                'employee_benefit_provision': ['employee benefit provision', 'leave pay provision', 'gratuity provision'],
+                'income_tax_expense': ['income tax expense', 'tax expense', 'corporate tax'],
+                'income_tax_payable': ['income tax payable', 'tax payable', 'corporate tax payable'],
+                'accrued_expense': ['accrued expense', 'accrued liability', 'accrual', 'expense accrual'],
+                'accrued_income': ['accrued income', 'accrued revenue', 'income receivable'],
+                'prepaid_expense': ['prepaid expense', 'prepayment', 'prepaid', 'deferred expense'],
+
+                // Phase 2: Important Periodic Transactions
+                // IFRS 9: Financial Instruments
+                'bad_debt_expense': ['bad debt expense', 'impairment loss', 'credit loss expense', 'doubtful debts expense', 'ecl expense'],
+                'allowance_doubtful_accounts': ['allowance for doubtful', 'provision for bad debts', 'ecl provision', 'impairment allowance', 'doubtful accounts'],
+                'accounts_receivable': ['accounts receivable', 'trade receivables', 'debtors', 'receivables'],
+
+                // IAS 36: Asset Impairment
+                'impairment_loss_expense': ['impairment loss', 'impairment expense', 'asset impairment', 'impairment charge'],
+                'accumulated_impairment': ['accumulated impairment', 'impairment provision', 'accumulated impairment loss'],
+
+                // IAS 37: Provisions
+                'provision_expense': ['provision expense', 'provision charge', 'provision for', 'warranty expense'],
+                'provision_liability': ['provision liability', 'provisions', 'warranty provision', 'legal provision', 'restructuring provision'],
+
+                // IFRS 15: Revenue Recognition
+                'deferred_revenue': ['deferred revenue', 'unearned revenue', 'contract liability', 'advance from customers', 'customer advances'],
+                'contract_asset': ['contract asset', 'unbilled revenue', 'work in progress', 'accrued revenue', 'revenue receivable'],
+                'revenue': ['revenue', 'sales revenue', 'income', 'sales'],
+
+                // IAS 23: Borrowing Costs
+                'interest_expense': ['interest expense', 'finance cost', 'interest charge', 'loan interest'],
+                'interest_payable': ['interest payable', 'accrued interest', 'interest accrual', 'interest owing'],
+                'bank_account': ['bank', 'cash at bank', 'bank account', 'checking account'],
+
+                // IAS 16: Asset Disposal
+                'gain_on_disposal': ['gain on disposal', 'profit on sale of assets', 'disposal gain', 'gain on sale'],
+                'loss_on_disposal': ['loss on disposal', 'loss on sale of assets', 'disposal loss', 'loss on sale'],
+
+                // IFRS 16: Leases
+                'right_of_use_asset': ['right of use asset', 'rou asset', 'lease asset', 'leased asset'],
+                'lease_liability': ['lease liability', 'lease payable', 'lease obligation', 'finance lease liability'],
+                'accumulated_depreciation_rou': ['accumulated depreciation rou', 'rou depreciation', 'lease depreciation'],
+
+                // Phase 3: Advanced IFRS Transactions
+                // IAS 21: Foreign Currency
+                'forex_gain': ['foreign exchange gain', 'forex gain', 'fx gain', 'exchange gain', 'currency gain'],
+                'forex_loss': ['foreign exchange loss', 'forex loss', 'fx loss', 'exchange loss', 'currency loss'],
+
+                // IFRS 13: Fair Value
+                'financial_asset_fvpl': ['financial asset fvpl', 'trading securities', 'investments at fair value', 'fvpl investments'],
+                'fair_value_gain': ['fair value gain', 'fv gain', 'unrealized gain', 'mark to market gain'],
+                'fair_value_loss': ['fair value loss', 'fv loss', 'unrealized loss', 'mark to market loss'],
+                'financial_asset_fvoci': ['financial asset fvoci', 'equity investments fvoci', 'available for sale'],
+                'fvoci_reserve': ['fvoci reserve', 'fair value reserve', 'oci reserve', 'revaluation reserve equity'],
+
+                // IAS 12: Deferred Tax
+                'deferred_tax_asset': ['deferred tax asset', 'dta', 'future tax benefit'],
+                'deferred_tax_liability': ['deferred tax liability', 'dtl', 'future tax obligation'],
+                'deferred_tax_benefit': ['deferred tax benefit', 'deferred tax income', 'tax benefit'],
+                'deferred_tax_expense': ['deferred tax expense', 'deferred tax charge', 'future tax expense'],
+
+                // IFRS 2: Share-Based Payments
+                'share_based_compensation_expense': ['share based compensation', 'stock option expense', 'equity compensation', 'sbc expense'],
+                'share_based_payment_reserve': ['share based payment reserve', 'stock option reserve', 'equity compensation reserve'],
+                'share_capital': ['share capital', 'common stock', 'ordinary shares', 'capital stock'],
+                'share_premium': ['share premium', 'additional paid in capital', 'apic', 'capital surplus'],
+
+                // IAS 38: Intangible Assets
+                'intangible_asset': ['intangible asset', 'intangibles', 'software', 'patents', 'licenses', 'trademarks'],
+                'accumulated_amortization': ['accumulated amortization', 'amortization accumulated', 'acc amortization'],
+                'amortization_expense': ['amortization expense', 'amortization', 'intangible amortization'],
+                'research_expense': ['research expense', 'research and development', 'r&d expense', 'research costs'],
+                'development_intangible': ['development costs', 'capitalized development', 'development intangible', 'development asset'],
+
+                // IAS 20: Government Grants
+                'deferred_grant_income': ['deferred grant', 'government grant liability', 'grant received in advance'],
+                'grant_income': ['grant income', 'government grant income', 'subsidy income'],
+
+                // Phase 4: Workflow & Consolidation
+                'retained_earnings': ['retained earnings', 'accumulated profit', 'profit brought forward'],
+                'intercompany_receivable': ['intercompany receivable', 'interco receivable', 'due from affiliate'],
+                'intercompany_payable': ['intercompany payable', 'interco payable', 'due to affiliate'],
+                'goodwill': ['goodwill', 'acquisition goodwill'],
+                'goodwill_impairment_loss': ['goodwill impairment', 'impairment of goodwill', 'goodwill impairment loss'],
+                'accounts_payable': ['accounts payable', 'trade payables', 'creditors', 'payables'],
+                'expense': ['expense', 'operating expense', 'general expense'],
+                'other_receivables': ['other receivables', 'sundry receivables', 'miscellaneous receivables']
+            };
+
+            // First try exact keyword match with mappings
+            if (accountMappings[normalised]) {
+                for (const searchTerm of accountMappings[normalised]) {
+                    const match = accountingCodes.find(code => {
+                        const name = (code.name || code.account_name || '').toLowerCase();
+                        return name.includes(searchTerm);
+                    });
+                    if (match) {
+                        return match.id || match.account_id || match.code || match.account_code;
+                    }
+                }
+            }
+
+            // Fallback to simple name matching
+            const match = accountingCodes.find(code => {
+                const name = (code.name || code.account_name || '').toLowerCase();
+                return name.includes(normalised);
+            });
+            return match ? (match.id || match.account_id || match.code || match.account_code) : '';
+        }
+
+        async function refreshAccountingCodes() {
+            await ensureSupportingData(true);
+            document.querySelectorAll('#entryLines .account-select').forEach(select => {
+                const currentValue = select.value;
+                buildAccountOptions(select, currentValue);
+            });
+            if (window.modernUI) {
+                window.modernUI.showNotification('Accounting codes refreshed.', 'success');
+            }
+        }
+
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debugPanel');
+            if (!panel) return;
+            panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'block' : 'none';
+        }
+
+        function togglePhase1Help() {
+            const panel = document.getElementById('phase1HelpPanel');
+            if (!panel) return;
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+                // Smooth scroll to panel
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function updateDebugPanel() {
+            const codeCount = accountingCodes.length;
+            const bankCount = bankAccounts.length;
+            const transactionType = document.getElementById('transactionType').value || 'None';
+            const debugCodeCount = document.getElementById('debugCodeCount');
+            const debugBankCount = document.getElementById('debugBankCount');
+            const debugTransactionType = document.getElementById('debugTransactionType');
+            if (debugCodeCount) debugCodeCount.textContent = codeCount;
+            if (debugBankCount) debugBankCount.textContent = bankCount;
+            if (debugTransactionType) debugTransactionType.textContent = transactionType;
+        }
+
+        function showAllAccountingCodes() {
+            console.table(accountingCodes);
+            if (window.modernUI) {
+                window.modernUI.showNotification('Accounting codes output to console.', 'info');
+            }
+        }
+
+        function showExpenseCodes() {
+            const expenses = accountingCodes.filter(code => {
+                const name = (code.name || code.account_name || '').toLowerCase();
+                return name.includes('expense');
+            });
+            console.table(expenses);
+            if (window.modernUI) {
+                window.modernUI.showNotification(`${expenses.length} expense codes output to console.`, 'info');
+            }
+        }
+
+        function exportAccountingCodes() {
+            const blob = new Blob([JSON.stringify(accountingCodes, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'accounting_codes.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function setupEntryModalEvents() {
+            const saveEntryBtn = document.getElementById('saveEntryBtn');
+            const saveDraftBtn = document.getElementById('saveDraftBtn');
+            if (saveEntryBtn) {
+                saveEntryBtn.addEventListener('click', () => saveJournalEntry('posted'));
+            }
+            if (saveDraftBtn) {
+                saveDraftBtn.addEventListener('click', () => saveJournalEntry('draft'));
+            }
+
+            const transactionTypeSelect = document.getElementById('transactionType');
+            if (transactionTypeSelect) {
+                transactionTypeSelect.addEventListener('change', () => {
+                    handleTransactionTypeChange();
+                    updateDebugPanel();
+                });
+            }
+        }
+
+        function setupFilterEvents() {
+            const filters = ['statusFilter', 'typeFilter', 'fromDateFilter', 'toDateFilter', 'searchFilter'];
+            filters.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const eventName = el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change';
+                el.addEventListener(eventName, filterJournalEntries);
+            });
+
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) {
+                selectAll.addEventListener('change', (event) => {
+                    const checked = event.target.checked;
+                    document.querySelectorAll('#journalEntriesTable tbody input[type="checkbox"]').forEach(cb => {
+                        cb.checked = checked;
+                    });
+                });
+            }
+        }
+
+        function updateSortToggleStyles(container, activeOption) {
+            container.querySelectorAll('button[data-sort-option]').forEach(button => {
+                const option = button.getAttribute('data-sort-option');
+                if (option === activeOption) {
+                    button.classList.add('btn-secondary', 'active');
+                    button.classList.remove('btn-outline-secondary');
+                } else {
+                    button.classList.remove('btn-secondary', 'active');
+                    button.classList.add('btn-outline-secondary');
+                }
+            });
+        }
+
+        function setupSortToggle() {
+            const container = document.getElementById('journalSortToggle');
+            if (!container) return;
+
+            updateSortToggleStyles(container, currentSortOption);
+
+            container.querySelectorAll('button[data-sort-option]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const selectedOption = button.getAttribute('data-sort-option');
+                    if (!selectedOption) {
+                        return;
+                    }
+
+                    if (selectedOption !== currentSortOption) {
+                        currentSortOption = selectedOption;
+                        updateSortToggleStyles(container, currentSortOption);
+                    }
+
+                    if (hasActiveFilters()) {
+                        filterJournalEntries();
+                    } else {
+                        renderJournalEntries(journalEntries);
+                    }
+                });
+            });
+        }
+
+        // Open integration dashboard and load statistics
+        async function openIntegrationDashboard() {
+            const dashboard = document.getElementById('integrationDashboard');
+            const isVisible = dashboard.style.display !== 'none';
+
+            if (isVisible) {
+                // Hide dashboard
+                dashboard.style.display = 'none';
+            } else {
+                // Show dashboard and load statistics
+                dashboard.style.display = 'block';
+                await loadIntegrationStatistics();
+            }
+        }
+
+        // Load integration statistics from API
+        async function loadIntegrationStatistics() {
+            try {
+                const response = await fetch('/api/v1/reports/integration/dashboard-statistics');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    const data = result.data;
+
+                    // Update summary statistics
+                    document.getElementById('todayTransactions').textContent =
+                        data.summary.total_transactions_today || 0;
+                    document.getElementById('autoGeneratedEntries').textContent =
+                        data.summary.auto_generated_entries || 0;
+                    document.getElementById('ifrsComplianceScore').textContent =
+                        data.summary.ifrs_compliance_score || 'N/A';
+                    document.getElementById('lastSyncTime').textContent =
+                        data.summary.last_sync || 'Unknown';
+
+                    // Update integration status badges (Sales, Inventory, Banking, VAT)
+                    updateIntegrationStatus(data);
+                }
+            } catch (error) {
+                console.error('Error loading integration statistics:', error);
+                showNotification('Failed to load integration statistics', 'error');
+            }
+        }
+
+        // Update integration status based on data
+        function updateIntegrationStatus(data) {
+            // This function can be extended to update the status badges dynamically
+            // For now, the HTML already has the status badges defined
+            console.log('Integration status loaded:', data);
+        }
+
+        // View Sales Integration Details
+        function viewSalesIntegration() {
+            Swal.fire({
+                title: 'Sales Integration Details',
+                html: `
+                    <div class="text-start">
+                        <h6 class="mb-3">Automatic Journal Entry Generation</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Revenue recognition (IFRS 15)</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Accounts receivable tracking</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>VAT output calculation</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Cost of sales allocation</li>
+                        </ul>
+
+                        <h6 class="mb-3 mt-4">Integration Points</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>POS System → Auto Journal Entry</li>
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Invoice Creation → Revenue Recognition</li>
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Sales Return → Reversal Entry</li>
+                        </ul>
+
+                        <div class="alert alert-info mt-4">
+                            <strong>IFRS Compliance:</strong> All sales transactions follow IFRS 15
+                            revenue recognition principles with proper accrual accounting.
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                width: 600,
+                confirmButtonText: 'Close'
+            });
+        }
+
+        // View Inventory Integration Details
+        function viewInventoryIntegration() {
+            Swal.fire({
+                title: 'Inventory Integration Configuration',
+                html: `
+                    <div class="text-start">
+                        <h6 class="mb-3">Stock Movement Tracking</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Purchase → Stock increase</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Sale → Stock decrease</li>
+                            <li><i class="bi bi-exclamation-circle text-warning me-2"></i>Stock adjustment → Manual entry required</li>
+                            <li><i class="bi bi-exclamation-circle text-warning me-2"></i>Transfer → Partial automation</li>
+                        </ul>
+
+                        <h6 class="mb-3 mt-4">COGS Calculation</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Method: FIFO (First In, First Out)</li>
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Auto-calculation on sale</li>
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Journal entry: Dr. COGS / Cr. Inventory</li>
+                        </ul>
+
+                        <div class="alert alert-warning mt-4">
+                            <strong>Action Required:</strong> Enable full stock movement automation in
+                            Settings → Inventory → Integration Settings
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                width: 600,
+                confirmButtonText: 'Configure',
+                showCancelButton: true,
+                cancelButtonText: 'Close'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Navigate to inventory settings
+                    window.location.href = '/static/settings.html#inventory';
+                }
+            });
+        }
+
+        // View Banking Integration Details
+        function viewBankingIntegration() {
+            Swal.fire({
+                title: 'Banking Integration Details',
+                html: `
+                    <div class="text-start">
+                        <h6 class="mb-3">Automatic Journal Entry Generation</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Bank deposits → Dr. Bank / Cr. Sales/Other</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Bank withdrawals → Dr. Expense / Cr. Bank</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Bank transfers → Dr. Bank A / Cr. Bank B</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Bank charges → Dr. Bank Charges / Cr. Bank</li>
+                        </ul>
+
+                        <h6 class="mb-3 mt-4">Reconciliation Integration</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Automatic matching with bank statements</li>
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Outstanding items tracking</li>
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Cash flow statement integration</li>
+                        </ul>
+
+                        <div class="alert alert-info mt-4">
+                            <strong>Real-time Sync:</strong> Bank transactions are automatically posted to
+                            the general ledger with proper IFRS 7 compliance.
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                width: 600,
+                confirmButtonText: 'Close'
+            });
+        }
+
+        // View VAT Integration Details
+        function viewVATIntegration() {
+            Swal.fire({
+                title: 'VAT Integration Configuration',
+                html: `
+                    <div class="text-start">
+                        <h6 class="mb-3">Automatic VAT Calculation</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>VAT Output on sales (14%)</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>VAT Input on purchases (14%)</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Zero-rated transactions</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>VAT-exempt items</li>
+                        </ul>
+
+                        <h6 class="mb-3 mt-4">IFRS Reporting</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>VAT Output → Current Liability</li>
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>VAT Input → Current Asset</li>
+                            <li><i class="bi bi-arrow-right text-primary me-2"></i>Net VAT payable/refundable</li>
+                        </ul>
+
+                        <h6 class="mb-3 mt-4">Reconciliation Status</h6>
+                        <div class="alert alert-warning">
+                            <strong>Pending:</strong> Monthly VAT reconciliation not yet completed.
+                            <br>Last reconciliation: Last month
+                            <br><strong>Action Required:</strong> Run VAT reconciliation report
+                        </div>
+
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-primary" onclick="window.location.href='/static/vat-reports.html'">
+                                <i class="bi bi-file-earmark-text me-2"></i>Go to VAT Reports
+                            </button>
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                width: 600,
+                confirmButtonText: 'Close'
+            });
+        }
+
+        // Show notification using Toast
+        function showNotification(message, type = 'info') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+
+            Toast.fire({
+                icon: type,
+                title: message
+            });
+        }
+
+        // Initialize page when DOM loads
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Journal entries page loaded, initializing...');
+
+            // Wait for auth to be ready, then fetch data
+            if (window.auth && auth.isAuthenticated()) {
+                console.log('Auth ready, fetching journal entries...');
+                fetchJournalEntries();
+            } else {
+                // Wait for auth to initialize
+                setTimeout(() => {
+                    if (window.auth && auth.isAuthenticated()) {
+                        console.log('Auth ready after delay, fetching journal entries...');
+                        fetchJournalEntries();
+                    } else {
+                        console.warn('Auth not ready, showing login message');
+                        const tbody = document.getElementById('journalEntriesTable').querySelector('tbody');
+                        if (tbody) {
+                            tbody.innerHTML = `
+                                <tr>
+                                    <td colspan="9" class="text-center">
+                                        <div class="py-4">
+                                            <i class="bi bi-lock fs-1 text-warning"></i>
+                                            <h5 class="mt-3">Authentication Required</h5>
+                                            <p class="text-muted">Please log in to view journal entries.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    }
+                }, 2000);
+            }
+
+            setupEntryModalEvents();
+            setupFilterEvents();
+            setupSortToggle();
+        });
+
+        // Also listen for auth ready event
+        document.addEventListener('authReady', function () {
+            console.log('AuthReady event received, fetching journal entries...');
+            fetchJournalEntries();
+        });
+    </script>
+</body>
+
+</html>

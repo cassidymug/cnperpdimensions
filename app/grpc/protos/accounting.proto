@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+package cnperp.accounting;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+
+// Accounting Service for high-frequency financial operations
+service AccountingService {
+  // Journal Entry operations
+  rpc CreateJournalEntry(CreateJournalEntryRequest) returns (JournalEntryResponse);
+  rpc GetJournalEntry(GetJournalEntryRequest) returns (JournalEntryResponse);
+  rpc GetJournalEntries(GetJournalEntriesRequest) returns (JournalEntriesResponse);
+  rpc PostJournalEntry(PostJournalEntryRequest) returns (JournalEntryResponse);
+  
+  // Account operations
+  rpc GetAccount(GetAccountRequest) returns (AccountResponse);
+  rpc GetAccounts(GetAccountsRequest) returns (AccountsResponse);
+  rpc UpdateAccountBalance(UpdateAccountBalanceRequest) returns (AccountResponse);
+  
+  // High-frequency operations
+  rpc BulkCreateJournalEntries(BulkCreateJournalEntriesRequest) returns (BulkJournalEntriesResponse);
+  rpc ProcessTransactionBatch(TransactionBatchRequest) returns (TransactionBatchResponse);
+  
+  // Real-time streaming
+  rpc StreamAccountBalances(google.protobuf.Empty) returns (stream AccountBalanceUpdate);
+  rpc WatchAccounts(WatchAccountsRequest) returns (stream AccountUpdate);
+}
+
+// Journal Entry messages
+message JournalEntry {
+  string id = 1;
+  string entry_number = 2;
+  google.protobuf.Timestamp entry_date = 3;
+  string description = 4;
+  string reference = 5;
+  cnperp.common.MoneyAmount total_debit = 6;
+  cnperp.common.MoneyAmount total_credit = 7;
+  string status = 8;  // "DRAFT", "POSTED", "REVERSED"
+  repeated JournalEntryLine lines = 9;
+  cnperp.common.AuditInfo audit = 10;
+  string source_module = 11;  // "PURCHASES", "SALES", "INVENTORY", etc.
+}
+
+message JournalEntryLine {
+  string id = 1;
+  string account_id = 2;
+  string account_code = 3;
+  string account_name = 4;
+  cnperp.common.MoneyAmount debit_amount = 5;
+  cnperp.common.MoneyAmount credit_amount = 6;
+  string description = 7;
+  map<string, string> dimensions = 8;  // Cost center, department, etc.
+}
+
+message CreateJournalEntryRequest {
+  google.protobuf.Timestamp entry_date = 1;
+  string description = 2;
+  string reference = 3;
+  repeated CreateJournalEntryLineRequest lines = 4;
+  string source_module = 5;
+  bool auto_post = 6;
+}
+
+message CreateJournalEntryLineRequest {
+  string account_id = 1;
+  cnperp.common.MoneyAmount debit_amount = 2;
+  cnperp.common.MoneyAmount credit_amount = 3;
+  string description = 4;
+  map<string, string> dimensions = 5;
+}
+
+message GetJournalEntryRequest {
+  string id = 1;
+}
+
+message GetJournalEntriesRequest {
+  cnperp.common.PaginationRequest pagination = 1;
+  google.protobuf.Timestamp from_date = 2;
+  google.protobuf.Timestamp to_date = 3;
+  string account_id = 4;
+  string status = 5;
+  string source_module = 6;
+}
+
+message PostJournalEntryRequest {
+  string id = 1;
+  string posted_by = 2;
+}
+
+message JournalEntryResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  JournalEntry journal_entry = 2;
+}
+
+message JournalEntriesResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  repeated JournalEntry journal_entries = 2;
+  cnperp.common.PaginationMeta pagination = 3;
+}
+
+// Account messages
+message Account {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string account_type = 4;  // "ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"
+  string category = 5;
+  string parent_id = 6;
+  cnperp.common.MoneyAmount current_balance = 7;
+  cnperp.common.MoneyAmount debit_balance = 8;
+  cnperp.common.MoneyAmount credit_balance = 9;
+  bool is_active = 10;
+  cnperp.common.AuditInfo audit = 11;
+}
+
+message GetAccountRequest {
+  string id = 1;
+}
+
+message GetAccountsRequest {
+  cnperp.common.PaginationRequest pagination = 1;
+  string account_type = 2;
+  string search = 3;
+  bool active_only = 4;
+}
+
+message UpdateAccountBalanceRequest {
+  string account_id = 1;
+  cnperp.common.MoneyAmount debit_amount = 2;
+  cnperp.common.MoneyAmount credit_amount = 3;
+  string reference = 4;
+}
+
+message AccountResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  Account account = 2;
+}
+
+message AccountsResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  repeated Account accounts = 2;
+  cnperp.common.PaginationMeta pagination = 3;
+}
+
+// Bulk operations
+message BulkCreateJournalEntriesRequest {
+  repeated CreateJournalEntryRequest entries = 1;
+  string batch_reference = 2;
+  bool auto_post = 3;
+}
+
+message BulkJournalEntriesResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  repeated JournalEntryResponse results = 2;
+  int32 processed = 3;
+  int32 failed = 4;
+  string batch_id = 5;
+}
+
+message TransactionBatchRequest {
+  string batch_id = 1;
+  repeated CreateJournalEntryRequest transactions = 2;
+  bool validate_only = 3;
+}
+
+message TransactionBatchResponse {
+  cnperp.common.UnifiedGrpcResponse response = 1;
+  string batch_id = 2;
+  int32 processed = 3;
+  int32 failed = 4;
+  repeated string errors = 5;
+}
+
+// Real-time streaming
+message WatchAccountsRequest {
+  repeated string account_ids = 1;  // Empty = watch all
+  bool include_balance_changes = 2;
+}
+
+message AccountUpdate {
+  string account_id = 1;
+  string account_code = 2;
+  string account_name = 3;
+  cnperp.common.MoneyAmount old_balance = 4;
+  cnperp.common.MoneyAmount new_balance = 5;
+  string transaction_reference = 6;
+  google.protobuf.Timestamp timestamp = 7;
+}
+
+message AccountBalanceUpdate {
+  string account_id = 1;
+  string account_code = 2;
+  cnperp.common.MoneyAmount current_balance = 3;
+  cnperp.common.MoneyAmount change_amount = 4;
+  google.protobuf.Timestamp last_updated = 5;
+}

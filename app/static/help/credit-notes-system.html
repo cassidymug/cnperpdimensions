@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Notes System Guide | CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); min-height: 100vh; padding: 20px; }
+        .help-container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); overflow: hidden; }
+        .help-header { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 3rem 2rem; text-align: center; }
+        .help-header h1 { font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .help-content { padding: 3rem; }
+        .section { margin-bottom: 3rem; }
+        .section h2 { color: #f5576c; font-weight: bold; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 3px solid #f093fb; }
+        .section h3 { color: #f093fb; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; }
+        .feature-card { background: #fff5f8; border-left: 4px solid #f5576c; padding: 1.5rem; margin-bottom: 1rem; border-radius: 8px; }
+        .code-block { background: #2d2d2d; color: #f8f8f2; padding: 1.5rem; border-radius: 8px; font-family: 'Courier New', monospace; margin: 1rem 0; overflow-x: auto; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #dee2e6; }
+        ul.check-list { list-style: none; padding-left: 0; }
+        ul.check-list li { padding: 0.5rem 0; padding-left: 2rem; position: relative; }
+        ul.check-list li:before { content: "✓"; position: absolute; left: 0; color: #28a745; font-weight: bold; font-size: 1.2rem; }
+        .workflow-step { background: #fff; border: 2px solid #f093fb; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="help-container">
+        <div class="help-header">
+            <h1><i class="bi bi-receipt me-3"></i>Credit Notes System</h1>
+            <p class="lead">Professional Returns & Refunds Management</p>
+        </div>
+
+        <div class="help-content">
+            <div class="section">
+                <h2><i class="bi bi-info-circle-fill me-2"></i>Overview</h2>
+                <p class="lead">The Credit Note System provides a comprehensive solution for handling customer returns and refunds in accordance with proper accounting practices. Credit notes are the standard business documents for processing returns, providing formal documentation for both refunds and credit adjustments.</p>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-star-fill text-warning me-2"></i>Key Features</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-file-earmark-text text-primary me-2"></i>Professional Documents</h4>
+                            <ul class="check-list">
+                                <li>Auto-generated credit note numbers (CN202412XXXX)</li>
+                                <li>Professional PDF documents with branding</li>
+                                <li>HTML versions for web display and email</li>
+                                <li>Terms and conditions included</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-cash-coin text-success me-2"></i>Multiple Refund Methods</h4>
+                            <ul class="check-list">
+                                <li><strong>Cash Refunds:</strong> Immediate payment</li>
+                                <li><strong>Bank Transfers:</strong> For card/bank returns</li>
+                                <li><strong>Credit Adjustments:</strong> Account balance credits</li>
+                                <li><strong>Store Credit:</strong> Future purchase credits</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-clipboard-check text-info me-2"></i>Complete Audit Trail</h4>
+                            <ul class="check-list">
+                                <li>Full transaction documentation</li>
+                                <li>User attribution (created by, approved by)</li>
+                                <li>Timestamps for all status changes</li>
+                                <li>Links to invoices and accounting entries</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h4><i class="bi bi-box-seam text-warning me-2"></i>Inventory Integration</h4>
+                            <ul class="check-list">
+                                <li>Automatic inventory adjustments</li>
+                                <li>Condition-based handling (good/damaged)</li>
+                                <li>Serial number tracking</li>
+                                <li>Write-offs for damaged items</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-arrow-right-circle me-2"></i>Business Workflow</h2>
+                
+                <div class="workflow-step">
+                    <h4><i class="bi bi-1-circle-fill text-primary me-2"></i>Customer Return Process</h4>
+                    <ol>
+                        <li>Customer brings items back to store</li>
+                        <li>Staff member creates credit note in system</li>
+                        <li>Items are inspected and condition recorded</li>
+                        <li>Return reasons are documented</li>
+                        <li>Credit note is generated as draft</li>
+                    </ol>
+                </div>
+
+                <div class="workflow-step">
+                    <h4><i class="bi bi-2-circle-fill text-success me-2"></i>Approval Process</h4>
+                    <ol>
+                        <li>Manager reviews credit note details</li>
+                        <li>Verifies return policy compliance</li>
+                        <li>Approves credit note (creates accounting entries)</li>
+                        <li>System updates inventory based on item conditions</li>
+                    </ol>
+                </div>
+
+                <div class="workflow-step">
+                    <h4><i class="bi bi-3-circle-fill text-info me-2"></i>Refund Processing</h4>
+                    <ol>
+                        <li>Determine refund method based on original payment</li>
+                        <li>Enter customer banking details if needed</li>
+                        <li>Process refund through appropriate channel</li>
+                        <li>Generate final credit note document for customer</li>
+                    </ol>
+                </div>
+
+                <div class="workflow-step">
+                    <h4><i class="bi bi-4-circle-fill text-warning me-2"></i>Documentation</h4>
+                    <ol>
+                        <li>Print credit note for customer signature</li>
+                        <li>File copy for business records</li>
+                        <li>Email copy to customer if requested</li>
+                        <li>All transactions recorded in accounting system</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-tags me-2"></i>Return Reasons</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Reason Code</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>faulty_product</code></td><td>Manufacturing defects</td></tr>
+                                <tr><td><code>wrong_item</code></td><td>Incorrect product sent</td></tr>
+                                <tr><td><code>damaged</code></td><td>Shipping/handling damage</td></tr>
+                                <tr><td><code>customer_request</code></td><td>Changed mind</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Reason Code</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>duplicate_order</code></td><td>Accidentally ordered twice</td></tr>
+                                <tr><td><code>quality_issue</code></td><td>Doesn't meet expectations</td></tr>
+                                <tr><td><code>size_issue</code></td><td>Wrong size</td></tr>
+                                <tr><td><code>other</code></td><td>Other reasons (describe)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-box me-2"></i>Item Conditions</h2>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-check-circle me-2"></i>Sellable
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li><strong>Unopened:</strong> Original packaging</li>
+                                    <li><strong>Good:</strong> Excellent condition</li>
+                                    <li><strong>Used:</strong> Shows use but functional</li>
+                                </ul>
+                                <p class="small mb-0 mt-2"><strong>Action:</strong> Added back to inventory</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-danger mb-3">
+                            <div class="card-header bg-danger text-white">
+                                <i class="bi bi-x-circle me-2"></i>Not Sellable
+                            </div>
+                            <div class="card-body">
+                                <ul class="small">
+                                    <li><strong>Damaged:</strong> Physical damage</li>
+                                    <li><strong>Faulty:</strong> Defective/malfunctioning</li>
+                                </ul>
+                                <p class="small mb-0 mt-2"><strong>Action:</strong> Written off as loss</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>Note</h6>
+                            <p class="small mb-0">Condition assessment affects inventory handling and accounting treatment. Damaged items create expense entries, while sellable items return to stock.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-calculator me-2"></i>Accounting Integration</h2>
+                
+                <div class="alert alert-success border-start border-success border-4">
+                    <h5 class="alert-heading"><i class="bi bi-shield-check me-2"></i>IFRS Compliant</h5>
+                    <ul class="mb-0">
+                        <li>Proper double-entry bookkeeping for all transactions</li>
+                        <li>Sales returns accounting entries</li>
+                        <li>VAT reversal handling</li>
+                        <li>Integration with general ledger</li>
+                    </ul>
+                </div>
+
+                <h3>Typical Accounting Entries</h3>
+                <div class="code-block">
+<strong>When Credit Note is Approved:</strong>
+
+Debit:  Sales Returns Account        P 1,000.00
+Debit:  VAT on Returns Account         P   140.00
+Credit: Accounts Receivable                     P 1,140.00
+
+<strong>When Refund is Processed (Cash):</strong>
+
+Debit:  Accounts Receivable          P 1,140.00
+Credit: Cash Account                            P 1,140.00
+
+<strong>For Damaged Items (Write-off):</strong>
+
+Debit:  Loss on Damaged Goods        P   500.00
+Credit: Inventory Account                       P   500.00
+                </div>
+            </div>
+
+            <div class="section">
+                <h2><i class="bi bi-file-earmark-code me-2"></i>API Endpoints</h2>
+                
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td><code>/api/v1/credit-notes/</code></td>
+                            <td>Create new credit note</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/api/v1/credit-notes/{id}</code></td>
+                            <td>Get credit note details</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td><code>/api/v1/credit-notes/{id}/approve</code></td>
+                            <td>Approve credit note</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td><code>/api/v1/credit-notes/{id}/process-refund</code></td>
+                            <td>Process refund payment</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/api/v1/credit-notes/</code></td>
+                            <td>List credit notes with filters</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/api/v1/credit-notes/pending-refunds</code></td>
+                            <td>Get pending refunds</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="nav-buttons">
+                <a href="/static/help-center.html" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+                <a href="/static/credit-notes.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-receipt me-2"></i>Open Credit Notes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

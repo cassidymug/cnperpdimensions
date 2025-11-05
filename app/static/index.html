@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP ERP - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Auth bootstrap must load first to prevent auth race conditions -->
+    <script src="js/auth-bootstrap.js"></script>
+    <!-- Auth Helper MUST load before navbar-loader so that auth headers are present for initial fetches -->
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        body[data-theme="dark"] {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .quick-action-btn {
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .quick-action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        /* Remove the old theme switcher */
+        .theme-switcher {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+
+
+
+
+
+
+
+    </style>
+    </head>
+
+    <body>
+        <!-- Navigation Bar Container -->
+        <div id="navbar-container"></div>
+        <!-- Navbar Scripts -->
+        <script src="js/navbar.js?v=20250106001"></script>
+
+        <!-- Spacer to prevent content from being hidden under fixed navbar -->
+        <div style="height: 70px;"></div>
+
+        <!-- Notification Container -->
+        <div id="notification-container" class="notification-container"></div>
+
+        <!-- Include Standardized Navbar -->
+
+
+
+
+
+
+        <!-- Main Content -->
+        <div class="container-fluid mt-4">
+            <!-- Real-time Clock -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card stat-card">
+                        <div class="card-body text-center">
+                            <h3 class="mb-2">📊 CNPERP ERP Dashboard</h3>
+                            <div class="h4 mb-0">
+                                <i class="bi bi-clock me-2"></i>
+                                <span id="dashboard-timestamp">Loading...</span>
+                            </div>
+                            <small>Real-time System Clock</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="mb-3"><i class="bi bi-lightning"></i> Quick Actions</h5>
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4 col-6 mb-3">
+                            <a href="/static/pos.html" class="text-decoration-none">
+                                <div class="card quick-action-btn bg-primary text-white">
+                                    <div class="card-body">
+                                        <i class="bi bi-cart-plus fs-1"></i>
+                                        <h6 class="mt-2">New Sale</h6>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-3">
+                            <a href="/static/journal-entries.html" class="text-decoration-none">
+                                <div class="card quick-action-btn bg-success text-white">
+                                    <div class="card-body">
+                                        <i class="bi bi-journal-plus fs-1"></i>
+                                        <h6 class="mt-2">New Entry</h6>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-3">
+                            <a href="/static/products.html" class="text-decoration-none">
+                                <div class="card quick-action-btn bg-info text-white">
+                                    <div class="card-body">
+                                        <i class="bi bi-box-seam fs-1"></i>
+                                        <h6 class="mt-2">Add Product</h6>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-3">
+                            <a href="/static/customers.html" class="text-decoration-none">
+                                <div class="card quick-action-btn bg-warning text-white">
+                                    <div class="card-body">
+                                        <i class="bi bi-person-plus fs-1"></i>
+                                        <h6 class="mt-2">Add Customer</h6>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-3">
+                            <a href="/static/purchases.html" class="text-decoration-none">
+                                <div class="card quick-action-btn bg-danger text-white">
+                                    <div class="card-body">
+                                        <i class="bi bi-truck fs-1"></i>
+                                        <h6 class="mt-2">New Purchase</h6>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-sm-4 col-6 mb-3">
+                            <a href="/static/bank-accounts.html" class="text-decoration-none">
+                                <div class="card quick-action-btn bg-secondary text-white">
+                                    <div class="card-body">
+                                        <i class="bi bi-bank fs-1"></i>
+                                        <h6 class="mt-2">Bank Transfer</h6>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Total Sales</h6>
+                                    <h3 class="mb-0" id="total-sales">Loading...</h3>
+                                    <small id="sales-trend">Loading...</small>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-graph-up fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Products</h6>
+                                    <h3 class="mb-0" id="total-products">Loading...</h3>
+                                    <small>Active inventory items</small>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-box-seam fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Customers</h6>
+                                    <h3 class="mb-0" id="total-customers">Loading...</h3>
+                                    <small>Registered customers</small>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-people fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Bank Balance</h6>
+                                    <h3 class="mb-0" id="bank-balance">Loading...</h3>
+                                    <small>Across all accounts</small>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="bi bi-bank fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Activity</h5>
+                        </div>
+                        <div class="card-body" id="recent-activity">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading recent activity...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Stats</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h4 class="text-success" id="monthly-sales">Loading...</h4>
+                                    <small>This Month</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-info" id="customer-count">Loading...</h4>
+                                    <small>Customers</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h5 class="text-warning" id="product-count">Loading...</h5>
+                                    <small>Products</small>
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="text-primary" id="branch-count">Loading...</h5>
+                                    <small>Branches</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Branch Switcher (eligible roles) -->
+        <script src="js/branch-switcher.js"></script>
+        <!-- Currency Utils -->
+        <script src="js/currency-utils.js"></script>
+        <!-- Modern Interactions -->
+        <script src="js/modern-interactions.js"></script>
+
+        <script>
+            // Global variables for settings
+            let currentCurrency = 'BWP';
+            let currencySymbol = 'P';
+            let currencyCode = 'BWP';
+
+            // Load settings and currency
+            async function loadSettings() {
+                try {
+                    const response = await fetch('/api/v1/settings/currency', { headers: (window.auth ? auth.authHeader() : {}) });
+                    if (response.ok) {
+                        const settings = await response.json();
+                        currentCurrency = settings.data.currency || 'BWP';
+                        currencySymbol = settings.data.currency_symbol || 'P';
+                        currencyCode = settings.data.currency || 'BWP';
+                    }
+                } catch (error) {
+                    console.error('Error loading settings:', error);
+                }
+            }
+
+            // Format currency amount
+            function formatCurrency(amount) {
+                return `${currencySymbol}${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+
+            // Load dashboard statistics
+            async function loadDashboardStats() {
+                try {
+                    // Load sales data
+                    const salesResponse = await fetch('/api/v1/sales/sales', { headers: (window.auth ? auth.authHeader() : {}) });
+                    if (salesResponse.ok) {
+                        const sales = await salesResponse.json();
+                        const totalSales = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount || 0), 0);
+                        document.getElementById('total-sales').textContent = formatCurrency(totalSales);
+                        document.getElementById('monthly-sales').textContent = formatCurrency(totalSales);
+                    }
+
+                    // Load products data
+                    const productsResponse = await fetch('/api/v1/inventory/products', { headers: (window.auth ? auth.authHeader() : {}) });
+                    if (productsResponse.ok) {
+                        const products = await productsResponse.json();
+                        document.getElementById('total-products').textContent = products.length;
+                        document.getElementById('product-count').textContent = products.length;
+                    }
+
+                    // Load customers data
+                    const customersResponse = await fetch('/api/v1/sales/customers', { headers: (window.auth ? auth.authHeader() : {}) });
+                    if (customersResponse.ok) {
+                        const customers = await customersResponse.json();
+                        document.getElementById('total-customers').textContent = customers.length;
+                        document.getElementById('customer-count').textContent = customers.length;
+                    }
+
+                    // Load bank accounts data
+                    const bankResponse = await fetch('/api/v1/banking/accounts', { headers: (window.auth ? auth.authHeader() : {}) });
+                    if (bankResponse.ok) {
+                        const accounts = await bankResponse.json();
+                        const accList = Array.isArray(accounts) ? accounts : (accounts?.data && Array.isArray(accounts.data) ? accounts.data : []);
+                        const totalBalance = accList.reduce((sum, account) => sum + parseFloat(account.balance || 0), 0);
+                        document.getElementById('bank-balance').textContent = formatCurrency(totalBalance);
+                    }
+
+                    // Load branches data
+                    const branchesResponse = await fetch('/api/v1/branches/public');
+                    if (branchesResponse.ok) {
+                        const branches = await branchesResponse.json();
+                        document.getElementById('branch-count').textContent = branches.length;
+                    }
+
+                    // Load recent activity
+                    await loadRecentActivity();
+
+                } catch (error) {
+                    console.error('Error loading dashboard stats:', error);
+                }
+            }
+
+            // Load recent activity
+            async function loadRecentActivity() {
+                try {
+                    const activityContainer = document.getElementById('recent-activity');
+                    activityContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading...</p></div>';
+
+                    // Load recent sales
+                    const salesResponse = await fetch('/api/v1/sales/sales?limit=5', { headers: (window.auth ? auth.authHeader() : {}) });
+                    let activities = [];
+
+                    if (salesResponse.ok) {
+                        const sales = await salesResponse.json();
+                        sales.forEach(sale => {
+                            activities.push({
+                                type: 'New Sale',
+                                description: `Customer: ${sale.customer_name || 'Unknown'}, Amount: ${formatCurrency(sale.total_amount || 0)}`,
+                                time: new Date(sale.created_at).toLocaleString()
+                            });
+                        });
+                    }
+
+                    // Load recent products
+                    const productsResponse = await fetch('/api/v1/inventory/products?limit=3', { headers: (window.auth ? auth.authHeader() : {}) });
+                    if (productsResponse.ok) {
+                        const products = await productsResponse.json();
+                        products.forEach(product => {
+                            activities.push({
+                                type: 'Product Added',
+                                description: `${product.name}, SKU: ${product.sku}`,
+                                time: new Date(product.created_at).toLocaleString()
+                            });
+                        });
+                    }
+
+                    // Sort activities by time and display
+                    activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+                    activities = activities.slice(0, 5);
+
+                    if (activities.length === 0) {
+                        activityContainer.innerHTML = '<p class="text-muted text-center">No recent activity</p>';
+                    } else {
+                        activityContainer.innerHTML = activities.map(activity => `
+                        <div class="activity-item">
+                            <strong>${activity.type}</strong> - ${activity.description}
+                            <small class="text-muted d-block">${activity.time}</small>
+                        </div>
+                    `).join('');
+                    }
+
+                } catch (error) {
+                    console.error('Error loading recent activity:', error);
+                    document.getElementById('recent-activity').innerHTML = '<p class="text-muted text-center">Error loading activity</p>';
+                }
+            }
+
+            // Update timestamp
+            function updateTimestamp() {
+                const now = new Date();
+                const timestamp = now.toLocaleString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                document.getElementById('dashboard-timestamp').textContent = timestamp;
+            }
+
+            // Initialize dashboard
+            async function initializeDashboard() {
+                // Check if user should be redirected based on role
+                if (window.auth && auth.isAuthenticated()) {
+                    auth.redirectBasedOnRole();
+                }
+
+                await loadSettings();
+                await loadDashboardStats();
+                updateTimestamp();
+                setInterval(updateTimestamp, 1000);
+            }
+
+            // Start initialization when DOM is loaded
+            document.addEventListener('DOMContentLoaded', initializeDashboard);
+
+            // F1 Key - Open Help System
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'F1') {
+                    event.preventDefault();
+                    window.open('/static/HELP_SYSTEM_GUIDE.html', '_blank');
+                }
+            });
+        </script>
+
+
+
+    </body>
+
+</html>

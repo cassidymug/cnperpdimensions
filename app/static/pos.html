@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CNPERP POS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    
+    <style>
+        body { background: #0f172a; color: #e2e8f0; }
+        .pos-topbar { background: #111827; border-bottom: 1px solid #1f2937; }
+        .chip { border: 1px solid #334155; padding: .25rem .5rem; border-radius: .5rem; font-size: .85rem; color: #cbd5e1; }
+        .panel { background: #0b1220; border: 1px solid #1f2937; border-radius: .75rem; }
+        .product-card { background: #0a0f1a; border: 1px solid #1e293b; border-radius: .75rem; padding: .75rem; cursor: pointer; transition: transform .1s ease; }
+        .product-card:hover { transform: translateY(-2px); border-color: #2563eb; }
+        .product-name { font-size: .9rem; font-weight: 600; color: #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-price { color: #93c5fd; font-weight: 700; }
+        .product-sku { color: #9ca3af; font-size: .75rem; }
+        .bag-item { border-bottom: 1px dashed #1f2937; padding: .5rem 0; }
+        .qty-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #334155; background: #0b1220; color: #e2e8f0; }
+        .pm-btn { border: 1px solid #334155; background: #0b1220; color: #e2e8f0; padding: .5rem .75rem; border-radius: .5rem; }
+        .pm-btn.active { border-color: #2563eb; color: #bfdbfe; }
+        .badge-info-ghost { background: rgba(59,130,246,.15); color: #93c5fd; border: 1px solid rgba(59,130,246,.35); }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+    <!-- Navbar Scripts -->
+    <script src="js/navbar.js?v=20250106001"></script>
+    
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <header class="pos-topbar py-2">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="h5 mb-0"><i class="bi bi-shop me-2"></i><span id="brandName">CNPERP POS</span></div>
+                <div class="d-flex gap-2">
+                    <span class="chip"><i class="bi bi-geo me-1"></i><span id="branchName">Branch</span></span>
+                    <span class="chip"><i class="bi bi-person-badge me-1"></i><span id="cashierName">User</span></span>
+                    <span class="chip"><i class="bi bi-clock me-1"></i><span id="dateTime">--</span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container-fluid my-3">
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="p-3 panel h-100">
+                    <div class="d-flex gap-2 mb-3 align-items-center">
+                        <input id="productSearch" class="form-control form-control-lg" placeholder="Search products..." />
+                        <button class="btn btn-outline-light" id="clearProductSearch" title="Clear"><i class="bi bi-x-lg"></i></button>
+                        <input id="barcodeScan" class="form-control" placeholder="Scan barcode..." style="max-width: 240px;" />
+                        <span class="text-secondary small"><i class="bi bi-upc-scan me-1"></i>Auto-add on Enter</span>
+                    </div>
+                    <div id="productsGrid" class="row g-2" style="max-height: 70vh; overflow-y:auto;"></div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="p-3 panel h-100 d-flex flex-column">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div>
+                            <span class="me-2"><i class="bi bi-person"></i>Customer:</span>
+                            <span id="customerSummary" class="fw-semibold">Walk-in Customer</span>
+                            <button class="btn btn-sm btn-outline-light ms-2" id="chooseCustomerBtn"><i class="bi bi-search"></i> Choose</button>
+                        </div>
+                        <div id="customerBalanceWrap" class="small d-none">
+                            Balance: <span id="customerBalance">0.00</span>
+                        </div>
+                    </div>
+
+                    <div id="cartList" class="flex-grow-1" style="overflow-y: auto; min-height: 200px; border-top: 1px dashed #1f2937; border-bottom: 1px dashed #1f2937;"></div>
+
+                    <div class="mt-2">
+                        <div class="d-flex justify-content-between small"><span class="text-secondary">Subtotal</span><span id="subtotal">0.00</span></div>
+                        <div class="d-flex justify-content-between small"><span class="text-secondary">Discount</span><span id="discount">0.00</span></div>
+                        <div class="d-flex justify-content-between small"><span class="text-secondary">VAT</span><span id="vat">0.00</span></div>
+                        <div class="d-flex justify-content-between h5"><strong>Total</strong><strong id="total">0.00</strong></div>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="mb-2">Payment Method</div>
+                        <div class="d-flex gap-2 mb-3">
+                            <button class="pm-btn active" id="pm-cash">Cash</button>
+                            <button class="pm-btn" id="pm-card">Card</button>
+                            <button class="pm-btn" id="pm-credit">Credit</button>
+                        </div>
+                        <div id="cashControls" class="d-flex align-items-center gap-2 mb-3">
+                            <label class="text-secondary">Tendered</label>
+                            <input id="amountTendered" type="number" class="form-control" min="0" step="0.01" style="max-width: 200px;" />
+                            <div class="text-secondary">Change: <span id="changeDue">0.00</span></div>
+                        </div>
+                        <div id="cardControls" class="mb-3" style="display:none;">
+                            <div class="text-secondary mb-1">Card Bank Account</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <select id="cardBankSelect" class="form-select" style="max-width: 360px;"></select>
+                                <button class="btn btn-outline-light" id="reloadBanks" title="Reload"><i class="bi bi-arrow-repeat"></i></button>
+                            </div>
+                            <div id="defaultCardBadge" class="mt-2 d-none">
+                                <span class="badge badge-info-ghost"><i class="bi bi-info-circle me-1"></i>Using default: <span id="defaultCardName"></span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto d-flex gap-2 justify-content-end flex-wrap">
+                        <a class="btn btn-outline-info" id="viewReceiptsBtn" href="/static/receipts.html" target="_blank" rel="noopener"><i class="bi bi-receipt me-1"></i>Receipts</a>
+                        <button class="btn btn-outline-light" id="testCardBtn"><i class="bi bi-question-circle me-1"></i>Test Card Bank</button>
+                        <button class="btn btn-outline-warning" id="closeSessionBtn"><i class="bi bi-door-closed me-1"></i>Close Session</button>
+                        <button class="btn btn-success" id="confirmBtn"><i class="bi bi-check-circle me-1"></i>Checkout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 1080"></div>
+
+    <!-- Customer Modal -->
+    <div class="modal fade" id="customerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background:#0b1220; color:#e2e8f0;">
+                <div class="modal-header" style="border-bottom: 1px solid #1f2937;">
+                    <h5 class="modal-title"><i class="bi bi-person me-2"></i>Select Customer</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex gap-2 mb-3">
+                        <input id="customerSearch" class="form-control" placeholder="Search customers by name, email, phone..." />
+                        <button class="btn btn-outline-light" id="clearCustomerSearch" title="Clear"><i class="bi bi-x-lg"></i></button>
+                        <button class="btn btn-secondary" id="useWalkIn"><i class="bi bi-person-walking me-1"></i>Use Walk-in</button>
+                    </div>
+                    <div id="customerLoading" class="text-center d-none mb-3">
+                        <div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                    <div id="noCustomers" class="text-center text-secondary d-none py-4">
+                        <i class="bi bi-people fs-1"></i>
+                        <div class="mt-2">No customers found</div>
+                    </div>
+                    <div id="customerList" style="max-height: 50vh; overflow-y: auto;"></div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #1f2937;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Preview Modal -->
+    <div class="modal fade" id="receiptPreviewModal" tabindex="-1" aria-labelledby="receiptPreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background: #2d2d2d; color: #ffffff;">
+                <div class="modal-header" style="border-bottom: 1px solid #404040;">
+                    <h5 class="modal-title" id="receiptPreviewModalLabel">Receipt Preview</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalReceiptPreview" class="receipt-preview" style="background: white; color: black; max-height: 500px; overflow-y: auto;">
+                        <!-- Receipt content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #404040;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="modalPrintBtn" onclick="printModalReceipt()">Print</button>
+                    <button type="button" class="btn btn-success" id="modalDownloadBtn" onclick="downloadModalReceipt()">Download PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Receipts Modal -->
+    <div class="modal fade" id="recentReceiptsModal" tabindex="-1" aria-labelledby="recentReceiptsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content" style="background:#0b1220; color:#e2e8f0;">
+                <div class="modal-header" style="border-bottom: 1px solid #1f2937;">
+                    <h5 class="modal-title" id="recentReceiptsLabel"><i class="bi bi-receipt me-2"></i>Recent Receipts</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                        <div class="text-secondary small" id="recentReceiptsSummary">Latest transactions for this branch</div>
+                        <div class="d-flex gap-2">
+                            <select id="recentReceiptsLimit" class="form-select form-select-sm" style="width: 140px;">
+                                <option value="10">Last 10</option>
+                                <option value="20" selected>Last 20</option>
+                                <option value="50">Last 50</option>
+                            </select>
+                            <button class="btn btn-outline-light btn-sm" id="refreshReceiptsList"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+                        </div>
+                    </div>
+                    <div id="recentReceiptsLoading" class="text-center py-4 d-none">
+                        <div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading...</span></div>
+                        <div class="small text-secondary mt-2">Fetching receipts…</div>
+                    </div>
+                    <div id="recentReceiptsEmpty" class="text-center py-4 d-none">
+                        <i class="bi bi-archive text-secondary fs-3"></i>
+                        <div class="mt-2 text-secondary">No receipts recorded yet</div>
+                        <div class="text-secondary small">Complete a sale to generate the first receipt.</div>
+                    </div>
+                    <div class="table-responsive" id="recentReceiptsTableWrap">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Receipt #</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Source</th>
+                                    <th>Printed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentReceiptsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts: Auth (for user/session), Bootstrap bundle, navbar, and POS logic -->
+    <script src="js/auth.js"></script>
+    <script src="js/auth-bootstrap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="js/pos_new.js"></script>
+</body>
+</html> 

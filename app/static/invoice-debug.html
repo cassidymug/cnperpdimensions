@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice API Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <h1>Invoice API Debug Test</h1>
+    <p>This page will help debug the invoice API issues.</p>
+    
+    <div>
+        <button class="btn-primary" onclick="testGetAllInvoices()">Test GET All Invoices</button>
+        <button class="btn-secondary" onclick="testSpecificInvoice()">Test Specific Invoice</button>
+        <button class="btn-secondary" onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        const INVOICES_ENDPOINT = '/api/v1/invoices';
+        let lastInvoiceId = null;
+        
+        function addResult(message, type = 'info', data = null) {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            
+            let content = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            div.innerHTML = content;
+            resultsDiv.appendChild(div);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        async function testGetAllInvoices() {
+            addResult('Testing GET all invoices...', 'info');
+            
+            try {
+                const response = await fetch(INVOICES_ENDPOINT);
+                addResult(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const invoices = await response.json();
+                    addResult(`Found ${invoices.length} invoices`, 'success', invoices.slice(0, 3));
+                    
+                    if (invoices.length > 0) {
+                        lastInvoiceId = invoices[0].id;
+                        addResult(`Stored first invoice ID for testing: ${lastInvoiceId}`, 'info');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    addResult(`Error response: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                addResult(`Request failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSpecificInvoice() {
+            if (!lastInvoiceId) {
+                addResult('No invoice ID available. Run "Test GET All Invoices" first.', 'error');
+                return;
+            }
+            
+            addResult(`Testing GET specific invoice: ${lastInvoiceId}`, 'info');
+            
+            try {
+                const response = await fetch(`${INVOICES_ENDPOINT}/${lastInvoiceId}`);
+                addResult(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const invoice = await response.json();
+                    addResult(`Invoice details loaded successfully`, 'success', invoice);
+                } else {
+                    const errorText = await response.text();
+                    addResult(`Error response: ${errorText}`, 'error');
+                }
+            } catch (error) {
+                addResult(`Request failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Auto-run test when page loads
+        window.addEventListener('load', () => {
+            addResult('Page loaded. Ready to test invoice API.', 'info');
+            setTimeout(testGetAllInvoices, 1000);
+        });
+    </script>
+
+    
+    
+</body>
+</html>

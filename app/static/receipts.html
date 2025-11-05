@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Receipt Management</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Modern Styles -->
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .receipt-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .receipt-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+        }
+
+        .receipt-preview {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 10px;
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-receipt me-2"></i>Receipt Management</h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" onclick="openInvoicePaymentModal()">
+                            <i class="bi bi-cash-stack me-1"></i>Record Payment
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="refreshReceipts()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                        </button>
+                        <button class="btn btn-outline-success" onclick="bulkPrint()">
+                            <i class="bi bi-printer me-1"></i>Bulk Print
+                        </button>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search receipts..."
+                            style="width: 250px;">
+                        <select id="statusFilter" class="form-select" style="width: 150px;">
+                            <option value="">All Status</option>
+                            <option value="printed">Printed</option>
+                            <option value="not_printed">Not Printed</option>
+                        </select>
+                        <div class="input-group" style="width: 300px;">
+                            <input type="date" id="startDate" class="form-control">
+                            <span class="input-group-text">to</span>
+                            <input type="date" id="endDate" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipt Statistics -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-receipt me-2"></i>Total Receipts</h5>
+                                <h3 id="totalReceipts">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-printer me-2"></i>Printed</h5>
+                                <h3 id="printedReceipts">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-clock me-2"></i>Pending Print</h5>
+                                <h3 id="pendingReceipts">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-calendar me-2"></i>This Month</h5>
+                                <h3 id="monthlyReceipts">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipts Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Receipts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="receiptsTable">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                        <th>Receipt #</th>
+                                        <th>Document</th>
+                                        <th>Date</th>
+                                        <th>Branch</th>
+                                        <th>Registered By</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Print Count</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="receiptsTableBody">
+                                    <!-- Receipts will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Loading indicator -->
+                        <div id="loadingIndicator" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading receipts...</p>
+                        </div>
+
+                        <!-- No data message -->
+                        <div id="noDataMessage" class="text-center py-4 d-none">
+                            <i class="bi bi-receipt-x fs-1 text-muted"></i>
+                            <h5 class="mt-3 text-muted">No receipts found</h5>
+                            <p class="text-muted">Receipts will appear here once sales are completed.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Preview Modal -->
+    <div class="modal fade" id="receiptModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiptModalTitle">Receipt Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="receiptPreview" class="receipt-preview">
+                        <!-- Receipt content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="printBtn" onclick="printReceipt()">Print</button>
+                    <button type="button" class="btn btn-success" id="downloadBtn" onclick="downloadReceipt()">Download
+                        PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Record Invoice Payment Modal -->
+    <div class="modal fade" id="invoicePaymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="invoicePaymentForm" onsubmit="submitInvoicePayment(event)">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-cash-stack me-2"></i>Record Invoice Payment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="invoicePaymentError" class="alert alert-danger d-none" role="alert"></div>
+                        <div class="mb-3">
+                            <label for="invoicePaymentInvoice" class="form-label">Invoice ID or Number</label>
+                            <input type="text" class="form-control" id="invoicePaymentInvoice"
+                                placeholder="e.g. INV-2025-0001" required>
+                            <small class="form-text text-muted">You can paste the invoice UUID or the public invoice
+                                number.</small>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="invoicePaymentAmount" class="form-label">Amount</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="invoicePaymentAmount"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="invoicePaymentDate" class="form-label">Payment Date</label>
+                                <input type="date" class="form-control" id="invoicePaymentDate">
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <label for="invoicePaymentMethod" class="form-label">Payment Method</label>
+                                <select class="form-select" id="invoicePaymentMethod">
+                                    <option value="cash">Cash</option>
+                                    <option value="card">Card</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="mobile_money">Mobile Money</option>
+                                    <option value="cheque">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="invoicePaymentFormat" class="form-label">Receipt Format</label>
+                                <select class="form-select" id="invoicePaymentFormat">
+                                    <option value="">Default</option>
+                                    <option value="80mm">Thermal 80mm</option>
+                                    <option value="50mm">Thermal 50mm</option>
+                                    <option value="a4">A4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label for="invoicePaymentReference" class="form-label">Reference</label>
+                            <input type="text" class="form-control" id="invoicePaymentReference"
+                                placeholder="Bank reference or transaction ID">
+                        </div>
+                        <div class="mt-3">
+                            <label for="invoicePaymentNote" class="form-label">Notes</label>
+                            <textarea class="form-control" id="invoicePaymentNote" rows="2"
+                                placeholder="Optional description"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Record Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let currentReceipt = null;
+        let allReceipts = [];
+        let invoicePaymentModal = null;
+
+        function formatAmount(amount, currency) {
+            if (amount === undefined || amount === null || isNaN(Number(amount))) {
+                return '-';
+            }
+            const symbol = currency && currency !== 'BWP' ? currency : 'P';
+            return `${symbol} ${Number(amount).toFixed(2)}`;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function () {
+            loadUserInfo();
+            loadReceipts();
+            setupFilters();
+            const modalElement = document.getElementById('invoicePaymentModal');
+            if (modalElement) {
+                invoicePaymentModal = new bootstrap.Modal(modalElement);
+                document.getElementById('invoicePaymentForm')?.addEventListener('submit', submitInvoicePayment);
+            }
+        });
+
+        async function loadUserInfo() {
+            try {
+                const user = window.auth?.getUser();
+                if (user) {
+                    const userDisplayElement = document.getElementById('userDisplay');
+                    if (userDisplayElement) {
+                        userDisplayElement.textContent = user.username || 'User';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        async function loadReceipts() {
+            try {
+                // Load statistics
+                const statsResponse = await fetch('/api/v1/receipts/stats', {
+                    headers: {
+                        ...auth.authHeader()
+                    }
+                });
+
+                if (statsResponse.ok) {
+                    const stats = await statsResponse.json();
+                    document.getElementById('totalReceipts').textContent = stats.total_receipts;
+                    document.getElementById('printedReceipts').textContent = stats.printed_receipts;
+                    document.getElementById('pendingReceipts').textContent = stats.pending_receipts;
+                    document.getElementById('monthlyReceipts').textContent = stats.monthly_receipts;
+                }
+
+                // Load receipts with current filters
+                await loadFilteredReceipts();
+            } catch (error) {
+                console.error('Error loading receipts:', error);
+                showNoData();
+            } finally {
+                document.getElementById('loadingIndicator').classList.add('d-none');
+            }
+        }
+
+        async function loadFilteredReceipts() {
+            try {
+                const searchInput = document.getElementById('searchInput');
+                const statusFilter = document.getElementById('statusFilter');
+                const startDate = document.getElementById('startDate');
+                const endDate = document.getElementById('endDate');
+
+                const params = new URLSearchParams({
+                    q: searchInput.value,
+                    status: statusFilter.value,
+                    start_date: startDate.value,
+                    end_date: endDate.value,
+                    limit: '100'
+                });
+
+                const response = await fetch(`/api/v1/receipts/search?${params}`, {
+                    headers: {
+                        ...auth.authHeader()
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    allReceipts = data.receipts;
+                    renderReceipts(allReceipts);
+                } else {
+                    console.error('Failed to load filtered receipts');
+                    showNoData();
+                }
+            } catch (error) {
+                console.error('Error loading filtered receipts:', error);
+                showNoData();
+            }
+        }
+
+        function updateStatistics() {
+            const total = allReceipts.length;
+            const printed = allReceipts.filter(r => r.printed).length;
+            const pending = total - printed;
+            const thisMonth = allReceipts.filter(r => {
+                const receiptDate = new Date(r.created_at);
+                const now = new Date();
+                return receiptDate.getMonth() === now.getMonth() &&
+                    receiptDate.getFullYear() === now.getFullYear();
+            }).length;
+
+            document.getElementById('totalReceipts').textContent = total;
+            document.getElementById('printedReceipts').textContent = printed;
+            document.getElementById('pendingReceipts').textContent = pending;
+            document.getElementById('monthlyReceipts').textContent = thisMonth;
+        }
+
+        function renderReceipts(receipts) {
+            const tbody = document.getElementById('receiptsTableBody');
+
+            if (!Array.isArray(receipts) || receipts.length === 0) {
+                showNoData();
+                return;
+            }
+
+            hideNoData();
+
+            tbody.innerHTML = receipts.map((receipt) => {
+                const documentLabel = receipt.notes
+                    || (receipt.invoice_id ? `Invoice ${receipt.invoice_id.slice(0, 8)}…`
+                        : receipt.sale_id ? `Sale ${receipt.sale_id.slice(0, 8)}…`
+                            : '-');
+                const branchLabel = receipt.branch_name || (receipt.branch_id ? `Branch ${receipt.branch_id.slice(0, 8)}…` : '-');
+                const userLabel = receipt.created_by_username || (receipt.created_by_user_id ? `User ${receipt.created_by_user_id.slice(0, 8)}…` : '-');
+                const amountLabel = formatAmount(receipt.amount, receipt.currency);
+                const createdAt = receipt.created_at ? new Date(receipt.created_at).toLocaleDateString() : '-';
+                const statusClass = receipt.printed ? 'bg-success' : 'bg-warning';
+                const statusLabel = receipt.printed ? 'Printed' : 'Not Printed';
+
+                return `
+                    <tr>
+                        <td><input type="checkbox" name="receiptSelect" value="${receipt.id}" onchange="updateBulkPrintButton()"></td>
+                        <td><strong>${receipt.receipt_number}</strong></td>
+                        <td>${documentLabel}</td>
+                        <td>${createdAt}</td>
+                        <td>${branchLabel}</td>
+                        <td>${userLabel}</td>
+                        <td>${amountLabel}</td>
+                        <td>
+                            <span class="badge ${statusClass}">${statusLabel}</span>
+                        </td>
+                        <td>${receipt.print_count ?? 0}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewReceipt('${receipt.id}')" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="printReceipt('${receipt.id}')" title="Print">
+                                    <i class="bi bi-printer"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="downloadReceipt('${receipt.id}')" title="Download">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            updateStatistics();
+        }
+
+        async function refreshReceipts() {
+            const refreshBtn = document.querySelector('button[onclick="refreshReceipts()"]');
+            const originalText = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Loading...';
+            refreshBtn.disabled = true;
+
+            try {
+                await loadReceipts();
+            } finally {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        async function bulkPrint() {
+            const selectedReceipts = Array.from(document.querySelectorAll('input[name="receiptSelect"]:checked'))
+                .map(checkbox => checkbox.value);
+
+            if (selectedReceipts.length === 0) {
+                alert('Please select receipts to print');
+                return;
+            }
+
+            if (!confirm(`Print ${selectedReceipts.length} receipt(s)?`)) {
+                return;
+            }
+
+            const bulkPrintBtn = document.querySelector('button[onclick="bulkPrint()"]');
+            const originalText = bulkPrintBtn.innerHTML;
+            bulkPrintBtn.innerHTML = '<i class="bi bi-printer me-1"></i>Printing...';
+            bulkPrintBtn.disabled = true;
+
+            try {
+                for (const receiptId of selectedReceipts) {
+                    await printReceipt(receiptId);
+                    // Small delay between prints
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                alert(`Successfully printed ${selectedReceipts.length} receipt(s)`);
+            } catch (error) {
+                console.error('Bulk print error:', error);
+                alert('Error during bulk printing');
+            } finally {
+                bulkPrintBtn.innerHTML = originalText;
+                bulkPrintBtn.disabled = false;
+            }
+        }
+        function setupFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            // Debounce function for search input
+            let searchTimeout;
+            function debouncedSearch() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadFilteredReceipts();
+                }, 300);
+            }
+
+            searchInput.addEventListener('input', debouncedSearch);
+            statusFilter.addEventListener('change', () => loadFilteredReceipts());
+            startDateInput.addEventListener('change', () => loadFilteredReceipts());
+            endDateInput.addEventListener('change', () => loadFilteredReceipts());
+        }
+
+        async function loadFilteredReceipts() {
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            const params = new URLSearchParams({
+                q: searchInput.value,
+                status: statusFilter.value,
+                start_date: startDateInput.value,
+                end_date: endDateInput.value,
+                limit: '100'
+            });
+
+            try {
+                const response = await fetch(`/api/v1/receipts/search?${params}`, {
+                    headers: {
+                        ...auth.authHeader()
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    allReceipts = data.receipts;
+                    renderReceipts(allReceipts);
+                } else {
+                    console.error('Error loading filtered receipts');
+                }
+            } catch (error) {
+                console.error('Error loading filtered receipts:', error);
+            }
+        }
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('input[name="receiptSelect"]');
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+
+            updateBulkPrintButton();
+        }
+
+        function updateBulkPrintButton() {
+            const selectedCount = document.querySelectorAll('input[name="receiptSelect"]:checked').length;
+            const bulkPrintBtn = document.querySelector('button[onclick="bulkPrint()"]');
+
+            if (selectedCount > 0) {
+                bulkPrintBtn.innerHTML = `<i class="bi bi-printer me-1"></i>Print ${selectedCount} Receipt(s)`;
+                bulkPrintBtn.disabled = false;
+            } else {
+                bulkPrintBtn.innerHTML = '<i class="bi bi-printer me-1"></i>Bulk Print';
+                bulkPrintBtn.disabled = true;
+            }
+        }
+
+        async function viewReceipt(receiptId) {
+            try {
+                const response = await fetch(`/api/v1/receipts/${receiptId}`, {
+                    headers: {
+                        ...auth.authHeader()
+                    }
+                });
+
+                if (response.ok) {
+                    const receipt = await response.json();
+                    currentReceipt = receipt;
+
+                    document.getElementById('receiptModalTitle').textContent = `Receipt - ${receipt.receipt_number}`;
+                    document.getElementById('receiptPreview').innerHTML = receipt.html_content;
+
+                    const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
+                    modal.show();
+                }
+            } catch (error) {
+                console.error('Error loading receipt:', error);
+                alert('Error loading receipt');
+            }
+        }
+
+        async function printReceipt(receiptId = null) {
+            const id = receiptId || (currentReceipt ? currentReceipt.id : null);
+            if (!id) return;
+
+            try {
+                // Mark as printed
+                await fetch(`/api/v1/receipts/${id}/print`, {
+                    method: 'POST',
+                    headers: {
+                        ...auth.authHeader()
+                    }
+                });
+
+                // Print
+                const printWindow = window.open('', '_blank');
+                const content = receiptId ? currentReceipt?.html_content : document.getElementById('receiptPreview').innerHTML;
+
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Receipt</title>
+                            <style>
+                            body { font-family: 'Courier New', monospace; margin: 20px; }
+                            .receipt-container { max-width: 400px; margin: 0 auto; }
+                            table { width: 100%; border-collapse: collapse; }
+                            th, td { padding: 5px; text-align: left; }
+                            .text-center { text-align: center; }
+                            .text-end { text-align: right; }
+                            .border-top { border-top: 1px solid #000; padding-top: 10px; }
+                        </style>
+                        </head>
+                        <body>
+                            ${content}
+                        </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
+
+                // Refresh data
+                loadReceipts();
+            } catch (error) {
+                console.error('Error printing receipt:', error);
+                alert('Error printing receipt');
+            }
+        }
+
+        async function downloadReceipt(receiptId = null) {
+            const id = receiptId || (currentReceipt ? currentReceipt.id : null);
+            if (!id) return;
+
+            try {
+                const response = await fetch(`/api/v1/receipts/${id}`, {
+                    headers: {
+                        ...auth.authHeader()
+                    }
+                });
+
+                if (response.ok) {
+                    const receipt = await response.json();
+                    if (receipt.pdf_path) {
+                        const link = document.createElement('a');
+                        link.href = receipt.pdf_path;
+                        link.download = `${receipt.receipt_number}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        alert('PDF not available for this receipt');
+                    }
+                }
+            } catch (error) {
+                console.error('Error downloading receipt:', error);
+                alert('Error downloading receipt');
+            }
+        }
+
+        function openInvoicePaymentModal() {
+            if (!invoicePaymentModal) return;
+            const form = document.getElementById('invoicePaymentForm');
+            form?.reset();
+            const dateInput = document.getElementById('invoicePaymentDate');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+            const errorAlert = document.getElementById('invoicePaymentError');
+            if (errorAlert) {
+                errorAlert.classList.add('d-none');
+                errorAlert.textContent = '';
+            }
+            invoicePaymentModal.show();
+        }
+
+        async function submitInvoicePayment(event) {
+            event.preventDefault();
+            const identifier = document.getElementById('invoicePaymentInvoice')?.value.trim();
+            const amountInput = document.getElementById('invoicePaymentAmount')?.value;
+            const method = document.getElementById('invoicePaymentMethod')?.value;
+            const dateValue = document.getElementById('invoicePaymentDate')?.value;
+            const reference = document.getElementById('invoicePaymentReference')?.value.trim();
+            const note = document.getElementById('invoicePaymentNote')?.value.trim();
+            const format = document.getElementById('invoicePaymentFormat')?.value || undefined;
+            const errorAlert = document.getElementById('invoicePaymentError');
+
+            if (!identifier) {
+                errorAlert.classList.remove('d-none');
+                errorAlert.textContent = 'Please provide an invoice ID or invoice number.';
+                return;
+            }
+
+            const amount = parseFloat(amountInput || '0');
+            if (!amount || Number.isNaN(amount) || amount <= 0) {
+                errorAlert.classList.remove('d-none');
+                errorAlert.textContent = 'Enter a valid payment amount greater than zero.';
+                return;
+            }
+
+            try {
+                const payload = {
+                    amount,
+                    payment_method: method,
+                    payment_date: dateValue || null,
+                    reference: reference || null,
+                    note: note || null,
+                    format
+                };
+
+                const response = await fetch(`/api/v1/receipts/invoices/${encodeURIComponent(identifier)}/payments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const problem = await response.json().catch(() => ({}));
+                    const message = problem?.detail || problem?.error || 'Failed to record payment';
+                    throw new Error(message);
+                }
+
+                invoicePaymentModal.hide();
+                alert('Payment recorded and receipt generated successfully.');
+                await loadReceipts();
+                await loadReceiptStats();
+            } catch (error) {
+                console.error('Error recording payment:', error);
+                errorAlert.classList.remove('d-none');
+                errorAlert.textContent = error.message;
+            }
+        }
+
+        function showNoData() {
+            document.getElementById('noDataMessage').classList.remove('d-none');
+            document.getElementById('receiptsTable').classList.add('d-none');
+        }
+
+        function hideNoData() {
+            document.getElementById('noDataMessage').classList.add('d-none');
+            document.getElementById('receiptsTable').classList.remove('d-none');
+        }
+
+        function logout() {
+            if (window.auth) {
+                auth.logout();
+            }
+            window.location.href = '/static/login.html';
+        }
+        async function loadReceiptStats() {
+            try {
+                const response = await fetch('/api/v1/receipts/stats', {
+                    headers: {
+                        ...auth.authHeader()
+                    }
+                });
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('totalReceipts').textContent = stats.total_receipts || 0;
+                    document.getElementById('printedReceipts').textContent = stats.printed_receipts || 0;
+                    document.getElementById('pendingReceipts').textContent = stats.pending_receipts || 0;
+                    document.getElementById('monthlyReceipts').textContent = stats.monthly_receipts || 0;
+                }
+            } catch (error) {
+                console.error('Error loading receipt stats:', error);
+            }
+        }
+
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            setupFilters();
+            loadReceipts();
+            loadReceiptStats();
+        });
+    </script>
+
+    <!-- Core Scripts -->
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <script src="js/navbar.js?v=20250106001"></script>
+
+
+</body>
+
+</html>

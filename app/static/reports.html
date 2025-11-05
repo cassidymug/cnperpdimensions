@@ -1,0 +1,2766 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .navbar { background: linear-gradient(135deg, var(--primary-color), #0056b3) !important; }
+    </style>
+    <style>
+    @media print {
+        body * { visibility: hidden !important; }
+        .print-report, .print-report * { visibility: visible !important; }
+        .print-report { position: absolute; left: 0; top: 0; width: 100vw; background: #fff; z-index: 9999; }
+        .print-report table { width: 100%; border-collapse: collapse; font-size: 12pt; }
+        .print-report th, .print-report td { border: 1px solid #333; padding: 6px; }
+        .print-report .company-header { text-align: left; margin-bottom: 12px; }
+        .print-report .company-header h2 { margin: 0; color: #0d6efd; }
+        .print-report .company-header .meta { font-size: 10pt; color: #555; }
+        .print-report .report-title { font-size: 18pt; font-weight: bold; margin-bottom: 8px; }
+        .print-report .report-period { font-size: 11pt; margin-bottom: 8px; }
+        .print-report .summary-row { font-weight: bold; background: #f0f0f0; }
+        .print-report h2 { color: #0d6efd !important; border-bottom: 2px solid #0d6efd !important; padding-bottom: 5px; margin-top: 15px; }
+        .print-report h3 { color: #333 !important; font-size: 14pt; margin-top: 10px; }
+    }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Financial Reports & Analytics</title>
+    <!-- Cache buster: Force browser to reload JS fixes -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Fallback for offline mode -->
+    <script src="js/chart-fallback.js"></script>
+    <!-- Offline Handler -->
+    <script src="js/offline-handler.js"></script>
+    <!-- Modern Styles -->
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Scrollable dropdown styles */
+        .dropdown-menu.scrollable-dropdown {
+            max-height: 400px;
+            overflow-y: auto;
+            width: 350px;
+        }
+        
+        /* Fix spacing issues - hide orphaned navbar content (but not actual navbar) */
+        .container-fluid .nav-item:not(.navbar .nav-item), 
+        .container-fluid .dropdown-menu:not(.navbar .dropdown-menu) {
+            display: none !important;
+        }
+        
+        /* Show only properly structured content */
+        .nav-tabs .nav-item,
+        .nav-tabs .nav-link {
+            display: block !important;
+        }
+
+        .dropdown-menu.scrollable-dropdown .dropdown-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .dropdown-menu.scrollable-dropdown .dropdown-item {
+            white-space: nowrap;
+        }
+
+        .dropdown-menu.scrollable-dropdown .dropdown-item i {
+            width: 16px;
+            text-align: center;
+        }
+
+        /* Dark theme for scrollable dropdown */
+        body[data-theme="dark"] .dropdown-menu.scrollable-dropdown {
+            background-color: #343a40;
+            border-color: #495057;
+        }
+
+        body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-header {
+            background-color: #495057;
+            border-bottom-color: #6c757d;
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-item {
+            color: #ffffff;
+        }
+
+        body[data-theme="dark"] .dropdown-menu.scrollable-dropdown .dropdown-item:hover {
+            background-color: #495057;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Print-only containers for each report -->
+    <div id="printDebtorsAgingContainer" class="print-report" style="display:none;"></div>
+    <div id="printCreditorsAgingContainer" class="print-report" style="display:none;"></div>
+    <div id="printTrialBalanceContainer" class="print-report" style="display:none;"></div>
+    <div id="printBalanceSheetContainer" class="print-report" style="display:none;"></div>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+    <!-- Navbar Scripts -->
+    <script src="js/navbar.js?v=20250106001"></script>
+    <!-- API Config (provides API_CONFIG with endpoints) -->
+    <script src="js/api-config.js?v=20250127"></script>
+    
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    
+    <!-- Main Content -->
+    <div class="container-fluid" style="padding-top: 80px; margin-top: 1rem;">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-file-earmark-text text-primary"></i> Financial Reports & Analytics
+                        </h1>
+                        <p class="text-muted mb-0">IFRS-compliant financial reports, aging analysis, and comprehensive ledgers</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="exportAllReports()">
+                            <i class="bi bi-download"></i> Export All
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="printAllReports()">
+                            <i class="bi bi-printer"></i> Print All
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshAllReports()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Branch</label>
+                <select class="form-select" id="branchFilter" onchange="refreshDebtorsAging()">
+                    <option value="">All Branches</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date Range</label>
+                <select class="form-select" id="dateRangeFilter">
+                    <option value="month">This Month</option>
+                    <option value="quarter">This Quarter</option>
+                    <option value="year">This Year</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Currency</label>
+                <select class="form-select" id="currencyFilter">
+                    <option value="BWP">BWP (Botswana Pula)</option>
+                    <option value="USD">USD (US Dollar)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary w-100" onclick="applyFilters()">
+                    <i class="bi bi-funnel"></i> Apply Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Report Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="debtors-tab" data-bs-toggle="tab" data-bs-target="#debtors-pane" type="button" role="tab">
+                    <i class="bi bi-people me-2"></i>Debtors Aging
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="creditors-tab" data-bs-toggle="tab" data-bs-target="#creditors-pane" type="button" role="tab">
+                    <i class="bi bi-building me-2"></i>Creditors Aging
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="trial-balance-tab" data-bs-toggle="tab" data-bs-target="#trial-balance-pane" type="button" role="tab">
+                    <i class="bi bi-calculator me-2"></i>Trial Balance
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="balance-sheet-tab" data-bs-toggle="tab" data-bs-target="#balance-sheet-pane" type="button" role="tab">
+                    <i class="bi bi-pie-chart me-2"></i>Balance Sheet
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="reportTabsContent">
+                            <li><a class="dropdown-item" href="/static/products.html">Products</a></li>
+                            <li><a class="dropdown-item" href="/static/purchases.html">Purchases</a></li>
+                            <li><a class="dropdown-item" href="/static/purchase-orders.html">Purchase Orders</a></li>
+                            <li><a class="dropdown-item" href="/static/suppliers.html">Suppliers</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Banking -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-bank me-1"></i>Banking
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/static/bank-accounts.html">Bank Accounts</a></li>
+                            <li><a class="dropdown-item" href="/static/bank-transfers.html">Bank Transfers</a></li>
+                            <li><a class="dropdown-item" href="/static/bank-transactions.html">Transactions</a></li>
+                            <li><a class="dropdown-item" href="/static/bank-reconciliations.html">Reconciliations</a></li>
+                            <li><a class="dropdown-item" href="/static/vat-reconciliations.html">VAT Reconciliations</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Accounting -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-calculator me-1"></i>Accounting
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/static/chart-of-accounts.html">Chart of Accounts</a></li>
+                            <li><a class="dropdown-item" href="/static/accounting-codes.html">Accounting Codes</a></li>
+                            <li><a class="dropdown-item" href="/static/journal-entries.html">Journal Entries</a></li>
+                            <li><a class="dropdown-item" href="/static/ledgers.html">Ledgers</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Reports -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-file-earmark-text me-1"></i>Reports
+                        </a>
+                        <ul class="dropdown-menu scrollable-dropdown">
+                            <!-- Financial Reports -->
+                            <li><h6 class="dropdown-header">Financial Reports</h6></li>
+                            <li><a class="dropdown-item active" href="/static/reports.html">
+                                <i class="bi bi-chart-bar me-2"></i>Reports Center
+                            </a></li>
+                            <li><a class="dropdown-item" href="/static/financial-reports.html">
+                                <i class="bi bi-calculator me-2"></i>Financial Statements
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showTrialBalanceReport()">
+                                <i class="bi bi-list-task me-2"></i>Trial Balance
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showBalanceSheetReport()">
+                                <i class="bi bi-pie-chart me-2"></i>Balance Sheet
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showDebtorsAgingReport()">
+                                <i class="bi bi-people me-2"></i>Debtors Aging
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showCreditorsAgingReport()">
+                                <i class="bi bi-building me-2"></i>Creditors Aging
+                            </a></li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            <!-- Sales Reports -->
+                            <li><h6 class="dropdown-header">Sales Reports</h6></li>
+                            <li><a class="dropdown-item" href="/static/sales-reports.html">
+                                <i class="bi bi-cart me-2"></i>Sales Analytics
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openSalesReport('daily')">
+                                <i class="bi bi-calendar-day me-2"></i>Daily Sales
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openSalesReport('monthly')">
+                                <i class="bi bi-calendar-month me-2"></i>Monthly Sales
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openCustomerReport()">
+                                <i class="bi bi-person-badge me-2"></i>Customer Analysis
+                            </a></li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            <!-- Inventory Reports -->
+                            <li><h6 class="dropdown-header">Inventory Reports</h6></li>
+                            <li><a class="dropdown-item" href="/static/inventory-reports.html">
+                                <i class="bi bi-box-seam me-2"></i>Inventory Analytics
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openInventoryReport('stock')">
+                                <i class="bi bi-boxes me-2"></i>Stock Levels
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openInventoryReport('valuation')">
+                                <i class="bi bi-currency-dollar me-2"></i>Stock Valuation
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openInventoryReport('movement')">
+                                <i class="bi bi-arrow-left-right me-2"></i>Stock Movement
+                            </a></li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            <!-- Banking Reports -->
+                            <li><h6 class="dropdown-header">Banking Reports</h6></li>
+                            <li><a class="dropdown-item" href="#" onclick="openBankingReport('cashflow')">
+                                <i class="bi bi-cash-stack me-2"></i>Cash Flow
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openBankingReport('reconciliation')">
+                                <i class="bi bi-check2-square me-2"></i>Bank Reconciliation
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openVATReport()">
+                                <i class="bi bi-receipt me-2"></i>VAT Returns
+                            </a></li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            <!-- Management Reports -->
+                            <li><h6 class="dropdown-header">Management Reports</h6></li>
+                            <li><a class="dropdown-item" href="#" onclick="openProfitLossReport()">
+                                <i class="bi bi-graph-up me-2"></i>Profit & Loss
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openBudgetReport()">
+                                <i class="bi bi-clipboard-data me-2"></i>Budget Analysis
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openKPIReport()">
+                                <i class="bi bi-speedometer2 me-2"></i>KPI Dashboard
+                            </a></li>
+                        </ul>
+                    </li>
+
+                    <!-- Setup -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear me-1"></i>Setup
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/static/branches.html">Branches</a></li>
+                            <li><a class="dropdown-item" href="/static/users.html">Users</a></li>
+                            <li><a class="dropdown-item" href="/static/settings.html">Settings</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Right Side Items -->
+                <ul class="navbar-nav">
+                    <!-- Theme Switcher -->
+                    <li class="nav-item me-2">
+                        <button class="btn btn-outline-light btn-sm" id="themeToggle" title="Toggle Theme">
+                            <i class="bi bi-moon-fill"></i>
+                        </button>
+                    </li>
+
+                    <!-- User Menu -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>Admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/static/users.html">Users</a></li>
+                            <li><a class="dropdown-item" href="/static/settings.html">Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-file-earmark-text text-primary"></i> Financial Reports & Analytics
+                        </h1>
+                        <p class="text-muted mb-0">IFRS-compliant financial reports, aging analysis, and comprehensive ledgers</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="exportAllReports()">
+                            <i class="bi bi-download"></i> Export All
+                        </button>
+                        <button class="btn btn-primary" onclick="generateCustomReport()">
+                        <i class="bi bi-plus"></i> Custom Report
+                    </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Access Report Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-primary" style="cursor: pointer;" onclick="showDebtorsAgingReport()">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people fs-1 text-primary mb-3"></i>
+                        <h5>Debtors Aging</h5>
+                        <p class="text-muted">Customer outstanding analysis</p>
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-primary">Real-time</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-warning" style="cursor: pointer;" onclick="showCreditorsAgingReport()">
+                    <div class="card-body text-center">
+                        <i class="bi bi-building fs-1 text-warning mb-3"></i>
+                        <h5>Creditors Aging</h5>
+                        <p class="text-muted">Supplier payables analysis</p>
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-warning text-dark">Real-time</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-success" style="cursor: pointer;" onclick="showTrialBalanceReport()">
+                    <div class="card-body text-center">
+                        <i class="bi bi-list-task fs-1 text-success mb-3"></i>
+                        <h5>Trial Balance</h5>
+                        <p class="text-muted">Account balance verification</p>
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-success">IFRS</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-info" style="cursor: pointer;" onclick="showBalanceSheetReport()">
+                    <div class="card-body text-center">
+                        <i class="bi bi-pie-chart fs-1 text-info mb-3"></i>
+                        <h5>Balance Sheet</h5>
+                        <p class="text-muted">Financial position statement</p>
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-info">IFRS</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="debtors-tab" data-bs-toggle="tab" data-bs-target="#debtors-pane" type="button" role="tab">
+                    <i class="bi bi-people me-2"></i>Debtors Aging
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="creditors-tab" data-bs-toggle="tab" data-bs-target="#creditors-pane" type="button" role="tab">
+                    <i class="bi bi-building me-2"></i>Creditors Aging
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="trial-balance-tab" data-bs-toggle="tab" data-bs-target="#trial-balance-pane" type="button" role="tab">
+                    <i class="bi bi-list-task me-2"></i>Trial Balance
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="balance-sheet-tab" data-bs-toggle="tab" data-bs-target="#balance-sheet-pane" type="button" role="tab">
+                    <i class="bi bi-pie-chart me-2"></i>Balance Sheet
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="reportTabsContent">
+            <!-- Debtors Aging Report -->
+            <div class="tab-pane fade show active" id="debtors-pane" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-people me-2"></i>Debtors Aging Report
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm" onclick="refreshDebtorsAging()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                                <div class="btn-group">
+                                    <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-download"></i> Export
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" onclick="exportDebtorsAging('pdf')"><i class="bi bi-filetype-pdf me-2 text-danger"></i>PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportDebtorsAging('xlsx')"><i class="bi bi-filetype-xlsx me-2 text-success"></i>Excel (XLSX)</a></li>
+                                    </ul>
+                                </div>
+                                <button class="btn btn-light btn-sm" onclick="printDebtorsAging()">
+                                    <i class="bi bi-printer"></i> Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">As of Date</label>
+                                <input type="date" class="form-control" id="debtorsAsOfDate" onchange="refreshDebtorsAging()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Customer</label>
+                                <select class="form-select" id="debtorsCustomerFilter" onchange="refreshDebtorsAging()">
+                                    <option value="">All Customers</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Minimum Amount</label>
+                                <input type="number" class="form-control" id="debtorsMinAmount" step="0.01" onchange="refreshDebtorsAging()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Currency</label>
+                                <select class="form-select" id="debtorsCurrency" onchange="refreshDebtorsAging()">
+                                    <option value="BWP">BWP (Pula)</option>
+                                    <option value="USD">USD</option>
+                                    <option value="ZAR">ZAR</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Current</h6>
+                                        <h4 class="text-success" id="debtorsCurrent">P 0.00</h4>
+                                        <small>0-30 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">30 Days</h6>
+                                        <h4 class="text-info" id="debtors30Days">P 0.00</h4>
+                                        <small>31-60 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">60 Days</h6>
+                                        <h4 class="text-warning" id="debtors60Days">P 0.00</h4>
+                                        <small>61-90 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">90 Days</h6>
+                                        <h4 class="text-danger" id="debtors90Days">P 0.00</h4>
+                                        <small>91-120 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">120+ Days</h6>
+                                        <h4 class="text-dark" id="debtors120Plus">P 0.00</h4>
+                                        <small>Over 120 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Total</h6>
+                                        <h4 id="debtorsTotal">P 0.00</h4>
+                                        <small>All outstanding</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Debtors Table -->
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Contact</th>
+                                        <th class="text-end">Current</th>
+                                        <th class="text-end">31-60 Days</th>
+                                        <th class="text-end">61-90 Days</th>
+                                        <th class="text-end">91-120 Days</th>
+                                        <th class="text-end">120+ Days</th>
+                                        <th class="text-end">Total Outstanding</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="debtorsTableBody">
+                                    <tr>
+                                        <td colspan="9" class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                    </div>
+                                    </div>
+                </div>
+            </div>
+
+            <!-- Creditors Aging Report -->
+            <div class="tab-pane fade" id="creditors-pane" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-building me-2"></i>Creditors Aging Report
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-dark btn-sm" onclick="refreshCreditorsAging()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                                <div class="btn-group">
+                                    <button class="btn btn-dark btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-download"></i> Export
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" onclick="exportCreditorsAging('pdf')"><i class="bi bi-filetype-pdf me-2 text-danger"></i>PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportCreditorsAging('xlsx')"><i class="bi bi-filetype-xlsx me-2 text-success"></i>Excel (XLSX)</a></li>
+                                    </ul>
+                                </div>
+                                <button class="btn btn-dark btn-sm" onclick="printCreditorsAging()">
+                                    <i class="bi bi-printer"></i> Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">As of Date</label>
+                                <input type="date" class="form-control" id="creditorsAsOfDate" onchange="refreshCreditorsAging()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Supplier</label>
+                                <select class="form-select" id="creditorsSupplierFilter" onchange="refreshCreditorsAging()">
+                                    <option value="">All Suppliers</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Minimum Amount</label>
+                                <input type="number" class="form-control" id="creditorsMinAmount" step="0.01" onchange="refreshCreditorsAging()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Currency</label>
+                                <select class="form-select" id="creditorsCurrency" onchange="refreshCreditorsAging()">
+                                    <option value="BWP">BWP (Pula)</option>
+                                    <option value="USD">USD</option>
+                                    <option value="ZAR">ZAR</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Current</h6>
+                                        <h4 class="text-success" id="creditorsCurrent">P 0.00</h4>
+                                        <small>0-30 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">30 Days</h6>
+                                        <h4 class="text-info" id="creditors30Days">P 0.00</h4>
+                                        <small>31-60 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">60 Days</h6>
+                                        <h4 class="text-warning" id="creditors60Days">P 0.00</h4>
+                                        <small>61-90 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">90 Days</h6>
+                                        <h4 class="text-danger" id="creditors90Days">P 0.00</h4>
+                                        <small>91-120 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">120+ Days</h6>
+                                        <h4 class="text-dark" id="creditors120Plus">P 0.00</h4>
+                                        <small>Over 120 days</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-warning text-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Total</h6>
+                                        <h4 id="creditorsTotal">P 0.00</h4>
+                                        <small>All payables</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Creditors Table -->
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Supplier</th>
+                                        <th>Contact</th>
+                                        <th class="text-end">Current</th>
+                                        <th class="text-end">31-60 Days</th>
+                                        <th class="text-end">61-90 Days</th>
+                                        <th class="text-end">91-120 Days</th>
+                                        <th class="text-end">120+ Days</th>
+                                        <th class="text-end">Total Payable</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="creditorsTableBody">
+                                    <tr>
+                                        <td colspan="9" class="text-center">
+                                            <div class="spinner-border text-warning" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trial Balance Report -->
+            <div class="tab-pane fade" id="trial-balance-pane" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-task me-2"></i>Trial Balance
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm" onclick="refreshTrialBalance()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                                <div class="btn-group">
+                                    <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-download"></i> Export
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" onclick="exportTrialBalance('pdf')"><i class="bi bi-filetype-pdf me-2 text-danger"></i>PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportTrialBalance('xlsx')"><i class="bi bi-filetype-xlsx me-2 text-success"></i>Excel (XLSX)</a></li>
+                                    </ul>
+                                </div>
+                                <button class="btn btn-light btn-sm" onclick="validateTrialBalance()">
+                                    <i class="bi bi-shield-check"></i> Validate
+                                </button>
+                                <button class="btn btn-light btn-sm" onclick="printTrialBalance()">
+                                    <i class="bi bi-printer"></i> Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">As of Date</label>
+                                <input type="date" class="form-control" id="trialBalanceAsOfDate" onchange="refreshTrialBalance()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Account Type</label>
+                                <select class="form-select" id="trialBalanceAccountType" onchange="refreshTrialBalance()">
+                                    <option value="">All Account Types</option>
+                                    <option value="Asset">Assets</option>
+                                    <option value="Liability">Liabilities</option>
+                                    <option value="Equity">Equity</option>
+                                    <option value="Revenue">Revenue</option>
+                                    <option value="Expense">Expenses</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Show Zero Balances</label>
+                                <select class="form-select" id="trialBalanceShowZero" onchange="refreshTrialBalance()">
+                                    <option value="false">Hide Zero Balances</option>
+                                    <option value="true">Show Zero Balances</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Format</label>
+                                <select class="form-select" id="trialBalanceFormat">
+                                    <option value="standard">Standard Format</option>
+                                    <option value="ifrs">IFRS Format</option>
+                                    <option value="detailed">Detailed Format</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Trial Balance Summary -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Total Debits</h6>
+                                        <h4 class="text-primary" id="trialBalanceTotalDebits">P 0.00</h4>
+                                        <small>Sum of all debit balances</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Total Credits</h6>
+                                        <h4 class="text-primary" id="trialBalanceTotalCredits">P 0.00</h4>
+                                        <small>Sum of all credit balances</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card" id="trialBalanceStatus">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">Balance Status</h6>
+                                        <h4 id="trialBalanceDifference">P 0.00</h4>
+                                        <small id="trialBalanceStatusText">Calculating...</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trial Balance Table -->
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Account Code</th>
+                                        <th>Account Name</th>
+                                        <th>Account Type</th>
+                                        <th>IFRS Tag</th>
+                                        <th class="text-end">Debit Balance</th>
+                                        <th class="text-end">Credit Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trialBalanceTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            <div class="spinner-border text-success" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <th colspan="4">TOTALS</th>
+                                        <th class="text-end" id="trialBalanceFooterDebits">P 0.00</th>
+                                        <th class="text-end" id="trialBalanceFooterCredits">P 0.00</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Sheet Report -->
+            <div class="tab-pane fade" id="balance-sheet-pane" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-pie-chart me-2"></i>Balance Sheet (Statement of Financial Position)
+                                <small class="badge bg-success ms-2" style="font-size: 0.6rem;">v2.2-PRINT-FIX</small>
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm" onclick="refreshBalanceSheet()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                                <div class="btn-group">
+                                    <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-download"></i> Export
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="#" onclick="exportBalanceSheet('pdf')"><i class="bi bi-filetype-pdf me-2 text-danger"></i>PDF</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="exportBalanceSheet('xlsx')"><i class="bi bi-filetype-xlsx me-2 text-success"></i>Excel (XLSX)</a></li>
+                                    </ul>
+                                </div>
+                                <button class="btn btn-light btn-sm" onclick="printBalanceSheet()">
+                                    <i class="bi bi-printer"></i> Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">As of Date</label>
+                                <input type="date" class="form-control" id="balanceSheetAsOfDate" onchange="refreshBalanceSheet()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Comparison Date</label>
+                                <input type="date" class="form-control" id="balanceSheetComparisonDate" onchange="refreshBalanceSheet()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Format</label>
+                                <select class="form-select" id="balanceSheetFormat">
+                                    <option value="ifrs">IFRS Format</option>
+                                    <option value="classified">Classified Format</option>
+                                    <option value="comparative">Comparative Format</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Level of Detail</label>
+                                <select class="form-select" id="balanceSheetDetail">
+                                    <option value="summary">Summary</option>
+                                    <option value="detailed">Detailed</option>
+                                    <option value="full">Full Detail</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Balance Sheet Structure -->
+                        <div class="row">
+                            <!-- Assets Column -->
+                            <div class="col-md-6">
+                                <h5 class="text-primary mb-3">
+                                    <i class="bi bi-building me-2"></i>ASSETS
+                                </h5>
+                                
+                                <!-- Current Assets -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Current Assets</h6>
+                                    </div>
+                                    <div class="card-body" id="currentAssetsSection">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-info" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Non-Current Assets -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Non-Current Assets</h6>
+                                    </div>
+                                    <div class="card-body" id="nonCurrentAssetsSection">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-info" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Assets -->
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <h5>TOTAL ASSETS</h5>
+                                            <h5 id="totalAssetsBS">P 0.00</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Liabilities & Equity Column -->
+                            <div class="col-md-6">
+                                <h5 class="text-warning mb-3">
+                                    <i class="bi bi-credit-card me-2"></i>LIABILITIES & EQUITY
+                                </h5>
+
+                                <!-- Current Liabilities -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Current Liabilities</h6>
+                                    </div>
+                                    <div class="card-body" id="currentLiabilitiesSection">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-info" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Non-Current Liabilities -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Non-Current Liabilities</h6>
+                                    </div>
+                                    <div class="card-body" id="nonCurrentLiabilitiesSection">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-info" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Equity -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Equity</h6>
+                                    </div>
+                                    <div class="card-body" id="equitySection">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-info" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Liabilities & Equity -->
+                                <div class="card bg-warning text-dark">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <h5>TOTAL LIABILITIES & EQUITY</h5>
+                                            <h5 id="totalLiabilitiesEquity">P 0.00</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Balance Sheet Verification -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="alert" id="balanceSheetVerification">
+                                    <h6><i class="bi bi-shield-check me-2"></i>Balance Sheet Verification</h6>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Assets = Liabilities + Equity</span>
+                                        <span id="balanceSheetEquation">P 0.00 = P 0.00 + P 0.00</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <strong id="balanceSheetStatus">Calculating...</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Specialized Report Views -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-grid-3x3-gap"></i> Specialized Report Views
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center p-3">
+                                    <i class="bi bi-calculator fs-2 text-primary mb-2"></i>
+                                    <h6>Financial Reports</h6>
+                                    <p class="text-muted small">IFRS-compliant financial statements</p>
+                                    <button class="btn-modern btn-outline-primary btn-sm" onclick="window.location.href='/static/financial-reports.html'">
+                                        View Financial Reports
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3">
+                                    <i class="bi bi-cart fs-2 text-success mb-2"></i>
+                                    <h6>Sales Reports</h6>
+                                    <p class="text-muted small">Sales analytics and insights</p>
+                                    <button class="btn-modern btn-outline-success btn-sm" onclick="window.location.href='/static/sales-reports.html'">
+                                        View Sales Reports
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3">
+                                    <i class="bi bi-box fs-2 text-warning mb-2"></i>
+                                    <h6>Inventory Reports</h6>
+                                    <p class="text-muted small">Stock analysis and valuation</p>
+                                    <button class="btn-modern btn-outline-warning btn-sm" onclick="window.location.href='/static/inventory-reports.html'">
+                                        View Inventory Reports
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3">
+                                    <i class="bi bi-graph-up fs-2 text-info mb-2"></i>
+                                    <h6>Analytics Dashboard</h6>
+                                    <p class="text-muted small">Business intelligence and KPIs</p>
+                                    <button class="btn-modern btn-outline-info btn-sm" onclick="window.location.href='/static/index.html'">
+                                        View Dashboard
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Reports -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-graph-up"></i> Business Overview
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="businessOverviewChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="modern-card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-pie-chart"></i> Revenue Breakdown
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueChart" width="200" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Report Type</label>
+                    <select class="form-select" id="reportTypeFilter">
+                        <option value="">All Reports</option>
+                        <option value="financial">Financial</option>
+                        <option value="sales">Sales</option>
+                        <option value="inventory">Inventory</option>
+                        <option value="operational">Operational</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Period</label>
+                    <select class="form-select" id="periodFilter">
+                        <option value="">All Periods</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Branch</label>
+                    <select class="form-select" id="branchFilter">
+                        <option value="">All Branches</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="archived">Archived</option>
+                        <option value="scheduled">Scheduled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Search reports...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn-modern btn-outline" onclick="clearFilters()">
+                            <i class="bi bi-arrow-clockwise"></i> Clear
+                        </button>
+                        <button class="btn-modern btn-primary" onclick="applyFilters()">
+                            <i class="bi bi-search"></i> Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Table -->
+        <div class="modern-card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-table"></i> Available Reports
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-modern">
+                        <thead>
+                            <tr>
+                                <th>Report Name</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Last Updated</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTable">
+                            <!-- Reports will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+    
+    <!-- Currency Utils -->
+    <script src="js/currency-utils.js"></script>
+
+    <script>
+        // Global variables
+        let reportsData = {};
+        let charts = {};
+        const API_BASE = '/api/v1';
+        
+        // Currency formatting function
+        function formatCurrency(amount, currency = 'BWP') {
+            if (currency === 'BWP') {
+                return `P ${Number(amount).toLocaleString('en-BW', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`;
+            }
+            
+            try {
+                return new Intl.NumberFormat('en-BW', {
+                    style: 'currency',
+                    currency: currency,
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(amount);
+            } catch (error) {
+                return `${currency} ${Number(amount).toLocaleString('en-BW', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })}`;
+            }
+        }
+
+        // ========================================================================
+        // COMPREHENSIVE FINANCIAL REPORTS FUNCTIONALITY
+        // ========================================================================
+
+        // Quick tab navigation functions
+        function showDebtorsAgingReport() {
+            const tab = new bootstrap.Tab(document.getElementById('debtors-tab'));
+            tab.show();
+            refreshDebtorsAging();
+        }
+
+        function showCreditorsAgingReport() {
+            const tab = new bootstrap.Tab(document.getElementById('creditors-tab'));
+            tab.show();
+            refreshCreditorsAging();
+        }
+
+        function showTrialBalanceReport() {
+            const tab = new bootstrap.Tab(document.getElementById('trial-balance-tab'));
+            tab.show();
+            refreshTrialBalance();
+        }
+
+        function showBalanceSheetReport() {
+            const tab = new bootstrap.Tab(document.getElementById('balance-sheet-tab'));
+            tab.show();
+            refreshBalanceSheet();
+        }
+
+        // ========================================================================
+        // DEBTORS AGING REPORT
+        // ========================================================================
+
+        async function refreshDebtorsAging() {
+            const asOfDate = document.getElementById('debtorsAsOfDate').value || new Date().toISOString().split('T')[0];
+            const customerFilter = document.getElementById('debtorsCustomerFilter').value;
+            const minAmount = document.getElementById('debtorsMinAmount').value || 0;
+            const currency = document.getElementById('debtorsCurrency').value;
+
+            try {
+                // Show loading
+                document.getElementById('debtorsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                const branchId = document.getElementById('branchFilter').value;
+                const params = new URLSearchParams({
+                    as_of_date: asOfDate,
+                    min_amount: minAmount,
+                    currency: currency
+                });
+                if (branchId) params.append('branch_id', branchId);
+
+                if (customerFilter) params.append('customer_id', customerFilter);
+
+                const response = await fetch(`${API_BASE}/reports/debtors-aging?${params}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load debtors aging report');
+                }
+
+                const result = await response.json();
+                renderDebtorsAging(result.data);
+
+            } catch (error) {
+                console.error('Error loading debtors aging:', error);
+                showErrorMessage('Failed to load debtors aging report: ' + error.message, 'debtorsAging');
+            }
+        }
+
+        function renderDebtorsAging(data) {
+            // Update summary cards
+            document.getElementById('debtorsCurrent').textContent = formatCurrency(data.summary.current || 0);
+            document.getElementById('debtors30Days').textContent = formatCurrency(data.summary.days_31_60 || 0);
+            document.getElementById('debtors60Days').textContent = formatCurrency(data.summary.days_61_90 || 0);
+            document.getElementById('debtors90Days').textContent = formatCurrency(data.summary.days_91_120 || 0);
+            document.getElementById('debtors120Plus').textContent = formatCurrency(data.summary.days_120_plus || 0);
+            document.getElementById('debtorsTotal').textContent = formatCurrency(data.summary.total || 0);
+
+            // Render debtors table
+            const tableBody = document.getElementById('debtorsTableBody');
+            
+            if (!data.debtors || data.debtors.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">
+                            <i class="bi bi-inbox me-2"></i>No outstanding debtors found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = data.debtors.map(debtor => `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${debtor.customer_name}</div>
+                        <small class="text-muted">${debtor.customer_code || ''}</small>
+                    </td>
+                    <td>
+                        <div>${debtor.contact_person || ''}</div>
+                        <small class="text-muted">${debtor.phone || debtor.email || ''}</small>
+                    </td>
+                    <td class="text-end">${formatCurrency(debtor.current || 0)}</td>
+                    <td class="text-end">${formatCurrency(debtor.days_31_60 || 0)}</td>
+                    <td class="text-end">${formatCurrency(debtor.days_61_90 || 0)}</td>
+                    <td class="text-end">${formatCurrency(debtor.days_91_120 || 0)}</td>
+                    <td class="text-end">${formatCurrency(debtor.days_120_plus || 0)}</td>
+                    <td class="text-end fw-bold">${formatCurrency(debtor.total_outstanding || 0)}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary btn-sm" onclick="viewCustomerDetails('${debtor.customer_id}')" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="sendStatement('${debtor.customer_id}')" title="Send Statement">
+                                <i class="bi bi-envelope"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function exportDebtorsAging(fmt) {
+            try {
+                const asOfDate = document.getElementById('debtorsAsOfDate').value || new Date().toISOString().split('T')[0];
+                const minAmount = document.getElementById('debtorsMinAmount').value || 0;
+                const currency = document.getElementById('debtorsCurrency').value;
+                const customerFilter = document.getElementById('debtorsCustomerFilter').value;
+                const branchId = document.getElementById('branchFilter').value;
+                const params = new URLSearchParams({ as_of_date: asOfDate, min_amount: minAmount, currency });
+                if (branchId) params.append('branch_id', branchId);
+                if (customerFilter) params.append('customer_id', customerFilter);
+                if (fmt) params.append('export', fmt);
+                const url = `${API_BASE}/reports/debtors-aging?${params}`;
+                await downloadFile(url, `debtors_aging_${asOfDate}.${fmt || 'pdf'}`);
+            } catch (e) {
+                showErrorMessage('Failed to export Debtors Aging: ' + e.message, 'debtors-pane');
+            }
+        }
+
+        async function printDebtorsAging() {
+            const tableBody = document.getElementById('debtorsTableBody');
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            let html = `<div class='company-header'>
+                <h2>COMPUTING NETWORKING PRINTING SOLUTIONS PTY LTD</h2>
+                <div class='meta'>TEL 74818826 77122880 BOTSWANA</div>
+            </div>
+            <div class='report-title'>Debtors Aging Report</div>
+            <div class='report-period'>As of: ${document.getElementById('debtorsAsOfDate').value || new Date().toISOString().split('T')[0]}</div>
+            <table><thead><tr>
+                <th>Customer</th><th>Contact</th><th>Current</th><th>31-60</th><th>61-90</th><th>91-120</th><th>120+</th><th>Total Outstanding</th>
+            </tr></thead><tbody>`;
+            rows.forEach(tr => {
+                html += `<tr>${tr.innerHTML}</tr>`;
+            });
+            html += `</tbody></table>`;
+            html += `<div class='summary-row'>
+                Current: ${document.getElementById('debtorsCurrent').textContent} | 
+                31-60: ${document.getElementById('debtors30Days').textContent} | 
+                61-90: ${document.getElementById('debtors60Days').textContent} | 
+                91-120: ${document.getElementById('debtors90Days').textContent} | 
+                120+: ${document.getElementById('debtors120Plus').textContent} | 
+                Total: ${document.getElementById('debtorsTotal').textContent}
+            </div>`;
+            const container = document.getElementById('printDebtorsAgingContainer');
+            container.innerHTML = html;
+            container.style.display = 'block';
+            setTimeout(() => { window.print(); container.style.display = 'none'; }, 100);
+        }
+
+        // ========================================================================
+        // CREDITORS AGING REPORT
+        // ========================================================================
+
+        async function refreshCreditorsAging() {
+            const asOfDate = document.getElementById('creditorsAsOfDate').value || new Date().toISOString().split('T')[0];
+            const supplierFilter = document.getElementById('creditorsSupplierFilter').value;
+            const minAmount = document.getElementById('creditorsMinAmount').value || 0;
+            const currency = document.getElementById('creditorsCurrency').value;
+            
+            try {
+                // Show loading
+                document.getElementById('creditorsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                const params = new URLSearchParams({
+                    as_of_date: asOfDate,
+                    min_amount: minAmount,
+                    currency: currency
+                });
+                // Include branch filter
+                const branchId = document.getElementById('branchFilter').value;
+                if (branchId) params.append('branch_id', branchId);
+
+                if (supplierFilter) params.append('supplier_id', supplierFilter);
+
+                const response = await fetch(`${API_BASE}/reports/creditors-aging?${params}`);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        renderCreditorsAging(result.data);
+            } else {
+                        throw new Error('API returned error');
+                    }
+                } else {
+                    throw new Error('Failed to load creditors aging report');
+                }
+                
+            } catch (error) {
+                console.error('Error loading creditors aging:', error);
+                showErrorMessage('Failed to load creditors aging report: ' + error.message, 'creditorsAging');
+            }
+        }
+
+        function renderCreditorsAging(data) {
+            // Update summary cards
+            document.getElementById('creditorsCurrent').textContent = formatCurrency(data.summary.current || 0);
+            document.getElementById('creditors30Days').textContent = formatCurrency(data.summary.days_31_60 || 0);
+            document.getElementById('creditors60Days').textContent = formatCurrency(data.summary.days_61_90 || 0);
+            document.getElementById('creditors90Days').textContent = formatCurrency(data.summary.days_91_120 || 0);
+            document.getElementById('creditors120Plus').textContent = formatCurrency(data.summary.days_120_plus || 0);
+            document.getElementById('creditorsTotal').textContent = formatCurrency(data.summary.total || 0);
+
+            // Render creditors table
+            const tableBody = document.getElementById('creditorsTableBody');
+            
+            if (!data.creditors || data.creditors.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">
+                            <i class="bi bi-inbox me-2"></i>No outstanding creditors found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = data.creditors.map(creditor => `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${creditor.supplier_name}</div>
+                        <small class="text-muted">${creditor.supplier_code || ''}</small>
+                    </td>
+                    <td>
+                        <div>${creditor.contact_person || ''}</div>
+                        <small class="text-muted">${creditor.phone || creditor.email || ''}</small>
+                    </td>
+                    <td class="text-end">${formatCurrency(creditor.current || 0)}</td>
+                    <td class="text-end">${formatCurrency(creditor.days_31_60 || 0)}</td>
+                    <td class="text-end">${formatCurrency(creditor.days_61_90 || 0)}</td>
+                    <td class="text-end">${formatCurrency(creditor.days_91_120 || 0)}</td>
+                    <td class="text-end">${formatCurrency(creditor.days_120_plus || 0)}</td>
+                    <td class="text-end fw-bold">${formatCurrency(creditor.total_payable || 0)}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary btn-sm" onclick="viewSupplierDetails('${creditor.supplier_id}')" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="schedulePayment('${creditor.supplier_id}')" title="Schedule Payment">
+                                <i class="bi bi-calendar-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function exportCreditorsAging(fmt) {
+            try {
+                const asOfDate = document.getElementById('creditorsAsOfDate').value || new Date().toISOString().split('T')[0];
+                const minAmount = document.getElementById('creditorsMinAmount').value || 0;
+                const currency = document.getElementById('creditorsCurrency').value;
+                const supplierFilter = document.getElementById('creditorsSupplierFilter').value;
+                const branchId = document.getElementById('branchFilter').value;
+                const params = new URLSearchParams({ as_of_date: asOfDate, min_amount: minAmount, currency });
+                if (branchId) params.append('branch_id', branchId);
+                if (supplierFilter) params.append('supplier_id', supplierFilter);
+                if (fmt) params.append('export', fmt);
+                const url = `${API_BASE}/reports/creditors-aging?${params}`;
+                await downloadFile(url, `creditors_aging_${asOfDate}.${fmt || 'pdf'}`);
+            } catch (e) {
+                showErrorMessage('Failed to export Creditors Aging: ' + e.message, 'creditors-pane');
+            }
+        }
+
+        async function printCreditorsAging() {
+            const tableBody = document.getElementById('creditorsTableBody');
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            let html = `<div class='company-header'>
+                <h2>COMPUTING NETWORKING PRINTING SOLUTIONS PTY LTD</h2>
+                <div class='meta'>TEL 74818826 77122880 BOTSWANA</div>
+            </div>
+            <div class='report-title'>Creditors Aging Report</div>
+            <div class='report-period'>As of: ${document.getElementById('creditorsAsOfDate').value || new Date().toISOString().split('T')[0]}</div>
+            <table><thead><tr>
+                <th>Supplier</th><th>Contact</th><th>Current</th><th>31-60</th><th>61-90</th><th>91-120</th><th>120+</th><th>Total Payable</th>
+            </tr></thead><tbody>`;
+            rows.forEach(tr => {
+                html += `<tr>${tr.innerHTML}</tr>`;
+            });
+            html += `</tbody></table>`;
+            html += `<div class='summary-row'>
+                Current: ${document.getElementById('creditorsCurrent').textContent} | 
+                31-60: ${document.getElementById('creditors30Days').textContent} | 
+                61-90: ${document.getElementById('creditors60Days').textContent} | 
+                91-120: ${document.getElementById('creditors90Days').textContent} | 
+                120+: ${document.getElementById('creditors120Plus').textContent} | 
+                Total: ${document.getElementById('creditorsTotal').textContent}
+            </div>`;
+            const container = document.getElementById('printCreditorsAgingContainer');
+            container.innerHTML = html;
+            container.style.display = 'block';
+            setTimeout(() => { window.print(); container.style.display = 'none'; }, 100);
+        }
+
+        // Supplier action functions
+        function viewSupplierDetails(supplierId) {
+            alert(`Viewing details for supplier: ${supplierId}`);
+            // Implementation: Open supplier details modal or navigate to supplier page
+        }
+
+        function schedulePayment(supplierId) {
+            alert(`Scheduling payment for supplier: ${supplierId}`);
+            // Implementation: Open payment scheduling modal
+        }
+
+        // Customer action functions (for debtors aging)
+        function viewCustomerDetails(customerId) {
+            alert(`Viewing details for customer: ${customerId}`);
+            // Implementation: Open customer details modal or navigate to customer page
+        }
+
+        function sendStatement(customerId) {
+            alert(`Sending statement to customer: ${customerId}`);
+            // Implementation: Send customer statement via email
+        }
+
+        // ========================================================================
+        // TRIAL BALANCE REPORT
+        // ========================================================================
+
+        async function refreshTrialBalance() {
+            const asOfDate = document.getElementById('trialBalanceAsOfDate').value || new Date().toISOString().split('T')[0];
+            const accountType = document.getElementById('trialBalanceAccountType').value;
+            const showZero = document.getElementById('trialBalanceShowZero').value === 'true';
+
+            try {
+                // Show loading
+                document.getElementById('trialBalanceTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                const params = new URLSearchParams({
+                    as_of_date: asOfDate,
+                    show_zero_balances: showZero
+                });
+
+                if (accountType) params.append('account_type', accountType);
+
+                const response = await fetch(`/api/v1/reports/trial-balance?${params}`);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        renderTrialBalance(result.data);
+                    } else {
+                        throw new Error('API returned error');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+            } catch (error) {
+                console.error('Error loading trial balance:', error);
+                showErrorMessage('Failed to load trial balance report: ' + error.message, 'trialBalance');
+            }
+        }
+
+        function renderTrialBalance(data) {
+            const accounts = data.accounts || data.account_balances || [];
+            let totalDebits = 0;
+            let totalCredits = 0;
+
+            // Render accounts table
+            const tableBody = document.getElementById('trialBalanceTableBody');
+            
+            if (accounts.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            <i class="bi bi-inbox me-2"></i>No accounts found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = accounts.map(account => {
+                // Use the debit_balance and credit_balance from the API response
+                // These represent the total debits and credits for the account
+                const debitAmount = account.debit_balance || 0;
+                const creditAmount = account.credit_balance || 0;
+
+                totalDebits += debitAmount;
+                totalCredits += creditAmount;
+
+                return `
+                    <tr>
+                        <td>
+                            <span class="fw-bold">${account.account_code || account.code}</span>
+                        </td>
+                        <td>
+                            <div>${account.account_name || account.name}</div>
+                            ${account.parent_name ? `<small class="text-muted">↳ ${account.parent_name}</small>` : ''}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">${account.account_type}</span>
+                        </td>
+                        <td>
+                            ${account.reporting_tag ? `<span class="badge bg-info">${account.reporting_tag}</span>` : ''}
+                        </td>
+                        <td class="text-end">
+                            ${debitAmount > 0 ? formatCurrency(debitAmount) : ''}
+                        </td>
+                        <td class="text-end">
+                            ${creditAmount > 0 ? formatCurrency(creditAmount) : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update summary
+            document.getElementById('trialBalanceTotalDebits').textContent = formatCurrency(totalDebits);
+            document.getElementById('trialBalanceTotalCredits').textContent = formatCurrency(totalCredits);
+            document.getElementById('trialBalanceFooterDebits').textContent = formatCurrency(totalDebits);
+            document.getElementById('trialBalanceFooterCredits').textContent = formatCurrency(totalCredits);
+
+            // Update balance status
+            const difference = totalDebits - totalCredits;
+            const statusCard = document.getElementById('trialBalanceStatus');
+            const differenceElement = document.getElementById('trialBalanceDifference');
+            const statusText = document.getElementById('trialBalanceStatusText');
+
+            differenceElement.textContent = formatCurrency(Math.abs(difference));
+            
+            if (Math.abs(difference) < 0.01) {
+                statusCard.className = 'card bg-success text-white';
+                statusText.textContent = 'Trial Balance is balanced ✓';
+            } else {
+                statusCard.className = 'card bg-danger text-white';
+                statusText.textContent = 'Trial Balance is OUT OF BALANCE!';
+            }
+        }
+
+        async function validateTrialBalance() {
+            alert('Running trial balance validation...');
+        }
+
+        async function exportTrialBalance() {
+            alert('Exporting trial balance to Excel...');
+        }
+
+        // ========================================================================
+        // BALANCE SHEET REPORT
+        // ========================================================================
+
+        async function refreshBalanceSheet() {
+            const asOfDate = document.getElementById('balanceSheetAsOfDate').value || new Date().toISOString().split('T')[0];
+
+            try {
+                // Show loading in all sections
+                const sections = ['currentAssetsSection', 'nonCurrentAssetsSection', 'currentLiabilitiesSection', 'nonCurrentLiabilitiesSection', 'equitySection'];
+                sections.forEach(sectionId => {
+                    document.getElementById(sectionId).innerHTML = `
+                        <div class="text-center">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const response = await fetch(`/api/v1/reports/balance-sheet?as_of_date=${asOfDate}`);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        renderBalanceSheet(result.data);
+                    } else {
+                        throw new Error('API returned error');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+            } catch (error) {
+                console.error('Error loading balance sheet:', error);
+                showErrorMessage('Failed to load balance sheet report: ' + error.message, 'balanceSheet');
+            }
+        }
+
+        function renderBalanceSheet(data) {
+            console.log('🔵 Balance Sheet Renderer v2.0 - 2025-10-07 23:45');
+            console.log('📊 Raw API Data:', data);
+            
+            // Store data globally for printing
+            window._balanceSheetData = data;
+            
+            // Normalize data shape and provide safe defaults
+            const safe = (v, d) => (v === null || v === undefined ? d : v);
+            const toArray = (v) => {
+                if (Array.isArray(v)) return v;
+                if (v && typeof v === 'object') {
+                    if (Array.isArray(v.line_items)) return v.line_items;
+                    if (Array.isArray(v.items)) return v.items;
+                }
+                return v ? [v] : [];
+            };
+            const sumAmounts = (arr) => (Array.isArray(arr) ? arr.reduce((s, a) => s + (Number(a.amount) || Number(a.current_period) || 0), 0) : 0);
+
+            const assets = safe(data.assets, {});
+            const liabilitiesAndEquity = safe(data.liabilities_and_equity, safe(data.liabilities, {}));
+            
+            console.log('✅ Parsed sections - Current Assets:', toArray(assets.current_assets).length, 'items');
+            
+            const currentAssets = toArray(assets.current_assets);
+            const nonCurrentAssets = toArray(assets.non_current_assets);
+            const currentLiabilities = toArray(liabilitiesAndEquity.current_liabilities);
+            const nonCurrentLiabilities = toArray(liabilitiesAndEquity.non_current_liabilities);
+            const equityArray = toArray(liabilitiesAndEquity.equity);
+
+            // Check if all sections are empty
+            const allEmpty = [currentAssets, nonCurrentAssets, currentLiabilities, nonCurrentLiabilities, equityArray].every(arr => !arr || arr.length === 0);
+            if (allEmpty) {
+                document.getElementById('balance-sheet-pane').innerHTML = `<div class='alert alert-warning text-center mt-4'><i class='bi bi-exclamation-triangle me-2'></i>No balance sheet data available for the selected period.</div>`;
+                return;
+            }
+
+            // Current Assets
+            renderBalanceSheetSection('currentAssetsSection', currentAssets, 'Current Assets');
+            // Non-Current Assets
+            renderBalanceSheetSection('nonCurrentAssetsSection', nonCurrentAssets, 'Non-Current Assets');
+            // Current Liabilities
+            renderBalanceSheetSection('currentLiabilitiesSection', currentLiabilities, 'Current Liabilities');
+            // Non-Current Liabilities
+            renderBalanceSheetSection('nonCurrentLiabilitiesSection', nonCurrentLiabilities, 'Non-Current Liabilities');
+            // Equity
+            renderBalanceSheetSection('equitySection', equityArray, 'Equity');
+
+            // Update totals - check multiple possible locations for totals
+            const totals = safe(data.totals, {});
+            let totalAssets = Number(assets.total_assets) || Number(totals.total_assets);
+            let totalLiabilities = Number(liabilitiesAndEquity.total_liabilities) || Number(totals.total_liabilities);
+            let totalEquity = Number(liabilitiesAndEquity.total_equity) || Number(totals.total_equity);
+
+            // If totals missing or NaN, derive from sections
+            if (!Number.isFinite(totalAssets)) {
+                totalAssets = sumAmounts(currentAssets) + sumAmounts(nonCurrentAssets);
+            }
+            if (!Number.isFinite(totalLiabilities)) {
+                totalLiabilities = sumAmounts(currentLiabilities) + sumAmounts(nonCurrentLiabilities);
+            }
+            if (!Number.isFinite(totalEquity)) {
+                totalEquity = sumAmounts(equityArray);
+            }
+            const totalLiabilitiesEquity = totalLiabilities + totalEquity;
+
+            document.getElementById('totalAssetsBS').textContent = formatCurrency(totalAssets);
+            document.getElementById('totalLiabilitiesEquity').textContent = formatCurrency(totalLiabilitiesEquity);
+
+            // Balance verification
+            const verification = document.getElementById('balanceSheetVerification');
+            const equation = document.getElementById('balanceSheetEquation');
+            const status = document.getElementById('balanceSheetStatus');
+
+            equation.textContent = `${formatCurrency(totalAssets)} = ${formatCurrency(totalLiabilities)} + ${formatCurrency(totalEquity)}`;
+
+            const difference = Math.abs(totalAssets - totalLiabilitiesEquity);
+            if (difference < 0.01) {
+                verification.className = 'alert alert-success';
+                status.textContent = 'Balance Sheet is balanced ✓';
+            } else {
+                verification.className = 'alert alert-danger';
+                status.textContent = `Balance Sheet is OUT OF BALANCE by ${formatCurrency(difference)}!`;
+            }
+        }
+
+                function renderBalanceSheetSection(sectionId, accounts, title) {
+            const section = document.getElementById(sectionId);
+            // Normalize accounts input
+            let list = Array.isArray(accounts) ? accounts : (accounts && typeof accounts === 'object' && accounts.line_items && Array.isArray(accounts.line_items) ? accounts.line_items : (accounts && accounts.items && Array.isArray(accounts.items) ? accounts.items : (accounts ? [accounts] : [])));
+
+            if (!list || list.length === 0) {
+                section.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="bi bi-inbox me-2"></i>No ${title.toLowerCase()} found
+                    </div>
+                `;
+                return;
+            }
+
+            const total = list.reduce((sum, account) => sum + (Number(account.amount) || Number(account.current_period) || 0), 0);
+
+            section.innerHTML = `
+                ${list.map(account => `
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <span class="fw-bold">${account.account_name || account.name}</span>
+                            ${account.account_code ? `<small class="text-muted ms-2">(${account.account_code})</small>` : ''}
+                        </div>
+                        <span>${formatCurrency(Number(account.amount) || Number(account.current_period) || 0)}</span>
+                    </div>
+                `).join('')}
+                <hr>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total ${title}</span>
+                    <span>${formatCurrency(total)}</span>
+                </div>
+            `;
+        }
+
+        function showErrorMessage(message, targetSection) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            let targetContainer;
+            if (targetSection) {
+                targetContainer = document.querySelector(`#${targetSection} .card-body`) || 
+                                 document.querySelector(`#${targetSection}`) || 
+                                 document.querySelector('.container-fluid');
+            } else {
+                targetContainer = document.querySelector('.container-fluid');
+            }
+            
+            targetContainer.insertBefore(alertDiv, targetContainer.firstChild);
+        }
+
+        async function exportBalanceSheet(fmt) {
+            try {
+                const asOfDate = document.getElementById('balanceSheetAsOfDate').value || new Date().toISOString().split('T')[0];
+                const comparisonDate = document.getElementById('balanceSheetComparisonDate').value;
+                const detail = document.getElementById('balanceSheetDetail').value || 'summary';
+                const params = new URLSearchParams({ as_of_date: asOfDate, detail_level: detail });
+                if (comparisonDate) params.append('comparison_date', comparisonDate);
+                if (fmt) params.append('export', fmt);
+                const url = `${API_BASE}/reports/balance-sheet?${params}`;
+                await downloadFile(url, `balance_sheet_${asOfDate}.${fmt || 'pdf'}`);
+            } catch (e) {
+                showErrorMessage('Failed to export Balance Sheet: ' + e.message, 'balance-sheet-pane');
+            }
+        }
+        async function exportTrialBalance(fmt) {
+            try {
+                const asOfDate = document.getElementById('trialBalanceAsOfDate').value || new Date().toISOString().split('T')[0];
+                const acctType = document.getElementById('trialBalanceAccountType').value;
+                const showZero = document.getElementById('trialBalanceShowZero').value === 'true';
+                const params = new URLSearchParams({ as_of_date: asOfDate, include_zero_balances: showZero });
+                if (acctType) params.append('account_type_filter', acctType);
+                if (fmt) params.append('export', fmt);
+                const url = `${API_BASE}/reports/trial-balance?${params}`;
+                await downloadFile(url, `trial_balance_${asOfDate}.${fmt || 'pdf'}`);
+            } catch (e) {
+                showErrorMessage('Failed to export Trial Balance: ' + e.message, 'trial-balance-pane');
+            }
+        }
+
+        async function printTrialBalance() {
+            const tableBody = document.getElementById('trialBalanceTableBody');
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
+            let html = `<div class='company-header'>
+                <h2>COMPUTING NETWORKING PRINTING SOLUTIONS PTY LTD</h2>
+                <div class='meta'>TEL 74818826 77122880 BOTSWANA</div>
+            </div>
+            <div class='report-title'>Trial Balance</div>
+            <div class='report-period'>As of: ${document.getElementById('trialBalanceAsOfDate').value || new Date().toISOString().split('T')[0]}</div>
+            <table><thead><tr>
+                <th>Account Code</th><th>Account Name</th><th>Account Type</th><th>IFRS Tag</th><th>Debit Balance</th><th>Credit Balance</th>
+            </tr></thead><tbody>`;
+            rows.forEach(tr => {
+                html += `<tr>${tr.innerHTML}</tr>`;
+            });
+            html += `</tbody></table>`;
+            html += `<div class='summary-row'>
+                Total Debits: ${document.getElementById('trialBalanceTotalDebits').textContent} | 
+                Total Credits: ${document.getElementById('trialBalanceTotalCredits').textContent} | 
+                Difference: ${document.getElementById('trialBalanceDifference').textContent}
+            </div>`;
+            const container = document.getElementById('printTrialBalanceContainer');
+            container.innerHTML = html;
+            container.style.display = 'block';
+            setTimeout(() => { window.print(); container.style.display = 'none'; }, 100);
+        }
+
+        async function downloadFile(url, suggestedName) {
+            const res = await fetch(url);
+            if (!res.ok) {
+                const text = await res.text().catch(() => '');
+                throw new Error(text || `HTTP ${res.status}`);
+            }
+            const blob = await res.blob();
+            const a = document.createElement('a');
+            const objectUrl = URL.createObjectURL(blob);
+            a.href = objectUrl;
+            a.download = suggestedName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+        }
+
+        async function printBalanceSheet() {
+            console.log('🖨️ Print Balance Sheet called');
+            
+            // Get the stored balance sheet data
+            const data = window._balanceSheetData;
+            if (!data) {
+                console.error('❌ No balance sheet data available');
+                alert('Please load the balance sheet first before printing.');
+                return;
+            }
+            
+            console.log('✅ Balance sheet data found:', data);
+
+            const asOfDate = document.getElementById('balanceSheetAsOfDate')?.value || new Date().toISOString().split('T')[0];
+            
+            // Helper to extract line items
+            const toArray = (v) => {
+                if (Array.isArray(v)) return v;
+                if (v && typeof v === 'object') {
+                    if (Array.isArray(v.line_items)) return v.line_items;
+                    if (Array.isArray(v.items)) return v.items;
+                }
+                return [];
+            };
+
+            const assets = data.assets || {};
+            const liabilitiesAndEquity = data.liabilities_and_equity || data.liabilities || {};
+            
+            const currentAssets = toArray(assets.current_assets);
+            const nonCurrentAssets = toArray(assets.non_current_assets);
+            const currentLiabilities = toArray(liabilitiesAndEquity.current_liabilities);
+            const nonCurrentLiabilities = toArray(liabilitiesAndEquity.non_current_liabilities);
+            const equity = toArray(liabilitiesAndEquity.equity);
+
+            console.log('📊 Sections parsed:', {
+                currentAssets: currentAssets.length,
+                nonCurrentAssets: nonCurrentAssets.length,
+                currentLiabilities: currentLiabilities.length,
+                nonCurrentLiabilities: nonCurrentLiabilities.length,
+                equity: equity.length
+            });
+
+            // Build HTML for printing
+            let html = `
+                <div class='company-header'>
+                    <h2>COMPUTING NETWORKING PRINTING SOLUTIONS PTY LTD</h2>
+                    <div class='meta'>TEL 74818826 77122880 BOTSWANA</div>
+                </div>
+                <div class='report-title'>Balance Sheet (Statement of Financial Position)</div>
+                <div class='report-period'>As of: ${asOfDate}</div>
+            `;
+
+            // Helper function to create a section table
+            function createSectionTable(items, sectionTitle) {
+                if (!items || items.length === 0) {
+                    return `<h3>${sectionTitle}</h3><p style="text-align:center;color:#999;">No items found</p>`;
+                }
+                
+                const total = items.reduce((sum, item) => sum + (Number(item.amount) || Number(item.current_period) || 0), 0);
+                
+                let tableHtml = `
+                    <h3>${sectionTitle}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Account Code</th>
+                                <th>Account Name</th>
+                                <th style="text-align:right;">Amount (BWP)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                items.forEach(item => {
+                    const amount = Number(item.amount) || Number(item.current_period) || 0;
+                    tableHtml += `
+                        <tr>
+                            <td>${item.account_code || ''}</td>
+                            <td>${item.account_name || item.name || ''}</td>
+                            <td style="text-align:right;">${formatCurrency(amount)}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHtml += `
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight:bold;background:#f0f0f0;">
+                                <td colspan="2">Total ${sectionTitle}</td>
+                                <td style="text-align:right;">${formatCurrency(total)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <br>
+                `;
+                
+                return tableHtml;
+            }
+
+            // Add Assets
+            html += '<div style="page-break-inside:avoid;"><h2 style="color:#0d6efd;border-bottom:2px solid #0d6efd;">ASSETS</h2>';
+            html += createSectionTable(currentAssets, 'Current Assets');
+            html += createSectionTable(nonCurrentAssets, 'Non-Current Assets');
+            
+            const totalAssets = Number(assets.total_assets) || 0;
+            html += `<div class='summary-row' style="font-size:14pt;padding:8px;margin:10px 0;"><strong>TOTAL ASSETS: ${formatCurrency(totalAssets)}</strong></div>`;
+            html += '</div>';
+
+            // Add Liabilities
+            html += '<div style="page-break-inside:avoid;"><h2 style="color:#0d6efd;border-bottom:2px solid #0d6efd;">LIABILITIES</h2>';
+            html += createSectionTable(currentLiabilities, 'Current Liabilities');
+            html += createSectionTable(nonCurrentLiabilities, 'Non-Current Liabilities');
+            
+            const totalLiabilities = Number(liabilitiesAndEquity.total_liabilities) || 0;
+            html += `<div class='summary-row' style="font-size:14pt;padding:8px;margin:10px 0;"><strong>TOTAL LIABILITIES: ${formatCurrency(totalLiabilities)}</strong></div>`;
+            html += '</div>';
+
+            // Add Equity
+            html += '<div style="page-break-inside:avoid;"><h2 style="color:#0d6efd;border-bottom:2px solid #0d6efd;">EQUITY</h2>';
+            html += createSectionTable(equity, 'Equity');
+            
+            const totalEquity = Number(liabilitiesAndEquity.total_equity) || 0;
+            html += `<div class='summary-row' style="font-size:14pt;padding:8px;margin:10px 0;"><strong>TOTAL EQUITY: ${formatCurrency(totalEquity)}</strong></div>`;
+            html += '</div>';
+
+            // Grand Total
+            const totalLiabilitiesEquity = totalLiabilities + totalEquity;
+            const balanced = Math.abs(totalAssets - totalLiabilitiesEquity) < 0.01;
+            html += `
+                <div style="margin-top:20px;padding:15px;background:${balanced ? '#d4edda' : '#f8d7da'};border:2px solid ${balanced ? '#28a745' : '#dc3545'};border-radius:5px;">
+                    <h3 style="margin:0 0 10px 0;">Balance Sheet Equation</h3>
+                    <p style="font-size:13pt;margin:5px 0;">Assets: ${formatCurrency(totalAssets)}</p>
+                    <p style="font-size:13pt;margin:5px 0;">Liabilities + Equity: ${formatCurrency(totalLiabilitiesEquity)}</p>
+                    <p style="font-weight:bold;font-size:14pt;margin:10px 0 0 0;color:${balanced ? '#28a745' : '#dc3545'};">
+                        ${balanced ? '✓ Balance Sheet is BALANCED' : '✗ OUT OF BALANCE by ' + formatCurrency(Math.abs(totalAssets - totalLiabilitiesEquity))}
+                    </p>
+                </div>
+            `;
+
+            console.log('📄 Generated HTML length:', html.length);
+
+            // Insert into print container and print
+            const container = document.getElementById('printBalanceSheetContainer');
+            if (!container) {
+                console.error('❌ Print container not found!');
+                alert('Print container not found. Please refresh the page.');
+                return;
+            }
+            
+            container.innerHTML = html;
+            container.style.display = 'block';
+            
+            console.log('✅ Container populated, triggering print...');
+            
+            setTimeout(() => { 
+                window.print(); 
+                container.style.display = 'none';
+                console.log('🖨️ Print dialog closed');
+            }, 100);
+        }
+
+        // ========================================================================
+        // COMMON UTILITY FUNCTIONS
+        // ========================================================================
+
+        function viewCustomerDetails(customerId) {
+            alert(`Viewing customer details for ID: ${customerId}`);
+        }
+
+        function sendStatement(customerId) {
+            alert(`Sending statement to customer ID: ${customerId}`);
+        }
+
+        function viewSupplierDetails(supplierId) {
+            alert(`Viewing supplier details for ID: ${supplierId}`);
+        }
+
+        function schedulePayment(supplierId) {
+            alert(`Scheduling payment for supplier ID: ${supplierId}`);
+        }
+
+        async function exportAllReports() {
+            alert('Exporting all financial reports...');
+        }
+
+        function generateCustomReport() {
+            alert('Opening custom report builder...');
+        }
+
+        // ========================================================================
+        // ADDITIONAL REPORT FUNCTIONS FOR DROPDOWN NAVIGATION
+        // ========================================================================
+
+        // Sales Report Functions
+        function openSalesReport(type) {
+            switch(type) {
+                case 'daily':
+                    window.open('/static/sales-reports.html#daily', '_blank');
+                    break;
+                case 'monthly':
+                    window.open('/static/sales-reports.html#monthly', '_blank');
+                    break;
+                default:
+                    window.location.href = '/static/sales-reports.html';
+            }
+        }
+
+        function openCustomerReport() {
+            window.open('/static/sales-reports.html#customers', '_blank');
+        }
+
+        // Inventory Report Functions
+        function openInventoryReport(type) {
+            switch(type) {
+                case 'stock':
+                    window.open('/static/inventory-reports.html#stock', '_blank');
+                    break;
+                case 'valuation':
+                    window.open('/static/inventory-reports.html#valuation', '_blank');
+                    break;
+                case 'movement':
+                    window.open('/static/inventory-reports.html#movement', '_blank');
+                    break;
+                default:
+                    window.location.href = '/static/inventory-reports.html';
+            }
+        }
+
+        // Banking Report Functions
+        function openBankingReport(type) {
+            switch(type) {
+                case 'cashflow':
+                    window.open('/static/banking-reports.html#cashflow', '_blank');
+                    break;
+                case 'reconciliation':
+                    window.open('/static/banking-reports.html#reconciliation', '_blank');
+                    break;
+                default:
+                    window.location.href = '/static/banking-reports.html';
+            }
+        }
+
+        function openVATReport() {
+            window.open('/static/vat-reconciliations.html', '_blank');
+        }
+
+        // Management Report Functions
+        function openProfitLossReport() {
+            window.open('/static/financial-reports.html#profit-loss', '_blank');
+        }
+
+        function openBudgetReport() {
+            window.open('/static/financial-reports.html#budget', '_blank');
+        }
+
+        function openKPIReport() {
+            window.open('/static/index.html', '_blank');
+        }
+
+        // Navbar enhancements (avoid clashing with navbar.js initializeNavbar)
+        function initReportsNavbarExtras() {
+            // Theme switcher functionality
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                document.body.setAttribute('data-theme', currentTheme);
+                updateThemeIcon(currentTheme);
+                
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.body.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    document.body.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    updateThemeIcon(newTheme);
+                });
+                
+                function updateThemeIcon(theme) {
+                    if (theme === 'dark') {
+                        icon.className = 'bi bi-sun-fill';
+                        themeToggle.title = 'Switch to Light Mode';
+                    } else {
+                        icon.className = 'bi bi-moon-fill';
+                        themeToggle.title = 'Switch to Dark Mode';
+                    }
+                }
+            }
+
+            // Initialize Bootstrap components
+            if (typeof bootstrap !== 'undefined') {
+                const dropdownElementList = document.querySelectorAll('.dropdown-toggle');
+                dropdownElementList.forEach(dropdownToggleEl => {
+                    new bootstrap.Dropdown(dropdownToggleEl);
+                });
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('theme');
+                sessionStorage.clear();
+                alert('Logging out...');
+                setTimeout(() => {
+                    window.location.href = '/static/index.html';
+                }, 1000);
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Render standardized navbar from navbar.js and then add page extras
+            if (typeof window.initializeNavbar === 'function') {
+                try { window.initializeNavbar('reports'); } catch (e) { console.warn('Navbar init error', e); }
+            } else {
+                console.warn('Navbar loader not available: js/navbar.js not loaded?');
+            }
+            initReportsNavbarExtras();
+            
+            // Set default dates for all reports
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('debtorsAsOfDate').value = today;
+            document.getElementById('creditorsAsOfDate').value = today;
+            document.getElementById('trialBalanceAsOfDate').value = today;
+            document.getElementById('balanceSheetAsOfDate').value = today;
+            
+            // Set comparison date to previous month
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            document.getElementById('balanceSheetComparisonDate').value = lastMonth.toISOString().split('T')[0];
+            
+            // Initialize all reports
+            refreshDebtorsAging();
+            refreshCreditorsAging();
+            
+            loadBranches();
+            loadCustomers();
+            loadSuppliers();
+            loadReportsData();
+            initializeCharts();
+        });
+
+        async function loadBranches() {
+            try {
+                const response = await fetch((window.API_CONFIG && API_CONFIG.ENDPOINTS && API_CONFIG.ENDPOINTS.BRANCHES_PUBLIC) ? API_CONFIG.ENDPOINTS.BRANCHES_PUBLIC : '/api/v1/branches/public');
+                let branches = await response.json();
+                // Some endpoints return { data: [...] }
+                if (branches && branches.data && Array.isArray(branches.data)) {
+                    branches = branches.data;
+                }
+                if (!Array.isArray(branches)) {
+                    console.warn('Branches response was not an array; got:', branches);
+                    branches = [];
+                }
+                
+                const branchSelect = document.getElementById('branchFilter');
+                branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch.id;
+                    option.textContent = branch.name;
+                    branchSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
+
+        async function loadReportsData() {
+            try {
+                // Load business overview data
+                const dashboardResponse = await fetch('/api/v1/reports/financial/dashboard');
+                const dashboardData = await dashboardResponse.json();
+                
+                // Load performance data
+                const performanceResponse = await fetch('/api/v1/reports/performance/dashboard');
+                const performanceData = await performanceResponse.json();
+                
+                reportsData = {
+                    dashboard: { 
+                        financial_summary: dashboardData.data || {
+                            total_revenue: 0,
+                            total_expenses: 0,
+                            net_profit: 0
+                        }
+                    },
+                    performance: { 
+                        metrics: performanceData.data || {}
+                    }
+                };
+                
+                updateReportsTable();
+                updateCharts();
+            } catch (error) {
+                console.error('Error loading reports data:', error);
+                // Use fallback data when API is not available
+                reportsData = {
+                    dashboard: { 
+                        financial_summary: {
+                            total_revenue: 0,
+                            total_expenses: 0,
+                            net_profit: 0
+                        }
+                    },
+                    performance: { 
+                        metrics: {}
+                    }
+                };
+                updateReportsTable();
+                updateCharts();
+                showError('Failed to load reports data - using offline mode');
+            }
+        }
+
+        async function loadCustomers() {
+            try {
+                const url = (window.API_CONFIG && API_CONFIG.ENDPOINTS && API_CONFIG.ENDPOINTS.SALES_CUSTOMERS) ? API_CONFIG.ENDPOINTS.SALES_CUSTOMERS : '/api/v1/sales/customers';
+                const response = await fetch(url);
+                let customers = await response.json();
+                if (customers && customers.data && Array.isArray(customers.data)) {
+                    customers = customers.data;
+                }
+                if (!Array.isArray(customers)) {
+                    console.warn('Customers response was not an array; got:', customers);
+                    customers = [];
+                }
+                
+                const customerSelect = document.getElementById('debtorsCustomerFilter');
+                customerSelect.innerHTML = '<option value="">All Customers</option>';
+                
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = customer.name;
+                    customerSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+
+        async function loadSuppliers() {
+            try {
+                const url = (window.API_CONFIG && API_CONFIG.ENDPOINTS && API_CONFIG.ENDPOINTS.SUPPLIERS) ? API_CONFIG.ENDPOINTS.SUPPLIERS : '/api/v1/purchases/suppliers';
+                const response = await fetch(url);
+                let suppliers = await response.json();
+                // Handle wrapped responses like { data: [...] }
+                if (suppliers && suppliers.data && Array.isArray(suppliers.data)) {
+                    suppliers = suppliers.data;
+                }
+                if (!Array.isArray(suppliers)) {
+                    console.warn('Suppliers response was not an array; got:', suppliers);
+                    suppliers = [];
+                }
+                
+                const supplierSelect = document.getElementById('creditorsSupplierFilter');
+                supplierSelect.innerHTML = '<option value="">All Suppliers</option>';
+                
+                suppliers.forEach(supplier => {
+                    const option = document.createElement('option');
+                    option.value = supplier.id;
+                    option.textContent = supplier.name;
+                    supplierSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading suppliers:', error);
+            }
+        }
+
+        function initializeCharts() {
+            try {
+                // Check if Chart.js is available
+                if (typeof Chart === 'undefined') {
+                    console.log('⚠️ Chart.js not available, using fallback');
+                    return;
+                }
+                
+                // Business Overview Chart
+                const overviewCtx = document.getElementById('businessOverviewChart').getContext('2d');
+                charts.overview = new Chart(overviewCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Revenue', 'Expenses', 'Net Profit'],
+                    datasets: [{
+                        label: 'Amount',
+                        data: [0, 0, 0],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            charts.revenue = new Chart(revenueCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Revenue', 'Expenses'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing charts:', error);
+        }
+
+    }
+
+        function updateCharts() {
+            try {
+                if (reportsData.dashboard && charts.overview && charts.revenue) {
+                    const data = reportsData.dashboard.financial_summary;
+                    
+                    // Update overview chart
+                    if (charts.overview && typeof charts.overview.update === 'function') {
+                        charts.overview.data.datasets[0].data = [
+                            data.total_revenue || 0,
+                            data.total_expenses || 0,
+                            data.net_profit || 0
+                        ];
+                        charts.overview.update();
+                    }
+                    
+                    // Update revenue chart
+                    if (charts.revenue && typeof charts.revenue.update === 'function') {
+                        charts.revenue.data.datasets[0].data = [
+                            data.total_revenue || 0,
+                            data.total_expenses || 0
+                        ];
+                        charts.revenue.update();
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating charts:', error);
+            }
+        }
+
+        function updateReportsTable() {
+            const table = document.getElementById('reportsTable');
+            
+            const reports = [
+                {
+                    name: 'Financial Dashboard',
+                    category: 'Financial',
+                    description: 'Comprehensive financial overview with key metrics',
+                    lastUpdated: new Date().toLocaleDateString(),
+                    status: 'Active',
+                    url: '/static/financial-reports.html'
+                },
+                {
+                    name: 'Balance Sheet',
+                    category: 'Financial',
+                    description: 'IFRS-compliant balance sheet statement',
+                    lastUpdated: new Date().toLocaleDateString(),
+                    status: 'Active',
+                    url: '/static/financial-reports.html'
+                },
+                {
+                    name: 'Income Statement',
+                    category: 'Financial',
+                    description: 'Profit and loss statement with detailed breakdown',
+                    lastUpdated: new Date().toLocaleDateString(),
+                    status: 'Active',
+                    url: '/static/financial-reports.html'
+                },
+                {
+                    name: 'Sales Summary',
+                    category: 'Sales',
+                    description: 'Sales performance and customer analytics',
+                    lastUpdated: new Date().toLocaleDateString(),
+                    status: 'Active',
+                    url: '/static/sales-reports.html'
+                },
+                {
+                    name: 'Customer Analysis',
+                    category: 'Sales',
+                    description: 'Customer behavior and receivables aging',
+                    lastUpdated: new Date().toLocaleDateString(),
+                    status: 'Active',
+                    url: '/static/sales-reports.html'
+                },
+                {
+                    name: 'Inventory Summary',
+                    category: 'Inventory',
+                    description: 'Stock levels and valuation analysis',
+                    lastUpdated: new Date().toLocaleDateString(),
+                    status: 'Active',
+                    url: '/static/inventory-reports.html'
+                },
+                {
+                    name: 'Low Stock Alerts',
+                    category: 'Inventory',
+                    description: 'Products requiring reorder attention',
+                    lastUpdated: new Date().toLocaleDateString(),
+                    status: 'Active',
+                    url: '/static/inventory-reports.html'
+                },
+                {
+                    name: 'Performance Dashboard',
+                    category: 'Operational',
+                    description: 'Business performance and KPI metrics',
+                    lastUpdated: new Date().toLocaleDateString(),
+                    status: 'Active',
+                    url: '/static/index.html'
+                }
+            ];
+            
+            let html = '';
+            reports.forEach(report => {
+                html += `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                                <strong>${report.name}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-modern badge-${getCategoryColor(report.category)}">${report.category}</span>
+                        </td>
+                        <td>${report.description}</td>
+                        <td>${report.lastUpdated}</td>
+                        <td>
+                            <span class="badge-modern badge-success">${report.status}</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn-modern btn-sm btn-outline-primary" onclick="viewReport('${report.url}')">
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                <button class="btn-modern btn-sm btn-outline-success" onclick="exportReport('${report.name}')">
+                                    <i class="bi bi-download"></i> Export
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            table.innerHTML = html;
+        }
+
+        function getCategoryColor(category) {
+            switch (category) {
+                case 'Financial': return 'primary';
+                case 'Sales': return 'success';
+                case 'Inventory': return 'warning';
+                case 'Operational': return 'info';
+                default: return 'secondary';
+            }
+        }
+
+        function navigateToReports(category) {
+            switch (category) {
+                case 'financial':
+                    window.location.href = '/static/financial-reports.html';
+                    break;
+                case 'sales':
+                    window.location.href = '/static/sales-reports.html';
+                    break;
+                case 'inventory':
+                    window.location.href = '/static/inventory-reports.html';
+                    break;
+                case 'operational':
+                    window.location.href = '/static/index.html';
+                    break;
+            }
+        }
+
+        function viewReport(url) {
+            window.location.href = url;
+        }
+
+        function exportReport(reportName) {
+            alert(`Export functionality for ${reportName} will be implemented`);
+        }
+
+        function generateCustomReport() {
+            alert('Custom report generation will be implemented');
+        }
+
+        function clearFilters() {
+            document.getElementById('reportTypeFilter').value = '';
+            document.getElementById('periodFilter').value = '';
+            document.getElementById('branchFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+        }
+
+        function applyFilters() {
+            // Apply filter logic here
+            console.log('Applying filters...');
+        }
+
+        function showError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+
+    
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    
+    
+</body>
+    
+    
+</html>

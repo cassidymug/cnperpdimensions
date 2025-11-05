@@ -1,0 +1,2677 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Financial Reports</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        .dark-mode {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        .entry-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .entry-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .debit-amount {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .credit-amount {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .filter-section {
+            background-color: var(--bg-primary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .journal-line {
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .balance-indicator {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .balance-balanced {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .balance-unbalanced {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .accounting-code-option {
+            font-weight: 500;
+        }
+
+        .accounting-code-option.sub-account {
+            padding-left: 20px;
+            font-style: italic;
+        }
+
+        .accounting-code-option.parent-account {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Standardized Navbar -->
+    <div id="navbar-container"></div>
+    <script src="js/navbar.js?v=20250106001"></script>
+    <div style="height: 70px;"></div>
+
+    
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-calculator me-2"></i>Financial Reports
+                </h1>
+                <p class="text-muted mb-0">IFRS-compliant financial statements and analysis</p>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-2"></i>Export
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="exportFinancialStatementPDF()">
+                            <i class="bi bi-filetype-pdf me-2"></i>Professional PDF
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportReport()">
+                            <i class="bi bi-file-earmark-pdf me-2"></i>Quick PDF
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportReport()">
+                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Excel (Coming Soon)
+                        </a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-primary" onclick="printReport()">
+                    <i class="bi bi-printer me-2"></i>Print
+                </button>
+            </div>
+        </div>
+
+        <!-- Report Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" onchange="loadFinancialData()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="endDate" onchange="loadFinancialData()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Branch</label>
+                    <select class="form-select" id="branchFilter" onchange="loadFinancialData()">
+                        <option value="">All Branches</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Report Type</label>
+                    <select class="form-select" id="reportType" onchange="loadFinancialData()">
+                        <option value="dashboard">Financial Dashboard</option>
+                        <option value="summary">Financial Summary</option>
+                        <option value="balance-sheet">Balance Sheet (Enhanced)</option>
+                        <option value="income-statement">Income Statement (Enhanced)</option>
+                        <option value="cash-flow">Cash Flow Statement</option>
+                        <option value="changes-in-equity">Statement of Changes in Equity</option>
+                        <option value="trial-balance">Trial Balance (Enhanced)</option>
+                        <option value="complete-package">Complete Financial Package</option>
+                        <option value="debtors-aging">Debtors Aging</option>
+                        <option value="creditors-aging">Creditors Aging</option>
+                        <option value="profit-loss">Profit & Loss (Legacy)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                            <i class="bi bi-arrow-clockwise"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Dashboard -->
+        <div id="financialDashboard" class="report-section">
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-currency-dollar fs-1 text-success mb-2"></i>
+                            <h4 id="totalRevenue">$0</h4>
+                            <p class="text-muted mb-0">Total Revenue</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-cart-x fs-1 text-danger mb-2"></i>
+                            <h4 id="totalExpenses">$0</h4>
+                            <p class="text-muted mb-0">Total Expenses</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-graph-up fs-1 text-primary mb-2"></i>
+                            <h4 id="netProfit">$0</h4>
+                            <p class="text-muted mb-0">Net Profit</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-cash-stack fs-1 text-info mb-2"></i>
+                            <h4 id="cashFlow">$0</h4>
+                            <p class="text-muted mb-0">Cash Flow</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-graph-up"></i> Financial Performance
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="financialPerformanceChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-pie-chart"></i> Revenue Breakdown
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="revenueBreakdownChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Sheet -->
+        <div id="balanceSheet" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-file-earmark-text"></i> Balance Sheet
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Assets</h6>
+                                    <div id="assetsSection"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-danger">Liabilities & Equity</h6>
+                                    <div id="liabilitiesSection"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Income Statement -->
+        <div id="incomeStatement" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-file-earmark-text"></i> Income Statement
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="incomeStatementSection"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Flow Statement -->
+        <div id="cashFlowStatement" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-file-earmark-text"></i> Cash Flow Statement
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="cashFlowSection"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trial Balance -->
+        <div id="trialBalance" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-file-earmark-text"></i> Trial Balance
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Account Code</th>
+                                            <th>Account Name</th>
+                                            <th>Account Type</th>
+                                            <th>Debits</th>
+                                            <th>Credits</th>
+                                            <th>Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="trialBalanceTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debtors Aging -->
+        <div id="debtorsAging" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-people"></i> Debtors Aging Report
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Customer</th>
+                                            <th>Current</th>
+                                            <th>1-30 Days</th>
+                                            <th>31-60 Days</th>
+                                            <th>61-90 Days</th>
+                                            <th>90+ Days</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="debtorsAgingTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Creditors Aging -->
+        <div id="creditorsAging" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-building"></i> Creditors Aging Report
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Supplier</th>
+                                            <th>Current</th>
+                                            <th>1-30 Days</th>
+                                            <th>31-60 Days</th>
+                                            <th>61-90 Days</th>
+                                            <th>90+ Days</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="creditorsAgingTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit & Loss -->
+        <div id="profitLoss" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-graph-up"></i> Profit & Loss Statement (Legacy)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="profitLossSection"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div id="summary" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="bi bi-speedometer2"></i> Financial Summary Dashboard
+                            </h6>
+                            <span class="badge bg-primary" id="summaryIFRSBadge">IFRS Compliant</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-cash-stack fs-1 text-success mb-2"></i>
+                                            <h4 id="summaryTotalAssets">$0</h4>
+                                            <p class="text-muted mb-0">Total Assets</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-credit-card fs-1 text-warning mb-2"></i>
+                                            <h4 id="summaryTotalLiabilities">$0</h4>
+                                            <p class="text-muted mb-0">Total Liabilities</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-bank fs-1 text-info mb-2"></i>
+                                            <h4 id="summaryTotalEquity">$0</h4>
+                                            <p class="text-muted mb-0">Total Equity</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-graph-up fs-1 text-primary mb-2"></i>
+                                            <h4 id="summaryNetIncome">$0</h4>
+                                            <p class="text-muted mb-0">Net Income</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Key Financial Ratios</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="financialRatios"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">IFRS Compliance Status</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="ifrsCompliance"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statement of Changes in Equity -->
+        <div id="changesInEquity" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="bi bi-arrow-up-right-circle"></i> Statement of Changes in Equity
+                            </h6>
+                            <span class="badge bg-primary" id="equityIFRSBadge">IFRS Compliant</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Component</th>
+                                            <th>Beginning Balance</th>
+                                            <th>Net Income</th>
+                                            <th>Other Comprehensive Income</th>
+                                            <th>Dividends</th>
+                                            <th>Share Transactions</th>
+                                            <th>Ending Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="changesInEquityTable">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete Financial Package -->
+        <div id="completePackage" class="report-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="bi bi-collection"></i> Complete Financial Statements Package
+                            </h6>
+                            <div>
+                                <span class="badge bg-primary me-2" id="packageIFRSBadge">IFRS Compliant</span>
+                                <button class="btn btn-sm btn-outline-primary" onclick="exportCompletePackage()">
+                                    <i class="bi bi-download"></i> Export All
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Balance Sheet Summary</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="packageBalanceSheet"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Income Statement Summary</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="packageIncomeStatement"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Cash Flow Summary</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="packageCashFlow"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Changes in Equity Summary</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="packageChangesInEquity"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report View Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportModalLabel">Financial Report</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="reportModalBody">
+                    <!-- Report content will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printModalReport()">
+                        <i class="bi bi-printer me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="exportModalReport('pdf')">
+                        <i class="bi bi-file-pdf me-1"></i>Export PDF
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="exportModalReport('excel')">
+                        <i class="bi bi-file-excel me-1"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jsPDF and html2canvas for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <script src="js/auth-fetch.js"></script>
+    
+    
+    <script src="js/branch-switcher.js"></script>
+    <script>document.addEventListener('DOMContentLoaded',()=>{ if(window.auth){ auth.requireAuth(); } });</script>
+    <script src="js/ui-guard.js"></script>
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+    <!-- Modern UI -->
+    
+    
+    
+    
+    <!-- Currency Utils -->
+    <script src="js/currency-utils.js"></script>
+
+    <script>
+        // API endpoints
+        const API_BASE_URL = '/api/v1/reports';
+    const BRANCHES_API_URL = '/api/v1/branches/public';
+
+        // Global variables
+        let financialData = {};
+        let charts = {};
+        let currentReportType = 'dashboard';
+        let reportModal = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBranches();
+            setDefaultDates();
+            setupEventListeners();
+            loadFinancialData();
+            reportModal = new bootstrap.Modal(document.getElementById('reportModal'));
+        });
+
+        function setupEventListeners() {
+            document.getElementById('reportType').addEventListener('change', loadFinancialData);
+            document.getElementById('startDate').addEventListener('change', loadFinancialData);
+            document.getElementById('endDate').addEventListener('change', loadFinancialData);
+            document.getElementById('branchFilter').addEventListener('change', loadFinancialData);
+        }
+
+        function setDefaultDates() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        }
+
+        async function loadBranches() {
+            try {
+                const response = await fetch('/api/v1/branches/public');
+                const branches = await response.json();
+                
+                const branchSelect = document.getElementById('branchFilter');
+                branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch.id;
+                    option.textContent = branch.name;
+                    branchSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
+
+        async function loadFinancialData() {
+            currentReportType = document.getElementById('reportType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const branchId = document.getElementById('branchFilter').value;
+
+            // Show loading state
+            showLoading();
+
+            try {
+                let url = '';
+                const params = new URLSearchParams();
+
+                switch (currentReportType) {
+                    case 'dashboard':
+                        if (startDate) params.append('start_date', startDate);
+                        if (endDate) params.append('end_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        url = `${API_BASE_URL}/financial/dashboard?${params}`;
+                        break;
+                    case 'summary':
+                        if (startDate) params.append('start_date', startDate);
+                        if (endDate) params.append('end_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        url = `${API_BASE_URL}/financial-statements/summary?${params}`;
+                        break;
+                    case 'balance-sheet':
+                        if (endDate) params.append('as_of_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        params.append('include_notes', 'true');
+                        url = `${API_BASE_URL}/financial-statements/balance-sheet?${params}`;
+                        break;
+                    case 'income-statement':
+                        if (startDate) params.append('start_date', startDate);
+                        if (endDate) params.append('end_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        url = `${API_BASE_URL}/financial-statements/income-statement?${params}`;
+                        break;
+                    case 'cash-flow':
+                        if (startDate) params.append('start_date', startDate);
+                        if (endDate) params.append('end_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        params.append('method', 'indirect');
+                        url = `${API_BASE_URL}/financial-statements/cash-flow?${params}`;
+                        break;
+                    case 'changes-in-equity':
+                        if (startDate) params.append('start_date', startDate);
+                        if (endDate) params.append('end_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        url = `${API_BASE_URL}/financial-statements/changes-in-equity?${params}`;
+                        break;
+                    case 'trial-balance':
+                        if (endDate) params.append('as_of_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        params.append('include_zero_balances', 'false');
+                        url = `${API_BASE_URL}/financial-statements/trial-balance-enhanced?${params}`;
+                        break;
+                    case 'complete-package':
+                        if (startDate) params.append('start_date', startDate);
+                        if (endDate) params.append('end_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        url = `${API_BASE_URL}/financial-statements/complete-package?${params}`;
+                        break;
+                    case 'debtors-aging':
+                        if (endDate) params.append('as_of_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        url = `${API_BASE_URL}/debtors-aging?${params}`;
+                        break;
+                    case 'creditors-aging':
+                        if (endDate) params.append('as_of_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        url = `${API_BASE_URL}/creditors-aging?${params}`;
+                        break;
+                    case 'profit-loss':
+                        if (startDate) params.append('start_date', startDate);
+                        if (endDate) params.append('end_date', endDate);
+                        if (branchId) params.append('branch_id', branchId);
+                        url = `${API_BASE_URL}/profit-loss?${params}`;
+                        break;
+                }
+
+                if (url) {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    const data = result && (result.data || result); // accept either shape
+
+                    if (!data || (typeof data !== 'object')) {
+                        console.warn('loadFinancialData: received empty/invalid data payload', result);
+                        showError('No data returned for selected report');
+                    } else {
+                        // Process data based on report type
+                        processReportData(currentReportType, data);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading financial data:', error);
+                showError('Failed to load financial data');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function processReportData(reportType, data) {
+            switch (reportType) {
+                case 'dashboard':
+                    updateFinancialDashboard(data);
+                    break;
+                case 'summary':
+                    updateFinancialSummaryDisplay(data);
+                    break;
+                case 'balance-sheet':
+                    updateEnhancedBalanceSheetDisplay(data);
+                    break;
+                case 'income-statement':
+                    updateEnhancedIncomeStatementDisplay(data);
+                    break;
+                case 'cash-flow':
+                    updateEnhancedCashFlowDisplay(data);
+                    break;
+                case 'changes-in-equity':
+                    updateChangesInEquityDisplay(data);
+                    break;
+                case 'trial-balance':
+                    updateEnhancedTrialBalanceDisplay(data);
+                    break;
+                case 'complete-package':
+                    updateCompletePackageDisplay(data);
+                    break;
+                case 'debtors-aging':
+                    updateDebtorsAgingTable(data);
+                    break;
+                case 'creditors-aging':
+                    updateCreditorsAgingTable(data);
+                    break;
+                case 'profit-loss':
+                    updateProfitLossDisplay(data);
+                    break;
+            }
+            showReportSection(reportType);
+        }
+
+        function updateFinancialDashboard(data) {
+            if (!data || typeof data !== 'object') {
+                console.warn('updateFinancialDashboard: invalid data, skipping update');
+                return;
+            }
+            // Some endpoints may return nested structure; attempt flexible extraction
+            const summary = data.financial_summary || data.summary || data;
+            const totalRevenue = summary.total_revenue ?? summary.revenue ?? 0;
+            const totalExpenses = summary.total_expenses ?? summary.expenses ?? 0;
+            const netProfit = summary.net_profit ?? summary.net_income ?? (totalRevenue - totalExpenses);
+            const cashFlowVal = summary.cash_flow ?? summary.net_cash_flow ?? 0;
+
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
+            document.getElementById('netProfit').textContent = formatCurrency(netProfit);
+            document.getElementById('cashFlow').textContent = formatCurrency(cashFlowVal);
+
+            const allZero = [totalRevenue, totalExpenses, netProfit].every(v => (Number(v) || 0) === 0);
+            if (allZero) {
+                // Clear any existing charts and render placeholder text
+                const perfCanvas = document.getElementById('financialPerformanceChart');
+                const revCanvas = document.getElementById('revenueBreakdownChart');
+                if (charts.performance) { charts.performance.destroy(); charts.performance = null; }
+                if (charts.revenue) { charts.revenue.destroy(); charts.revenue = null; }
+                if (perfCanvas) {
+                    const ctx = perfCanvas.getContext('2d');
+                    ctx.clearRect(0,0,perfCanvas.width, perfCanvas.height);
+                    ctx.font = '14px system-ui, sans-serif';
+                    ctx.fillStyle = '#666';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('No financial data for selected range', perfCanvas.width/2, perfCanvas.height/2);
+                }
+                if (revCanvas) {
+                    const ctx2 = revCanvas.getContext('2d');
+                    ctx2.clearRect(0,0,revCanvas.width, revCanvas.height);
+                    ctx2.font = '14px system-ui, sans-serif';
+                    ctx2.fillStyle = '#666';
+                    ctx2.textAlign = 'center';
+                    ctx2.fillText('No data', revCanvas.width/2, revCanvas.height/2);
+                }
+            } else {
+                updateFinancialCharts({ financial_summary: { total_revenue: totalRevenue, total_expenses: totalExpenses, net_profit: netProfit } });
+            }
+        }
+
+        function updateFinancialCharts(data) {
+            if (!data) {
+                console.warn('updateFinancialCharts: no data provided');
+                return;
+            }
+            // Accept either { financial_summary: {...} } or flat { total_revenue, total_expenses, net_profit }
+            if (!data.financial_summary) {
+                if (typeof data.total_revenue !== 'undefined' || typeof data.net_profit !== 'undefined') {
+                    console.log('updateFinancialCharts: constructing financial_summary from flat data');
+                    data = {
+                        financial_summary: {
+                            total_revenue: data.total_revenue ?? 0,
+                            total_expenses: data.total_expenses ?? 0,
+                            net_profit: data.net_profit ?? data.net_income ?? 0
+                        }
+                    };
+                } else {
+                    console.warn('updateFinancialCharts: missing financial_summary and flat metrics');
+                    return;
+                }
+            }
+            // Debug log raw summary values
+            console.log('updateFinancialCharts summary:', data.financial_summary);
+            // Financial Performance Chart
+            const performanceCtx = document.getElementById('financialPerformanceChart').getContext('2d');
+            if (charts.performance) charts.performance.destroy();
+            
+            charts.performance = new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Revenue', 'Expenses', 'Net Profit'],
+                    datasets: [{
+                        label: 'Amount',
+                        data: [
+                            data.financial_summary.total_revenue,
+                            data.financial_summary.total_expenses,
+                            data.financial_summary.net_profit
+                        ],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+
+            // Revenue Breakdown Chart
+            const revenueCtx = document.getElementById('revenueBreakdownChart').getContext('2d');
+            if (charts.revenue) charts.revenue.destroy();
+            
+            charts.revenue = new Chart(revenueCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Revenue', 'Expenses'],
+                    datasets: [{
+                        data: [
+                            data.financial_summary.total_revenue,
+                            data.financial_summary.total_expenses
+                        ],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateBalanceSheetDisplay(data) {
+            const assetsSection = document.getElementById('assetsSection');
+            const liabilitiesSection = document.getElementById('liabilitiesSection');
+
+            // Assets
+            let assetsHtml = '';
+            for (const [name, amount] of Object.entries(data.current_assets)) {
+                assetsHtml += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-success">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            for (const [name, amount] of Object.entries(data.non_current_assets)) {
+                assetsHtml += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-success">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            assetsHtml += `
+                <hr>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total Assets</span>
+                    <span class="text-success">${formatCurrency(data.total_assets)}</span>
+                </div>
+            `;
+            assetsSection.innerHTML = assetsHtml;
+
+            // Liabilities & Equity
+            let liabilitiesHtml = '';
+            for (const [name, amount] of Object.entries(data.current_liabilities)) {
+                liabilitiesHtml += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-danger">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            for (const [name, amount] of Object.entries(data.non_current_liabilities)) {
+                liabilitiesHtml += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-danger">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            for (const [name, amount] of Object.entries(data.equity)) {
+                liabilitiesHtml += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-primary">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            liabilitiesHtml += `
+                <hr>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total Liabilities & Equity</span>
+                    <span class="text-primary">${formatCurrency(data.total_liabilities_and_equity)}</span>
+                </div>
+            `;
+            liabilitiesSection.innerHTML = liabilitiesHtml;
+        }
+
+        function updateIncomeStatementDisplay(data) {
+            const section = document.getElementById('incomeStatementSection');
+            
+            let html = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Revenue</h6>
+            `;
+            
+            for (const [name, amount] of Object.entries(data.revenue)) {
+                html += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-success">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            
+            html += `
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total Revenue</span>
+                            <span class="text-success">${formatCurrency(data.total_revenue)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Expenses</h6>
+            `;
+            
+            for (const [name, amount] of Object.entries(data.expenses)) {
+                html += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-danger">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            
+            html += `
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total Expenses</span>
+                            <span class="text-danger">${formatCurrency(data.total_expenses)}</span>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold fs-5">
+                    <span>Net Income</span>
+                    <span class="${data.net_income >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.net_income)}</span>
+                </div>
+            `;
+            
+            section.innerHTML = html;
+        }
+
+        function updateCashFlowDisplay(data) {
+            const section = document.getElementById('cashFlowSection');
+            
+            let html = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-primary">Operating Activities</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cash In</span>
+                            <span class="text-success">${formatCurrency(data.operating_activities.cash_in)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cash Out</span>
+                            <span class="text-danger">${formatCurrency(data.operating_activities.cash_out)}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Net Cash</span>
+                            <span class="${data.operating_activities.net_cash >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.operating_activities.net_cash)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-info">Investing Activities</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cash In</span>
+                            <span class="text-success">${formatCurrency(data.investing_activities.cash_in)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cash Out</span>
+                            <span class="text-danger">${formatCurrency(data.investing_activities.cash_out)}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Net Cash</span>
+                            <span class="${data.investing_activities.net_cash >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.investing_activities.net_cash)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-warning">Financing Activities</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cash In</span>
+                            <span class="text-success">${formatCurrency(data.financing_activities.cash_in)}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cash Out</span>
+                            <span class="text-danger">${formatCurrency(data.financing_activities.cash_out)}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Net Cash</span>
+                            <span class="${data.financing_activities.net_cash >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.financing_activities.net_cash)}</span>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold fs-5">
+                    <span>Net Cash Flow</span>
+                    <span class="${data.net_cash_flow >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.net_cash_flow)}</span>
+                </div>
+            `;
+            
+            section.innerHTML = html;
+        }
+
+        function updateTrialBalanceTable(data) {
+            const table = document.getElementById('trialBalanceTable');
+            
+            let html = '';
+            data.trial_balance.forEach(account => {
+                html += `
+                    <tr>
+                        <td>${account.code}</td>
+                        <td>${account.name}</td>
+                        <td><span class="badge-modern badge-${getAccountTypeColor(account.account_type)}">${account.account_type}</span></td>
+                        <td class="text-end">${formatCurrency(account.debits)}</td>
+                        <td class="text-end">${formatCurrency(account.credits)}</td>
+                        <td class="text-end ${account.balance >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(account.balance)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                <tr class="table-active fw-bold">
+                    <td colspan="3">Totals</td>
+                    <td class="text-end">${formatCurrency(data.total_debits)}</td>
+                    <td class="text-end">${formatCurrency(data.total_credits)}</td>
+                    <td class="text-end">${formatCurrency(data.total_debits - data.total_credits)}</td>
+                </tr>
+            `;
+            
+            table.innerHTML = html;
+        }
+
+        function getAccountTypeColor(accountType) {
+            switch (accountType) {
+                case 'asset': return 'success';
+                case 'liability': return 'danger';
+                case 'equity': return 'primary';
+                case 'revenue': return 'info';
+                case 'expense': return 'warning';
+                default: return 'secondary';
+            }
+        }
+
+        function showReportSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.report-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show selected section
+            const sectionToShow = document.getElementById(sectionId);
+            if(sectionToShow) {
+                sectionToShow.style.display = 'block';
+            } else {
+                // Fallback to dashboard if section not found
+                document.getElementById('financialDashboard').style.display = 'block';
+            }
+        }
+
+        // New report loading functions
+        async function loadDebtorsAging(asOfDate, branchId) {
+            const params = new URLSearchParams();
+            if (asOfDate) params.append('as_of_date', asOfDate);
+            if (branchId) params.append('branch_id', branchId);
+
+            try {
+                const response = await fetch(`/api/v1/reports/debtors-aging?${params}`);
+                const data = await response.json();
+                updateDebtorsAgingTable(data);
+                showReportSection('debtorsAging');
+            } catch (error) {
+                // Use mock data if API fails
+                const mockData = getMockDebtorsAgingData();
+                updateDebtorsAgingTable(mockData);
+                showReportSection('debtorsAging');
+            }
+        }
+
+        async function loadCreditorsAging(asOfDate, branchId) {
+            const params = new URLSearchParams();
+            if (asOfDate) params.append('as_of_date', asOfDate);
+            if (branchId) params.append('branch_id', branchId);
+
+            try {
+                const response = await fetch(`/api/v1/reports/creditors-aging?${params}`);
+                const data = await response.json();
+                updateCreditorsAgingTable(data);
+                showReportSection('creditorsAging');
+            } catch (error) {
+                // Use mock data if API fails
+                const mockData = getMockCreditorsAgingData();
+                updateCreditorsAgingTable(mockData);
+                showReportSection('creditorsAging');
+            }
+        }
+
+        async function loadProfitLoss(startDate, endDate, branchId) {
+            const params = new URLSearchParams();
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+            if (branchId) params.append('branch_id', branchId);
+
+            try {
+                const response = await fetch(`/api/v1/reports/profit-loss?${params}`);
+                const data = await response.json();
+                updateProfitLossDisplay(data);
+                showReportSection('profitLoss');
+            } catch (error) {
+                // Use mock data if API fails
+                const mockData = getMockProfitLossData();
+                updateProfitLossDisplay(mockData);
+                showReportSection('profitLoss');
+            }
+        }
+
+        function updateDebtorsAgingTable(data) {
+            const table = document.getElementById('debtorsAgingTable');
+            
+            let html = '';
+            data.debtors.forEach(debtor => {
+                html += `
+                    <tr>
+                        <td>${debtor.customer_name}</td>
+                        <td class="text-end">${formatCurrency(debtor.current)}</td>
+                        <td class="text-end">${formatCurrency(debtor.days_1_30)}</td>
+                        <td class="text-end">${formatCurrency(debtor.days_31_60)}</td>
+                        <td class="text-end">${formatCurrency(debtor.days_61_90)}</td>
+                        <td class="text-end">${formatCurrency(debtor.days_90_plus)}</td>
+                        <td class="text-end fw-bold">${formatCurrency(debtor.total)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                <tr class="table-active fw-bold">
+                    <td>Totals</td>
+                    <td class="text-end">${formatCurrency(data.totals.current)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.days_1_30)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.days_31_60)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.days_61_90)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.days_90_plus)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.total)}</td>
+                </tr>
+            `;
+            
+            table.innerHTML = html;
+        }
+
+        function updateCreditorsAgingTable(data) {
+            const table = document.getElementById('creditorsAgingTable');
+            
+            let html = '';
+            data.creditors.forEach(creditor => {
+                html += `
+                    <tr>
+                        <td>${creditor.supplier_name}</td>
+                        <td class="text-end">${formatCurrency(creditor.current)}</td>
+                        <td class="text-end">${formatCurrency(creditor.days_1_30)}</td>
+                        <td class="text-end">${formatCurrency(creditor.days_31_60)}</td>
+                        <td class="text-end">${formatCurrency(creditor.days_61_90)}</td>
+                        <td class="text-end">${formatCurrency(creditor.days_90_plus)}</td>
+                        <td class="text-end fw-bold">${formatCurrency(creditor.total)}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                <tr class="table-active fw-bold">
+                    <td>Totals</td>
+                    <td class="text-end">${formatCurrency(data.totals.current)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.days_1_30)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.days_31_60)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.days_61_90)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.days_90_plus)}</td>
+                    <td class="text-end">${formatCurrency(data.totals.total)}</td>
+                </tr>
+            `;
+            
+            table.innerHTML = html;
+        }
+
+        function updateProfitLossDisplay(data) {
+            const section = document.getElementById('profitLossSection');
+            
+            let html = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Revenue</h6>
+            `;
+            
+            for (const [name, amount] of Object.entries(data.revenue)) {
+                html += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-success">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            
+            html += `
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total Revenue</span>
+                            <span class="text-success">${formatCurrency(data.total_revenue)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Expenses</h6>
+            `;
+            
+            for (const [name, amount] of Object.entries(data.expenses)) {
+                html += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${name}</span>
+                        <span class="text-danger">${formatCurrency(amount)}</span>
+                    </div>
+                `;
+            }
+            
+            html += `
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total Expenses</span>
+                            <span class="text-danger">${formatCurrency(data.total_expenses)}</span>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold fs-5">
+                    <span>Net Profit/Loss</span>
+                    <span class="${data.net_profit >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.net_profit)}</span>
+                </div>
+            `;
+            
+            section.innerHTML = html;
+        }
+
+        // Enhanced Financial Statement Display Functions
+        function updateFinancialSummaryDisplay(data) {
+            const reportData = data.report || data;
+            
+            // Update summary cards
+            document.getElementById('summaryTotalAssets').textContent = formatCurrency(reportData.total_assets || 0);
+            document.getElementById('summaryTotalLiabilities').textContent = formatCurrency(reportData.total_liabilities || 0);
+            document.getElementById('summaryTotalEquity').textContent = formatCurrency(reportData.total_equity || 0);
+            document.getElementById('summaryNetIncome').textContent = formatCurrency(reportData.net_income || 0);
+            
+            // Update financial ratios
+            const ratiosDiv = document.getElementById('financialRatios');
+            const ratios = reportData.financial_ratios || {};
+            let ratiosHtml = '';
+            
+            Object.entries(ratios).forEach(([key, value]) => {
+                const displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                ratiosHtml += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${displayName}</span>
+                        <span class="fw-bold">${typeof value === 'number' ? value.toFixed(2) : value}</span>
+                    </div>
+                `;
+            });
+            ratiosDiv.innerHTML = ratiosHtml;
+            
+            // Update IFRS compliance
+            const complianceDiv = document.getElementById('ifrsCompliance');
+            const compliance = reportData.ifrs_compliance || {};
+            let complianceHtml = '';
+            
+            Object.entries(compliance).forEach(([key, value]) => {
+                const displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const badgeClass = value === true ? 'bg-success' : value === false ? 'bg-danger' : 'bg-warning';
+                const displayValue = typeof value === 'boolean' ? (value ? 'Compliant' : 'Non-Compliant') : value;
+                complianceHtml += `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>${displayName}</span>
+                        <span class="badge ${badgeClass}">${displayValue}</span>
+                    </div>
+                `;
+            });
+            complianceDiv.innerHTML = complianceHtml;
+        }
+
+        function updateEnhancedBalanceSheetDisplay(data) {
+            const reportData = data.report || data;
+            const assetsSection = document.getElementById('assetsSection');
+            const liabilitiesSection = document.getElementById('liabilitiesSection');
+            
+            // Display assets
+            let assetsHtml = '';
+            if (reportData.assets && reportData.assets.sections) {
+                reportData.assets.sections.forEach(section => {
+                    assetsHtml += `<h6 class="mt-3 text-primary">${section.name}</h6>`;
+                    section.line_items.forEach(item => {
+                        assetsHtml += `
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="ms-2">${item.name}</span>
+                                <span>${formatCurrency(item.amount)}</span>
+                            </div>
+                        `;
+                    });
+                    assetsHtml += `
+                        <div class="d-flex justify-content-between fw-bold border-top pt-1">
+                            <span>Total ${section.name}</span>
+                            <span>${formatCurrency(section.total)}</span>
+                        </div>
+                    `;
+                });
+                assetsHtml += `
+                    <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2 mt-2">
+                        <span>TOTAL ASSETS</span>
+                        <span>${formatCurrency(reportData.assets.total)}</span>
+                    </div>
+                `;
+            }
+            assetsSection.innerHTML = assetsHtml;
+            
+            // Display liabilities and equity
+            let liabilitiesHtml = '';
+            if (reportData.liabilities && reportData.liabilities.sections) {
+                reportData.liabilities.sections.forEach(section => {
+                    liabilitiesHtml += `<h6 class="mt-3 text-warning">${section.name}</h6>`;
+                    section.line_items.forEach(item => {
+                        liabilitiesHtml += `
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="ms-2">${item.name}</span>
+                                <span>${formatCurrency(item.amount)}</span>
+                            </div>
+                        `;
+                    });
+                    liabilitiesHtml += `
+                        <div class="d-flex justify-content-between fw-bold border-top pt-1">
+                            <span>Total ${section.name}</span>
+                            <span>${formatCurrency(section.total)}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            if (reportData.equity && reportData.equity.sections) {
+                reportData.equity.sections.forEach(section => {
+                    liabilitiesHtml += `<h6 class="mt-3 text-info">${section.name}</h6>`;
+                    section.line_items.forEach(item => {
+                        liabilitiesHtml += `
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="ms-2">${item.name}</span>
+                                <span>${formatCurrency(item.amount)}</span>
+                            </div>
+                        `;
+                    });
+                    liabilitiesHtml += `
+                        <div class="d-flex justify-content-between fw-bold border-top pt-1">
+                            <span>Total ${section.name}</span>
+                            <span>${formatCurrency(section.total)}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            liabilitiesHtml += `
+                <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2 mt-2">
+                    <span>TOTAL LIABILITIES & EQUITY</span>
+                    <span>${formatCurrency((reportData.liabilities?.total || 0) + (reportData.equity?.total || 0))}</span>
+                </div>
+            `;
+            liabilitiesSection.innerHTML = liabilitiesHtml;
+        }
+
+        function updateEnhancedIncomeStatementDisplay(data) {
+            const reportData = data.report || data;
+            const section = document.getElementById('incomeStatementSection');
+            
+            let html = '';
+            if (reportData.sections) {
+                reportData.sections.forEach(section => {
+                    html += `<h6 class="mt-3 text-primary">${section.name}</h6>`;
+                    section.line_items.forEach(item => {
+                        html += `
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="ms-2">${item.name}</span>
+                                <span>${formatCurrency(item.amount)}</span>
+                            </div>
+                        `;
+                    });
+                    html += `
+                        <div class="d-flex justify-content-between fw-bold border-top pt-1">
+                            <span>Total ${section.name}</span>
+                            <span>${formatCurrency(section.total)}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `
+                <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2 mt-3">
+                    <span>NET INCOME</span>
+                    <span class="${(reportData.net_income || 0) >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(reportData.net_income || 0)}</span>
+                </div>
+            `;
+            
+            section.innerHTML = html;
+        }
+
+        function updateEnhancedCashFlowDisplay(data) {
+            const reportData = data.report || data;
+            const section = document.getElementById('cashFlowSection');
+            
+            let html = '';
+            if (reportData.sections) {
+                reportData.sections.forEach(section => {
+                    html += `
+                        <div class="col-md-4 mb-3">
+                            <h6 class="text-primary">${section.name}</h6>
+                    `;
+                    section.line_items.forEach(item => {
+                        html += `
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="ms-2">${item.name}</span>
+                                <span class="${item.amount >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(item.amount)}</span>
+                            </div>
+                        `;
+                    });
+                    html += `
+                            <hr>
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Net Cash</span>
+                                <span class="${section.total >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(section.total)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html = `<div class="row">${html}</div>`;
+            html += `
+                <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2 mt-3">
+                    <span>NET CASH FLOW</span>
+                    <span class="${(reportData.net_cash_flow || 0) >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(reportData.net_cash_flow || 0)}</span>
+                </div>
+            `;
+            
+            section.innerHTML = html;
+        }
+
+        function updateChangesInEquityDisplay(data) {
+            const reportData = data.report || data;
+            const table = document.getElementById('changesInEquityTable');
+            
+            let html = '';
+            if (reportData.equity_components) {
+                reportData.equity_components.forEach(component => {
+                    html += `
+                        <tr>
+                            <td>${component.component}</td>
+                            <td class="text-end">${formatCurrency(component.beginning_balance)}</td>
+                            <td class="text-end">${formatCurrency(component.net_income)}</td>
+                            <td class="text-end">${formatCurrency(component.other_comprehensive_income)}</td>
+                            <td class="text-end">${formatCurrency(component.dividends)}</td>
+                            <td class="text-end">${formatCurrency(component.share_transactions)}</td>
+                            <td class="text-end fw-bold">${formatCurrency(component.ending_balance)}</td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            table.innerHTML = html;
+        }
+
+        function updateEnhancedTrialBalanceDisplay(data) {
+            const reportData = data.report || data;
+            const table = document.getElementById('trialBalanceTable');
+            
+            let html = '';
+            if (reportData.trial_balance) {
+                reportData.trial_balance.forEach(account => {
+                    html += `
+                        <tr>
+                            <td>${account.code}</td>
+                            <td>${account.name}</td>
+                            <td class="text-end">${formatCurrency(account.debit_balance)}</td>
+                            <td class="text-end">${formatCurrency(account.credit_balance)}</td>
+                            <td><span class="badge bg-secondary">${account.account_type}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            table.innerHTML = html;
+        }
+
+        function updateCompletePackageDisplay(data) {
+            const reportData = data.report || data;
+            
+            // Update Balance Sheet Summary
+            const balanceSheetDiv = document.getElementById('packageBalanceSheet');
+            if (reportData.balance_sheet) {
+                balanceSheetDiv.innerHTML = `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Assets</span>
+                        <span class="fw-bold">${formatCurrency(reportData.balance_sheet.assets?.total || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Liabilities</span>
+                        <span class="fw-bold">${formatCurrency(reportData.balance_sheet.liabilities?.total || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Total Equity</span>
+                        <span class="fw-bold">${formatCurrency(reportData.balance_sheet.equity?.total || 0)}</span>
+                    </div>
+                `;
+            }
+            
+            // Update Income Statement Summary
+            const incomeStatementDiv = document.getElementById('packageIncomeStatement');
+            if (reportData.income_statement) {
+                incomeStatementDiv.innerHTML = `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Revenue</span>
+                        <span class="fw-bold text-success">${formatCurrency(reportData.income_statement.total_revenue || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Expenses</span>
+                        <span class="fw-bold text-danger">${formatCurrency(reportData.income_statement.total_expenses || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Net Income</span>
+                        <span class="fw-bold ${(reportData.income_statement.net_income || 0) >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(reportData.income_statement.net_income || 0)}</span>
+                    </div>
+                `;
+            }
+            
+            // Update Cash Flow Summary
+            const cashFlowDiv = document.getElementById('packageCashFlow');
+            if (reportData.cash_flow_statement) {
+                cashFlowDiv.innerHTML = `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Operating Cash Flow</span>
+                        <span class="fw-bold">${formatCurrency(reportData.cash_flow_statement.operating_cash_flow || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Investing Cash Flow</span>
+                        <span class="fw-bold">${formatCurrency(reportData.cash_flow_statement.investing_cash_flow || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Net Cash Flow</span>
+                        <span class="fw-bold ${(reportData.cash_flow_statement.net_cash_flow || 0) >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(reportData.cash_flow_statement.net_cash_flow || 0)}</span>
+                    </div>
+                `;
+            }
+            
+            // Update Changes in Equity Summary
+            const equityDiv = document.getElementById('packageChangesInEquity');
+            if (reportData.changes_in_equity) {
+                equityDiv.innerHTML = `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Beginning Equity</span>
+                        <span class="fw-bold">${formatCurrency(reportData.changes_in_equity.beginning_equity || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Net Changes</span>
+                        <span class="fw-bold">${formatCurrency(reportData.changes_in_equity.net_changes || 0)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Ending Equity</span>
+                        <span class="fw-bold">${formatCurrency(reportData.changes_in_equity.ending_equity || 0)}</span>
+                    </div>
+                `;
+            }
+        }
+
+        function exportCompletePackage() {
+            // TODO: Implement complete package export
+            alert('Complete package export functionality will be implemented soon.');
+        }
+
+        // Mock data functions
+        function getMockDebtorsAgingData() {
+            return {
+                debtors: [
+                    {
+                        customer_name: "ABC Company",
+                        current: 5000,
+                        days_1_30: 2000,
+                        days_31_60: 1500,
+                        days_61_90: 1000,
+                        days_90_plus: 500,
+                        total: 10000
+                    },
+                    {
+                        customer_name: "XYZ Corporation",
+                        current: 3000,
+                        days_1_30: 1000,
+                        days_31_60: 500,
+                        days_61_90: 0,
+                        days_90_plus: 0,
+                        total: 4500
+                    }
+                ],
+                totals: {
+                    current: 8000,
+                    days_1_30: 3000,
+                    days_31_60: 2000,
+                    days_61_90: 1000,
+                    days_90_plus: 500,
+                    total: 14500
+                }
+            };
+        }
+
+        function getMockCreditorsAgingData() {
+            return {
+                creditors: [
+                    {
+                        supplier_name: "Supplier A",
+                        current: 3000,
+                        days_1_30: 1000,
+                        days_31_60: 500,
+                        days_61_90: 200,
+                        days_90_plus: 0,
+                        total: 4700
+                    },
+                    {
+                        supplier_name: "Supplier B",
+                        current: 2000,
+                        days_1_30: 800,
+                        days_31_60: 300,
+                        days_61_90: 0,
+                        days_90_plus: 0,
+                        total: 3100
+                    }
+                ],
+                totals: {
+                    current: 5000,
+                    days_1_30: 1800,
+                    days_31_60: 800,
+                    days_61_90: 200,
+                    days_90_plus: 0,
+                    total: 7800
+                }
+            };
+        }
+
+        function getMockProfitLossData() {
+            return {
+                revenue: {
+                    "Sales Revenue": 125000,
+                    "Service Revenue": 25000,
+                    "Other Income": 5000
+                },
+                total_revenue: 155000,
+                expenses: {
+                    "Cost of Goods Sold": 75000,
+                    "Operating Expenses": 35000,
+                    "Administrative Expenses": 15000,
+                    "Marketing Expenses": 10000
+                },
+                total_expenses: 135000,
+                net_profit: 20000
+            };
+        }
+
+        function showLoading() {
+            // Add loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading';
+            loadingDiv.className = 'position-fixed top-50 start-50 translate-middle';
+            loadingDiv.innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            `;
+            document.body.appendChild(loadingDiv);
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.remove();
+            }
+        }
+
+        function showError(message) {
+            // Show error message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // View, Print, and Export Functions
+        function viewCurrentReport() {
+            const reportType = document.getElementById('reportType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const branchId = document.getElementById('branchFilter').value;
+            
+            currentReportType = reportType;
+            
+            // Set modal title
+            const reportTitles = {
+                'dashboard': 'Financial Dashboard',
+                'balance-sheet': 'Balance Sheet',
+                'income-statement': 'Income Statement',
+                'cash-flow': 'Cash Flow Statement',
+                'trial-balance': 'Trial Balance',
+                'debtors-aging': 'Debtors Aging Report',
+                'creditors-aging': 'Creditors Aging Report',
+                'profit-loss': 'Profit & Loss Statement'
+            };
+            
+            document.getElementById('reportModalLabel').textContent = reportTitles[reportType] || 'Financial Report';
+            
+            // Show loading in modal
+            document.getElementById('reportModalBody').innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p class="mt-2">Loading report...</p></div>';
+            reportModal.show();
+            
+            // Load report data and display in modal
+            loadReportForModal(reportType, startDate, endDate, branchId);
+        }
+
+        async function loadReportForModal(reportType, startDate, endDate, branchId) {
+            try {
+                let data;
+                switch (reportType) {
+                    case 'dashboard':
+                        data = await loadFinancialDashboardData(startDate, endDate, branchId);
+                        break;
+                    case 'balance-sheet':
+                        data = await loadBalanceSheetData(endDate, branchId);
+                        break;
+                    case 'income-statement':
+                        data = await loadIncomeStatementData(startDate, endDate, branchId);
+                        break;
+                    case 'cash-flow':
+                        data = await loadCashFlowData(startDate, endDate, branchId);
+                        break;
+                    case 'trial-balance':
+                        data = await loadTrialBalanceData(endDate, branchId);
+                        break;
+                    case 'debtors-aging':
+                        data = await loadDebtorsAgingData(endDate, branchId);
+                        break;
+                    case 'creditors-aging':
+                        data = await loadCreditorsAgingData(endDate, branchId);
+                        break;
+                    case 'profit-loss':
+                        data = await loadProfitLossData(startDate, endDate, branchId);
+                        break;
+                }
+                
+                currentReportData = data;
+                const reportContent = generateModalReportContent(reportType, data);
+                document.getElementById('reportModalBody').innerHTML = reportContent;
+                
+            } catch (error) {
+                console.error('Error loading report for modal:', error);
+                document.getElementById('reportModalBody').innerHTML = '<div class="alert alert-danger">Failed to load report data</div>';
+            }
+        }
+
+        function generateModalReportContent(reportType, data) {
+            const date = new Date().toLocaleDateString();
+            const time = new Date().toLocaleTimeString();
+            
+            let content = `
+                <div class="report-header mb-4">
+                    <div class="row">
+                        <div class="col-6">
+                            <h4>${getReportTitle(reportType)}</h4>
+                            <p class="text-muted">Generated on ${date} at ${time}</p>
+                        </div>
+                        <div class="col-6 text-end">
+                            <h5>CNPERP ERP System</h5>
+                            <p class="text-muted">Financial Reports</p>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+            `;
+            
+            switch (reportType) {
+                case 'dashboard':
+                    content += generateDashboardModalContent(data);
+                    break;
+                case 'balance-sheet':
+                    content += generateBalanceSheetModalContent(data);
+                    break;
+                case 'income-statement':
+                    content += generateIncomeStatementModalContent(data);
+                    break;
+                case 'cash-flow':
+                    content += generateCashFlowModalContent(data);
+                    break;
+                case 'trial-balance':
+                    content += generateTrialBalanceModalContent(data);
+                    break;
+                case 'debtors-aging':
+                    content += generateDebtorsAgingModalContent(data);
+                    break;
+                case 'creditors-aging':
+                    content += generateCreditorsAgingModalContent(data);
+                    break;
+                case 'profit-loss':
+                    content += generateProfitLossModalContent(data);
+                    break;
+                default:
+                    content += '<p>Report content not available.</p>';
+            }
+            
+            return content;
+        }
+
+        // Helper: map report type to readable title
+        function getReportTitle(reportType) {
+            const titles = {
+                'dashboard': 'Financial Dashboard',
+                'balance-sheet': 'Balance Sheet',
+                'income-statement': 'Income Statement',
+                'cash-flow': 'Cash Flow Statement',
+                'trial-balance': 'Trial Balance',
+                'debtors-aging': 'Debtors Aging Report',
+                'creditors-aging': 'Creditors Aging Report',
+                'profit-loss': 'Profit & Loss Statement'
+            };
+            return titles[reportType] || 'Financial Report';
+        }
+
+        // Wrapper to keep backwards compatibility (printReportContent expects this)
+        function generateReportContentForModal(reportType, data) {
+            return generateModalReportContent(reportType, data);
+        }
+
+        function generateBalanceSheetModalContent(data) {
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Assets</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                ${Object.entries(data.current_assets).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-success">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                ${Object.entries(data.non_current_assets).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-success">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                <tr class="table-active fw-bold">
+                                    <td>Total Assets</td>
+                                    <td class="text-end text-success">${formatCurrency(data.total_assets)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Liabilities & Equity</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                ${Object.entries(data.current_liabilities).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-danger">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                ${Object.entries(data.non_current_liabilities).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-danger">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                ${Object.entries(data.equity).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-primary">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                <tr class="table-active fw-bold">
+                                    <td>Total Liabilities & Equity</td>
+                                    <td class="text-end text-primary">${formatCurrency(data.total_liabilities_and_equity)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateIncomeStatementModalContent(data) {
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Revenue</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                ${Object.entries(data.revenue).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-success">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                <tr class="table-active fw-bold">
+                                    <td>Total Revenue</td>
+                                    <td class="text-end text-success">${formatCurrency(data.total_revenue)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Expenses</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                ${Object.entries(data.expenses).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-danger">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                <tr class="table-active fw-bold">
+                                    <td>Total Expenses</td>
+                                    <td class="text-end text-danger">${formatCurrency(data.total_expenses)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="${data.net_income >= 0 ? 'text-success' : 'text-danger'}">
+                            Net Income: ${formatCurrency(data.net_income)}
+                        </h5>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateCashFlowModalContent(data) {
+            return `
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-primary">Operating Activities</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr><td>Cash In</td><td class="text-end text-success">${formatCurrency(data.operating_activities.cash_in)}</td></tr>
+                                <tr><td>Cash Out</td><td class="text-end text-danger">${formatCurrency(data.operating_activities.cash_out)}</td></tr>
+                                <tr class="table-active fw-bold">
+                                    <td>Net Cash</td>
+                                    <td class="text-end ${data.operating_activities.net_cash >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.operating_activities.net_cash)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-info">Investing Activities</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr><td>Cash In</td><td class="text-end text-success">${formatCurrency(data.investing_activities.cash_in)}</td></tr>
+                                <tr><td>Cash Out</td><td class="text-end text-danger">${formatCurrency(data.investing_activities.cash_out)}</td></tr>
+                                <tr class="table-active fw-bold">
+                                    <td>Net Cash</td>
+                                    <td class="text-end ${data.investing_activities.net_cash >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.investing_activities.net_cash)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-warning">Financing Activities</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr><td>Cash In</td><td class="text-end text-success">${formatCurrency(data.financing_activities.cash_in)}</td></tr>
+                                <tr><td>Cash Out</td><td class="text-end text-danger">${formatCurrency(data.financing_activities.cash_out)}</td></tr>
+                                <tr class="table-active fw-bold">
+                                    <td>Net Cash</td>
+                                    <td class="text-end ${data.financing_activities.net_cash >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(data.financing_activities.net_cash)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="${data.net_cash_flow >= 0 ? 'text-success' : 'text-danger'}">
+                            Net Cash Flow: ${formatCurrency(data.net_cash_flow)}
+                        </h5>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateTrialBalanceModalContent(data) {
+            return `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Account Code</th>
+                                <th>Account Name</th>
+                                <th>Account Type</th>
+                                <th class="text-end">Debits</th>
+                                <th class="text-end">Credits</th>
+                                <th class="text-end">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.trial_balance.map(account => `
+                                <tr>
+                                    <td>${account.code}</td>
+                                    <td>${account.name}</td>
+                                    <td><span class="badge bg-secondary">${account.account_type}</span></td>
+                                    <td class="text-end">${formatCurrency(account.debits)}</td>
+                                    <td class="text-end">${formatCurrency(account.credits)}</td>
+                                    <td class="text-end ${account.balance >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(account.balance)}</td>
+                                </tr>
+                            `).join('')}
+                            <tr class="table-active fw-bold">
+                                <td colspan="3">Totals</td>
+                                <td class="text-end">${formatCurrency(data.total_debits)}</td>
+                                <td class="text-end">${formatCurrency(data.total_credits)}</td>
+                                <td class="text-end">${formatCurrency(data.total_debits - data.total_credits)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generateDebtorsAgingModalContent(data) {
+            return `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th class="text-end">Current</th>
+                                <th class="text-end">1-30 Days</th>
+                                <th class="text-end">31-60 Days</th>
+                                <th class="text-end">61-90 Days</th>
+                                <th class="text-end">90+ Days</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.debtors.map(debtor => `
+                                <tr>
+                                    <td>${debtor.customer_name}</td>
+                                    <td class="text-end">${formatCurrency(debtor.current)}</td>
+                                    <td class="text-end">${formatCurrency(debtor.days_1_30)}</td>
+                                    <td class="text-end">${formatCurrency(debtor.days_31_60)}</td>
+                                    <td class="text-end">${formatCurrency(debtor.days_61_90)}</td>
+                                    <td class="text-end">${formatCurrency(debtor.days_90_plus)}</td>
+                                    <td class="text-end fw-bold">${formatCurrency(debtor.total)}</td>
+                                </tr>
+                            `).join('')}
+                            <tr class="table-active fw-bold">
+                                <td>Totals</td>
+                                <td class="text-end">${formatCurrency(data.totals.current)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.days_1_30)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.days_31_60)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.days_61_90)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.days_90_plus)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.total)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generateCreditorsAgingModalContent(data) {
+            return `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th class="text-end">Current</th>
+                                <th class="text-end">1-30 Days</th>
+                                <th class="text-end">31-60 Days</th>
+                                <th class="text-end">61-90 Days</th>
+                                <th class="text-end">90+ Days</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.creditors.map(creditor => `
+                                <tr>
+                                    <td>${creditor.supplier_name}</td>
+                                    <td class="text-end">${formatCurrency(creditor.current)}</td>
+                                    <td class="text-end">${formatCurrency(creditor.days_1_30)}</td>
+                                    <td class="text-end">${formatCurrency(creditor.days_31_60)}</td>
+                                    <td class="text-end">${formatCurrency(creditor.days_61_90)}</td>
+                                    <td class="text-end">${formatCurrency(creditor.days_90_plus)}</td>
+                                    <td class="text-end fw-bold">${formatCurrency(creditor.total)}</td>
+                                </tr>
+                            `).join('')}
+                            <tr class="table-active fw-bold">
+                                <td>Totals</td>
+                                <td class="text-end">${formatCurrency(data.totals.current)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.days_1_30)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.days_31_60)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.days_61_90)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.days_90_plus)}</td>
+                                <td class="text-end">${formatCurrency(data.totals.total)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generateProfitLossModalContent(data) {
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Revenue</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                ${Object.entries(data.revenue).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-success">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                <tr class="table-active fw-bold">
+                                    <td>Total Revenue</td>
+                                    <td class="text-end text-success">${formatCurrency(data.total_revenue)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Expenses</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                ${Object.entries(data.expenses).map(([name, amount]) => 
+                                    `<tr><td>${name}</td><td class="text-end text-danger">${formatCurrency(amount)}</td></tr>`
+                                ).join('')}
+                                <tr class="table-active fw-bold">
+                                    <td>Total Expenses</td>
+                                    <td class="text-end text-danger">${formatCurrency(data.total_expenses)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="${data.net_profit >= 0 ? 'text-success' : 'text-danger'}">
+                            Net Profit/Loss: ${formatCurrency(data.net_profit)}
+                        </h5>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generic print function for reports
+        function printReportContent(reportType, data) {
+            const printWindow = window.open('', '_blank');
+            const reportContent = generateReportContentForModal(reportType, data);
+            
+            printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+    <title>${getReportTitle(reportType)}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; }
+            .container-fluid { width: 100%; padding: 0; }
+            .card { border: none !important; box-shadow: none !important; }
+            .card-header { background-color: #f8f9fa !important; }
+            .table th, .table td { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body onload="window.print(); window.close();">
+    <div class="container-fluid">
+        ${reportContent}
+    </div>
+</body>
+</html>`);
+        }
+
+        function exportReport() {
+            const { jsPDF } = window.jspdf;
+            const reportElement = document.querySelector('.report-section:not([style*="display: none"])');
+            if (!reportElement) {
+                alert('No active report to export.');
+                return;
+            }
+
+            const reportTitle = document.getElementById('reportType').selectedOptions[0].text;
+            
+            html2canvas(reportElement, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const ratio = canvasWidth / canvasHeight;
+                const imgWidth = pdfWidth - 20;
+                const imgHeight = imgWidth / ratio;
+
+                let position = 10;
+
+                pdf.setFontSize(18);
+                pdf.text(reportTitle, 10, position);
+                position += 10;
+
+                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                pdf.save(`${reportTitle.replace(/ /g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`);
+            });
+        }
+
+        async function exportFinancialStatementPDF() {
+            const reportType = document.getElementById('reportType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const branchId = document.getElementById('branchFilter').value;
+            
+            // Map frontend report types to backend statement types
+            const statementTypeMap = {
+                'summary': 'financial_summary',
+                'balance-sheet': 'balance_sheet',
+                'income-statement': 'income_statement',
+                'cash-flow': 'cash_flow',
+                'changes-in-equity': 'changes_in_equity',
+                'trial-balance': 'trial_balance',
+                'complete-package': 'complete_package'
+            };
+            
+            const statementType = statementTypeMap[reportType];
+            if (!statementType) {
+                alert('PDF export not available for this report type.');
+                return;
+            }
+            
+            try {
+                showLoading();
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                if (startDate) params.append('start_date', startDate);
+                if (endDate) params.append('end_date', endDate);
+                if (branchId) params.append('branch_id', branchId);
+                params.append('include_notes', 'true');
+                
+                // For cash flow, add method parameter
+                if (statementType === 'cash_flow') {
+                    params.append('method', 'direct');
+                }
+                
+                // For trial balance, add zero balances parameter
+                if (statementType === 'trial_balance') {
+                    params.append('include_zero_balances', 'false');
+                }
+                
+                const url = `${API_BASE_URL}/reports/financial-statements/${statementType}/pdf?${params.toString()}`;
+                
+                // Fetch PDF
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Download PDF
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `${statementType}_${new Date().toISOString().slice(0,10)}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Error exporting PDF:', error);
+                hideLoading();
+                showError('Failed to export PDF. Please try again.');
+            }
+        }
+
+        function printReport() {
+            const reportElement = document.querySelector('.report-section:not([style*="display: none"])');
+            if (!reportElement) {
+                alert('No active report to print.');
+                return;
+            }
+            const reportContent = reportElement.innerHTML;
+            const reportTitle = document.getElementById('reportType').selectedOptions[0].text;
+            const currentDate = new Date().toLocaleDateString();
+            const currentTime = new Date().toLocaleTimeString();
+
+            const printWindow = window.open('', '', 'height=800,width=1000');
+            printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+    <title>${reportTitle}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { 
+                margin: 0; 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+            .container-fluid { width: 100%; padding: 15px; }
+            .card { 
+                border: 1px solid #dee2e6 !important; 
+                box-shadow: none !important; 
+                margin-bottom: 20px;
+                page-break-inside: avoid;
+            }
+            .card-header { 
+                background-color: #f8f9fa !important; 
+                border-bottom: 1px solid #dee2e6 !important;
+                font-weight: bold;
+                padding: 10px 15px;
+            }
+            .card-body {
+                padding: 15px;
+            }
+            .table { 
+                margin-bottom: 0;
+                font-size: 11px;
+            }
+            .table th, .table td { 
+                padding: 6px 8px; 
+                border: 1px solid #dee2e6 !important;
+                vertical-align: top;
+            }
+            .table th {
+                background-color: #f8f9fa !important;
+                font-weight: bold;
+            }
+            .print-header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 15px;
+            }
+            .print-header h1 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: bold;
+            }
+            .print-header .company-info {
+                margin-top: 10px;
+                font-size: 14px;
+                color: #666;
+            }
+            .print-footer {
+                position: fixed;
+                bottom: 20px;
+                left: 0;
+                right: 0;
+                text-align: center;
+                font-size: 10px;
+                color: #666;
+                border-top: 1px solid #ccc;
+                padding-top: 10px;
+            }
+            .financial-summary {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
+            .financial-summary .metric {
+                text-align: center;
+                padding: 10px;
+                border: 1px solid #dee2e6;
+                background-color: #f8f9fa;
+            }
+            .metric-value {
+                font-size: 18px;
+                font-weight: bold;
+                color: #2c3e50;
+            }
+            .metric-label {
+                font-size: 12px;
+                color: #666;
+                margin-top: 5px;
+            }
+            .section-title {
+                font-size: 16px;
+                font-weight: bold;
+                margin: 20px 0 10px 0;
+                padding: 8px 0;
+                border-bottom: 1px solid #333;
+            }
+            .subsection-title {
+                font-size: 14px;
+                font-weight: bold;
+                margin: 15px 0 8px 0;
+                color: #2c3e50;
+            }
+            .amount {
+                text-align: right;
+                font-family: 'Courier New', monospace;
+            }
+            .total-line {
+                border-top: 2px solid #000 !important;
+                font-weight: bold;
+            }
+            .negative {
+                color: #dc3545;
+            }
+            .positive {
+                color: #28a745;
+            }
+            @page {
+                margin: 1in;
+                @bottom-center {
+                    content: "Page " counter(page) " of " counter(pages);
+                }
+            }
+        }
+        @media screen {
+            body { margin: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="print-header">
+            <h1>CNPERP ERP System</h1>
+            <div class="company-info">
+                <div><strong>${reportTitle}</strong></div>
+                <div>Generated on ${currentDate} at ${currentTime}</div>
+            </div>
+        </div>
+        
+        <div class="report-content">
+            ${reportContent}
+        </div>
+        
+        <div class="print-footer">
+            <div>This report was generated by CNPERP ERP System on ${currentDate} at ${currentTime}</div>
+            <div>© 2024 CNPERP - All Rights Reserved</div>
+        </div>
+    </div>
+</body>
+</html>`);
+            
+            printWindow.document.close();
+            printWindow.focus();
+            
+            // Wait for content to load before printing
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+    </script>
+</body>
+</html>

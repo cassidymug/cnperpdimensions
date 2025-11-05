@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP ERP - Navigation Example</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        body {
+            padding-top: 0;
+        }
+        
+        .content-section {
+            padding: 2rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .feature-card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar will be inserted here by JavaScript -->
+    
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="content-section">
+                    <h1 class="mb-4">
+                        <i class="bi bi-list-check me-2"></i>
+                        CNPERP ERP Navigation System
+                    </h1>
+                    <p class="lead">
+                        A comprehensive navigation system with dropdown menus, search functionality, notifications, and user management.
+                    </p>
+                </div>
+                
+                <!-- Features Section -->
+                <div class="content-section">
+                    <h2 class="mb-4">Navigation Features</h2>
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-list-nested text-primary" style="font-size: 3rem;"></i>
+                                    <h5 class="card-title mt-3">Dropdown Menus</h5>
+                                    <p class="card-text">
+                                        Comprehensive dropdown menus for all major ERP modules including Sales, Inventory, Purchases, Accounting, Banking, VAT, and Reports.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-search text-success" style="font-size: 3rem;"></i>
+                                    <h5 class="card-title mt-3">Global Search</h5>
+                                    <p class="card-text">
+                                        Real-time search functionality across products, customers, invoices, and all system data with instant results.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-bell text-warning" style="font-size: 3rem;"></i>
+                                    <h5 class="card-title mt-3">Notifications</h5>
+                                    <p class="card-text">
+                                        Real-time notifications with badge counters for alerts, updates, and system events with click handling.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Implementation Section -->
+                <div class="content-section">
+                    <h2 class="mb-4">Implementation</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>HTML Structure</h5>
+                            <div class="code-block">
+&lt;!-- Include CSS --&gt;
+&lt;link href="css/navbar.css" rel="stylesheet"&gt;
+
+&lt;!-- Include JavaScript --&gt;
+&lt;script src="components/navbar.js"&gt;&lt;/script&gt;
+
+&lt;!-- Initialize Navbar --&gt;
+&lt;script&gt;
+document.addEventListener('DOMContentLoaded', function() {
+    cnperpNavbar = new CNPERPNavbar({
+        brandName: 'CNPERP ERP',
+        brandIcon: 'bi-building',
+        showSearch: true,
+        showNotifications: true,
+        showQuickActions: true,
+        showUserMenu: true
+    });
+});
+&lt;/script&gt;
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Configuration Options</h5>
+                            <div class="code-block">
+const navbarConfig = {
+    brandName: 'CNPERP ERP',        // Brand name
+    brandIcon: 'bi-building',       // Brand icon
+    showSearch: true,               // Enable search
+    showNotifications: true,        // Enable notifications
+    showQuickActions: true,         // Enable quick actions
+    showUserMenu: true,             // Enable user menu
+    primaryColor: '#0d6efd',       // Primary color
+    accentColor: '#198754'          // Accent color
+};
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation Structure -->
+                <div class="content-section">
+                    <h2 class="mb-4">Navigation Structure</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Main Navigation Items</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="bi bi-speedometer2 text-primary me-3"></i>
+                                    <strong>Dashboard</strong>
+                                    <span class="badge bg-primary ms-auto">Main</span>
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="bi bi-cart text-success me-3"></i>
+                                    <strong>Sales</strong>
+                                    <span class="badge bg-success ms-auto">7 items</span>
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="bi bi-box text-warning me-3"></i>
+                                    <strong>Inventory</strong>
+                                    <span class="badge bg-warning ms-auto">8 items</span>
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="bi bi-truck text-info me-3"></i>
+                                    <strong>Purchases</strong>
+                                    <span class="badge bg-info ms-auto">6 items</span>
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="bi bi-calculator text-secondary me-3"></i>
+                                    <strong>Accounting</strong>
+                                    <span class="badge bg-secondary ms-auto">7 items</span>
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="bi bi-bank text-dark me-3"></i>
+                                    <strong>Banking</strong>
+                                    <span class="badge bg-dark ms-auto">5 items</span>
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="bi bi-receipt-cutoff text-danger me-3"></i>
+                                    <strong>VAT</strong>
+                                    <span class="badge bg-danger ms-auto">4 items</span>
+                                </li>
+                                <li class="list-group-item d-flex align-items-center">
+                                    <i class="bi bi-graph-up text-primary me-3"></i>
+                                    <strong>Reports</strong>
+                                    <span class="badge bg-primary ms-auto">6 items</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Quick Actions</h5>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <i class="bi bi-cart-plus text-success mb-2"></i>
+                                            <h6>New Sale</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <i class="bi bi-cart-check text-info mb-2"></i>
+                                            <h6>New Purchase</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <i class="bi bi-journal-plus text-warning mb-2"></i>
+                                            <h6>Journal Entry</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="card text-center">
+                                        <div class="card-body">
+                                            <i class="bi bi-box-seam text-primary mb-2"></i>
+                                            <h6>Add Product</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Responsive Design -->
+                <div class="content-section">
+                    <h2 class="mb-4">Responsive Design</h2>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-laptop text-primary mb-3" style="font-size: 2rem;"></i>
+                                    <h5>Desktop</h5>
+                                    <p class="text-muted">Full navigation with all dropdown menus visible</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-tablet text-success mb-3" style="font-size: 2rem;"></i>
+                                    <h5>Tablet</h5>
+                                    <p class="text-muted">Collapsible navigation with hamburger menu</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-phone text-warning mb-3" style="font-size: 2rem;"></i>
+                                    <h5>Mobile</h5>
+                                    <p class="text-muted">Optimized for touch with larger tap targets</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Customization -->
+                <div class="content-section">
+                    <h2 class="mb-4">Customization</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Color Themes</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-primary" onclick="changeTheme('primary')">Primary</button>
+                                <button class="btn btn-success" onclick="changeTheme('success')">Success</button>
+                                <button class="btn btn-warning" onclick="changeTheme('warning')">Warning</button>
+                                <button class="btn btn-danger" onclick="changeTheme('danger')">Danger</button>
+                                <button class="btn btn-info" onclick="changeTheme('info')">Info</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Features Toggle</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showSearch" checked>
+                                <label class="form-check-label" for="showSearch">Show Search</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showNotifications" checked>
+                                <label class="form-check-label" for="showNotifications">Show Notifications</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showQuickActions" checked>
+                                <label class="form-check-label" for="showQuickActions">Show Quick Actions</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="showUserMenu" checked>
+                                <label class="form-check-label" for="showUserMenu">Show User Menu</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Initialize navbar with custom configuration
+        document.addEventListener('DOMContentLoaded', function() {
+            cnperpNavbar = new CNPERPNavbar({
+                brandName: 'CNPERP ERP',
+                brandIcon: 'bi-building',
+                showSearch: true,
+                showNotifications: true,
+                showQuickActions: true,
+                showUserMenu: true
+            });
+        });
+        
+        // Theme change function
+        function changeTheme(theme) {
+            const navbar = document.querySelector('.navbar');
+            navbar.className = `navbar navbar-expand-lg navbar-dark bg-${theme}`;
+        }
+        
+        // Feature toggle handlers
+        document.getElementById('showSearch').addEventListener('change', function() {
+            const searchBox = document.querySelector('.search-box');
+            if (searchBox) {
+                searchBox.parentElement.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+        
+        document.getElementById('showNotifications').addEventListener('change', function() {
+            const notifications = document.querySelector('.nav-link[data-bs-toggle="dropdown"]');
+            if (notifications) {
+                notifications.parentElement.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+        
+        document.getElementById('showQuickActions').addEventListener('change', function() {
+            const quickActions = document.querySelector('.quick-actions');
+            if (quickActions) {
+                quickActions.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+        
+        document.getElementById('showUserMenu').addEventListener('change', function() {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) {
+                userMenu.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+    </script>
+</body>
+</html> 

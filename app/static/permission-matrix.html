@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Permission Matrix</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding:1.5rem; }
+    table th, table td { vertical-align: middle; }
+  .sticky-col { position: sticky; left:0; background:#fff; box-shadow:2px 0 4px rgba(0,0,0,.05); }
+  .freeze-col-1 { position:sticky; left:0; background:#fff; z-index:3; box-shadow:2px 0 4px rgba(0,0,0,.05); }
+  .freeze-col-2 { position:sticky; background:#fff; z-index:2; box-shadow:2px 0 4px rgba(0,0,0,.05); }
+    .perm-row-header { font-weight:600; }
+    .matrix-container { overflow:auto; max-height:70vh; }
+    td.changed, th.changed { background:#fff3cd !important; }
+    td.inherited { background:#e7f1ff; }
+    .legend span { display:inline-block; padding:.25rem .5rem; margin-right:.5rem; border-radius:.25rem; font-size:.75rem; }
+    .legend .chg { background:#fff3cd; border:1px solid #e0c870; }
+    .legend .inh { background:#e7f1ff; border:1px solid #98c2f5; }
+    .user-col-header { min-width:140px; }
+  </style>
+    
+    
+</head>
+<body>
+  
+    
+    
+    
+    
+    
+    
+  <h1 class="h4 mb-3">Permission & Role Matrix</h1>
+  <p class="text-muted">Toggle role permissions, inspect users' effective permissions, manage user direct overrides, and create new roles. Saving auto-creates missing permissions.</p>
+  <div class="d-flex gap-2 mb-2">
+    <button class="btn btn-sm btn-primary" id="reloadBtn">Reload</button>
+    <button class="btn btn-sm btn-success" id="saveBtn">Save Changes</button>
+    <button class="btn btn-sm btn-outline-secondary" id="selectAllVisible">Select All Visible</button>
+    <button class="btn btn-sm btn-outline-secondary" id="clearAllVisible">Clear All Visible</button>
+    <button class="btn btn-sm btn-outline-primary" id="newRoleBtn">New Role From Selection</button>
+    <button class="btn btn-sm btn-warning d-none" id="saveUserDirectBtn">Save User Direct Grants</button>
+    <div class="form-check form-switch ms-3">
+      <input class="form-check-input" type="checkbox" id="showOnlyChanged">
+      <label class="form-check-label small" for="showOnlyChanged">Show only changed</label>
+    </div>
+    <div class="form-check form-switch ms-3">
+      <input class="form-check-input" type="checkbox" id="autoSaveSwitch">
+      <label class="form-check-label small" for="autoSaveSwitch">Auto-save</label>
+    </div>
+    <button class="btn btn-sm btn-outline-success ms-2" id="exportJsonBtn" type="button">Export JSON</button>
+    <button class="btn btn-sm btn-outline-dark" id="importJsonBtn" type="button">Import JSON</button>
+    <input type="file" id="importJsonFile" accept="application/json" style="display:none;" />
+  </div>
+  <div class="mb-3">
+    <input type="text" id="filterInput" class="form-control" placeholder="Filter by module or action..." />
+  </div>
+  <div class="card mb-3" id="moduleManagerCard">
+    <div class="card-header p-2 d-flex justify-content-between align-items-center">
+      <span class="small fw-semibold">Module Bulk Manager</span>
+      <button class="btn btn-sm btn-outline-secondary" id="toggleModuleManager" type="button">Hide</button>
+    </div>
+    <div class="card-body p-2" id="moduleManagerBody" style="max-height:220px; overflow:auto;">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <div class="small text-muted">Toggle an entire module for a role (partial = indeterminate).</div>
+        <div class="ms-auto d-flex gap-2">
+          <button class="btn btn-xs btn-outline-primary" id="modulesSelectAll" type="button" style="--bs-btn-padding-y:.15rem;--bs-btn-padding-x:.4rem;font-size:.65rem;">All</button>
+          <button class="btn btn-xs btn-outline-danger" id="modulesSelectNone" type="button" style="--bs-btn-padding-y:.15rem;--bs-btn-padding-x:.4rem;font-size:.65rem;">None</button>
+        </div>
+      </div>
+      <input type="text" class="form-control form-control-sm mb-2" id="moduleManagerFilter" placeholder="Filter modules..." />
+      <table class="table table-sm table-bordered align-middle mb-0" id="moduleManagerTable">
+        <thead>
+          <tr id="moduleManagerHead"></tr>
+        </thead>
+        <tbody id="moduleManagerBodyRows"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-lg-9">
+      <div class="matrix-container">
+        <table class="table table-bordered table-sm" id="matrixTable">
+          <thead id="matrixHead"></thead>
+          <tbody id="matrixBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col-lg-3">
+      <h6 class="mt-2">Users (Effective)</h6>
+      <input type="text" id="userFilter" class="form-control form-control-sm mb-2" placeholder="Filter users" />
+      <div class="list-group small" id="userList" style="max-height:55vh;overflow:auto;"></div>
+      <div class="d-flex justify-content-between align-items-center mt-1 mb-2 small" id="userPager"></div>
+      <div id="userDetail" class="mt-2 small text-muted"></div>
+    </div>
+  </div>
+  <div class="legend mb-2 small">
+    <strong>Legend:</strong>
+    <span class="chg">Changed</span>
+    <span class="inh">Inherited (via role)</span>
+  </div>
+  <div id="status" class="mt-2 small"></div>
+  <div id="autosaveStatus" class="position-fixed bottom-0 end-0 m-3 small text-muted"></div>
+  <div id="savingOverlay" style="display:none; position:fixed; inset:0; background:rgba(255,255,255,.6); z-index:1050; align-items:center; justify-content:center;">
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status" style="width:3rem;height:3rem;"><span class="visually-hidden">Saving...</span></div>
+      <div class="mt-2 fw-semibold">Saving changes...</div>
+    </div>
+  </div>
+  <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+  <script src="/static/js/navbar-loader.js"></script>
+  <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer" style="z-index:2000"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    if(!auth.isAuthenticated()) auth.requireAuth();
+    const state = { roles: [], cells: [], original: {}, users: [], selectedUser: null, userOriginalDirect: new Set(), userDirectWorking: new Set(), userPage:1, userPageSize:30 };
+    const headEl = document.getElementById('matrixHead');
+    const bodyEl = document.getElementById('matrixBody');
+    const statusEl = document.getElementById('status');
+  const autosaveStatusEl = document.getElementById('autosaveStatus');
+  const savingOverlay = document.getElementById('savingOverlay');
+    const saveUserDirectBtn = document.getElementById('saveUserDirectBtn');
+  const moduleManagerHead = document.getElementById('moduleManagerHead');
+  const moduleManagerBodyRows = document.getElementById('moduleManagerBodyRows');
+
+    function showToast(message, variant='secondary', autohide=true, delay=5000){
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = `toast align-items-center text-bg-${variant} border-0`; el.role='alert'; el.ariaLive='assertive'; el.ariaAtomic='true';
+      el.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+      container.appendChild(el);
+      const t = new bootstrap.Toast(el, { autohide, delay });
+      t.show();
+      el.addEventListener('hidden.bs.toast', ()=> el.remove());
+    }
+    function statusVariant(cls){
+      if(!cls) return 'secondary';
+      if(cls.includes('danger')) return 'danger';
+      if(cls.includes('success')) return 'success';
+      if(cls.includes('warning')) return 'warning';
+      if(cls.includes('info')) return 'info';
+      return 'secondary';
+    }
+    function setStatus(msg, cls='text-muted'){
+      statusEl.className='visually-hidden';
+      statusEl.textContent=msg; // accessibility (screen readers)
+      showToast(msg, statusVariant(cls));
+    }
+
+    function groupCells(){
+      return state.cells.sort((a,b)=> a.module.localeCompare(b.module)|| a.action.localeCompare(b.action));
+    }
+
+    function buildTable(){
+      headEl.innerHTML='';
+      const tr=document.createElement('tr');
+      let userCol='';
+      if(state.selectedUser){ userCol = `<th class="user-col-header" title="Direct overrides for ${state.selectedUser.username}">User: ${state.selectedUser.username}</th>`; }
+  tr.innerHTML = '<th class="freeze-col-1">Module</th><th class="freeze-col-2" data-freeze-second>Action</th>' + state.roles.map(r=>`<th title="${r.description||''}" data-role-head="${r.id}">${r.name}</th>`).join('') + userCol;
+      headEl.appendChild(tr);
+      bodyEl.innerHTML='';
+      for(const cell of groupCells()){
+        const row=document.createElement('tr');
+        row.dataset.module=cell.module; row.dataset.action=cell.action;
+        let html = `<td class="freeze-col-1 perm-row-header">${cell.module}</td><td class="freeze-col-2" data-freeze-second>${cell.action}</td>`;
+        html += state.roles.map(r=>{
+          const checked = cell.role_ids.includes(r.id) ? 'checked' : '';
+          return `<td class="text-center" data-role-cell data-role="${r.id}" data-perm="${cell.module}|${cell.action}|${cell.resource}"><input type="checkbox" data-perm="${cell.module}|${cell.action}|${cell.resource}" data-role="${r.id}" ${checked} data-matrix-row data-matrix-col></td>`;
+        }).join('');
+        if(state.selectedUser){
+          const pid = cell.permission_id;
+          let directChecked=''; let inheritedClass=''; let inheritedMark='';
+          if(pid){
+            const direct = state.userDirectWorking.has(pid);
+            if(direct) directChecked='checked';
+            const effective = state.selectedUser.effective_permission_ids.includes(pid);
+            const inherited = effective && !direct;
+            if(inherited){ inheritedClass='inherited'; inheritedMark='*'; }
+          }
+      html += `<td class="text-center ${inheritedClass}" data-user-cell data-perm="${cell.module}|${cell.action}|${cell.resource}" data-permission-id="${pid||''}">` + (pid ? `<input type="checkbox" class="user-direct" data-permission-id="${pid}" ${directChecked} data-matrix-row data-matrix-col>` + (inheritedMark?` <span class="text-primary small" title="Inherited via role">${inheritedMark}</span>`:'') : '<em class="text-muted small">(new)</em>') + '</td>';
+        }
+        row.innerHTML=html;
+        bodyEl.appendChild(row);
+      }
+      attachRoleCellListeners();
+      attachUserCellListeners();
+      updateChangeHighlights();
+    assignMatrixCoordinates();
+    freezeSecondColumn();
+  buildModuleManager();
+    }
+
+    function snapshotOriginal(){
+      state.original={};
+      for(const cell of state.cells){ state.original[`${cell.module}|${cell.action}|${cell.resource}`] = new Set(cell.role_ids); }
+    }
+    function snapshotUserOriginal(){
+      if(!state.selectedUser){ state.userOriginalDirect=new Set(); state.userDirectWorking=new Set(); return; }
+      state.userOriginalDirect = new Set(state.selectedUser.direct_permission_ids);
+      state.userDirectWorking = new Set(state.selectedUser.direct_permission_ids);
+    }
+
+    function collectUpdate(){
+      const cellMap={};
+      for(const cell of state.cells){ cellMap[`${cell.module}|${cell.action}|${cell.resource}`] = {...cell, role_ids: []}; }
+      bodyEl.querySelectorAll('input[type=checkbox][data-perm][data-role]').forEach(cb=>{ const key=cb.dataset.perm; const rid=cb.dataset.role; if(cb.checked){ cellMap[key].role_ids.push(rid); } });
+      return Object.values(cellMap);
+    }
+
+    async function saveMatrix(){
+  const isAuto = saveMatrix.__auto === true;
+  if(isAuto){ showSavingOverlay(true); autosaveStatusEl.textContent='Auto-saving...'; }
+  else { setStatus('Saving...','text-warning'); showSavingOverlay(true); }
+      const cells=collectUpdate();
+      const res = await fetch('/api/v1/roles/permissions/matrix', { method:'POST', headers:{ 'Content-Type':'application/json', ...auth.authHeader() }, body: JSON.stringify({ cells }) });
+  if(!res.ok){ let msg='Save failed'; try{ const e=await res.json(); msg=e.detail||msg; }catch{} setStatus(msg,'text-danger'); showSavingOverlay(false); autosaveStatusEl.textContent=''; return; }
+      const out = await res.json();
+  if(isAuto){ showToast(`Auto-saved (+${out.grants_added}/-${out.grants_removed})${out.batched?' batched':''}`,'info'); autosaveStatusEl.textContent=''; }
+  else { setStatus(`Saved. Created ${out.created_permissions}, grants +${out.grants_added}/-${out.grants_removed}${out.batched?' (batched)':''}`,'text-success'); }
+  showSavingOverlay(false);
+      loadMatrix();
+    }
+
+    async function saveUserDirect(){
+      if(!state.selectedUser) return;
+      const permissionIds = Array.from(state.userDirectWorking);
+      setStatus('Saving user direct permissions...','text-warning');
+      const res = await fetch(`/api/v1/roles/users/${state.selectedUser.id}/permissions`, { method:'POST', headers:{ 'Content-Type':'application/json', ...auth.authHeader() }, body: JSON.stringify(permissionIds) });
+      if(!res.ok){ setStatus('Failed saving user direct','text-danger'); return; }
+      setStatus('User direct permissions saved','text-success');
+      await refreshUsersOnly();
+      const nu = state.users.find(u=> u.id===state.selectedUser.id);
+      if(nu) state.selectedUser = nu;
+      snapshotUserOriginal();
+      buildTable(); renderUsers(); updateUserDetail();
+    }
+
+    async function refreshUsersOnly(){
+      const res = await fetch('/api/v1/roles/permissions/matrix/extended', { headers: auth.authHeader() });
+      if(res.ok){ const data = await res.json(); state.users = data.users || []; }
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', saveMatrix);
+    document.getElementById('reloadBtn').addEventListener('click', loadMatrix);
+    saveUserDirectBtn.addEventListener('click', saveUserDirect);
+    document.getElementById('filterInput').addEventListener('input', e=>{
+      const v=e.target.value.toLowerCase();
+      bodyEl.querySelectorAll('tr').forEach(tr=>{
+        const mod=tr.dataset.module?.toLowerCase()||''; const act=tr.dataset.action?.toLowerCase()||'';
+        tr.style.display = (mod.includes(v) || act.includes(v)) ? '' : 'none';
+      });
+    });
+    document.getElementById('selectAllVisible').addEventListener('click', ()=>{
+      bodyEl.querySelectorAll('tr').forEach(tr=>{ if(tr.style.display!=='none'){ tr.querySelectorAll('input[type=checkbox][data-role]').forEach(cb=> cb.checked=true); }});
+      updateChangeHighlights();
+    });
+    document.getElementById('clearAllVisible').addEventListener('click', ()=>{
+      bodyEl.querySelectorAll('tr').forEach(tr=>{ if(tr.style.display!=='none'){ tr.querySelectorAll('input[type=checkbox][data-role]').forEach(cb=> cb.checked=false); }});
+      updateChangeHighlights();
+    });
+
+    function renderUsers(){
+      const list=document.getElementById('userList');
+      const filter=document.getElementById('userFilter').value.toLowerCase();
+      list.innerHTML='';
+      const filtered = state.users.filter(u=> !filter || u.username.toLowerCase().includes(filter));
+      const totalPages = Math.max(1, Math.ceil(filtered.length / state.userPageSize));
+      if(state.userPage > totalPages) state.userPage = totalPages;
+      const start=(state.userPage-1)*state.userPageSize;
+      const pageItems = filtered.slice(start, start+state.userPageSize);
+      pageItems.forEach(u=>{
+        const a=document.createElement('a'); a.href='#'; a.className='list-group-item list-group-item-action';
+        a.textContent=u.username; if(state.selectedUser && state.selectedUser.id===u.id) a.classList.add('active');
+        a.onclick=(e)=>{ e.preventDefault(); selectUser(u); };
+        list.appendChild(a);
+      });
+      const pager=document.getElementById('userPager');
+      pager.innerHTML='';
+      const info=document.createElement('span'); info.textContent=`Page ${state.userPage}/${totalPages}`;
+      const prev=document.createElement('button'); prev.className='btn btn-sm btn-outline-secondary'; prev.textContent='Prev'; prev.disabled=state.userPage===1; prev.onclick=()=>{ state.userPage--; renderUsers(); };
+      const next=document.createElement('button'); next.className='btn btn-sm btn-outline-secondary'; next.textContent='Next'; next.disabled=state.userPage===totalPages; next.onclick=()=>{ state.userPage++; renderUsers(); };
+      pager.append(prev, info, next);
+    }
+    document.getElementById('userFilter').addEventListener('input', ()=>{ state.userPage=1; renderUsers(); });
+
+    function selectUser(u){
+      state.selectedUser = u; snapshotUserOriginal(); buildTable(); renderUsers(); updateUserDetail(); saveUserDirectBtn.classList.remove('d-none');
+    }
+    function updateUserDetail(){
+      if(!state.selectedUser){ document.getElementById('userDetail').innerHTML=''; return; }
+      const u=state.selectedUser; const detail=document.getElementById('userDetail');
+      detail.innerHTML = `<div><strong>${u.username}</strong></div><div>Total Effective: ${u.effective_permission_ids.length}</div><div>Direct Grants: ${u.direct_permission_ids.length}</div><div>Working Direct Grants: ${state.userDirectWorking.size}</div>`;
+    }
+
+    function attachRoleCellListeners(){
+      bodyEl.querySelectorAll('input[type=checkbox][data-role]').forEach(cb=> cb.addEventListener('change', updateChangeHighlights));
+    }
+    function attachUserCellListeners(){
+      bodyEl.querySelectorAll('input.user-direct').forEach(cb=> cb.addEventListener('change', e=>{
+        const pid=e.target.dataset.permissionId; if(!pid) return; if(e.target.checked) state.userDirectWorking.add(pid); else state.userDirectWorking.delete(pid); updateChangeHighlights(); updateUserDetail();
+      }));
+    }
+    function updateChangeHighlights(){
+      bodyEl.querySelectorAll('td[data-role-cell]').forEach(td=>{
+        const key=td.dataset.perm; const rid=td.dataset.role; const set=state.original[key]||new Set(); const cb=td.querySelector('input');
+        const now=cb.checked; const orig=set.has(rid); if(now!==orig) td.classList.add('changed'); else td.classList.remove('changed');
+      });
+      if(state.selectedUser){
+        bodyEl.querySelectorAll('td[data-user-cell]').forEach(td=>{
+          td.classList.remove('changed'); const pid=td.dataset.permissionId; if(!pid) return; const orig=state.userOriginalDirect.has(pid); const now=state.userDirectWorking.has(pid); if(orig!==now) td.classList.add('changed');
+        });
+      }
+      applyShowOnlyChanged();
+      updateUnsavedGuard();
+      updateModuleManagerStates();
+    }
+    // ---------- Module Bulk Manager ----------
+    function uniqueModules(){
+      const set = new Set(state.cells.map(c=>c.module));
+      return Array.from(set).sort();
+    }
+    function buildModuleManager(){
+      if(!moduleManagerHead) return;
+  moduleManagerHead.innerHTML = '<th style="min-width:160px;" class="small">Module / Revert</th>' + state.roles.map(r=>`<th class="small text-center" data-mm-role-head="${r.id}">${r.name}</th>`).join('') + (state.selectedUser?'<th class="small text-center">User Direct</th>':'');
+      moduleManagerBodyRows.innerHTML='';
+      for(const mod of uniqueModules()){
+        const tr = document.createElement('tr');
+        tr.dataset.module = mod;
+  let html = `<td class="small fw-semibold d-flex justify-content-between align-items-center"><span>${mod}</span><button type="button" class="btn btn-xs btn-outline-secondary ms-2 revert-module" data-module="${mod}" style="--bs-btn-padding-y:.1rem;--bs-btn-padding-x:.35rem;font-size:.55rem;">Revert</button></td>`;
+        html += state.roles.map(r=>`<td class="text-center"><input type="checkbox" class="mm-role" data-mm-module="${mod}" data-mm-role="${r.id}"></td>`).join('');
+        if(state.selectedUser){
+          html += `<td class="text-center"><input type="checkbox" class="mm-user" data-mm-module="${mod}"></td>`;
+        }
+        tr.innerHTML = html;
+        moduleManagerBodyRows.appendChild(tr);
+      }
+      attachModuleManagerEvents();
+      updateModuleManagerStates();
+    }
+    function attachModuleManagerEvents(){
+      moduleManagerBodyRows.querySelectorAll('input.mm-role').forEach(cb=>{
+        cb.addEventListener('change', e=>{
+          const mod = e.target.dataset.mmModule;
+            const rid = e.target.dataset.mmRole;
+            const check = e.target.checked;
+            // apply to all role cells for that module
+            bodyEl.querySelectorAll(`tr[data-module="${mod}"] td[data-role-cell][data-role="${rid}"] input[type=checkbox]`).forEach(box=>{ box.checked = check; });
+            updateChangeHighlights();
+        });
+      });
+      moduleManagerBodyRows.querySelectorAll('input.mm-user').forEach(cb=>{
+        cb.addEventListener('change', e=>{
+          if(!state.selectedUser) return;
+          const mod = e.target.dataset.mmModule;
+          const check = e.target.checked;
+          // gather permission ids in that module
+          bodyEl.querySelectorAll(`tr[data-module="${mod}"] td[data-user-cell] input.user-direct`).forEach(box=>{
+            const pid = box.dataset.permissionId; if(!pid) return;
+            box.checked = check;
+            if(check) state.userDirectWorking.add(pid); else state.userDirectWorking.delete(pid);
+          });
+          updateChangeHighlights();
+          updateUserDetail();
+        });
+      });
+      moduleManagerBodyRows.querySelectorAll('button.revert-module').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+          const mod = e.target.dataset.module; revertModule(mod); });
+      });
+    }
+    function updateModuleManagerStates(){
+      if(!moduleManagerBodyRows) return;
+      moduleManagerBodyRows.querySelectorAll('tr[data-module]').forEach(tr=>{
+        const mod = tr.dataset.module;
+        // roles
+        tr.querySelectorAll('input.mm-role').forEach(mmCb=>{
+          const rid = mmCb.dataset.mmRole;
+          const boxes = bodyEl.querySelectorAll(`tr[data-module="${mod}"] td[data-role-cell][data-role="${rid}"] input[type=checkbox]`);
+          if(boxes.length===0){ mmCb.checked=false; mmCb.indeterminate=false; return; }
+          let checkedCount=0; boxes.forEach(b=>{ if(b.checked) checkedCount++; });
+          if(checkedCount===0){ mmCb.checked=false; mmCb.indeterminate=false; }
+          else if(checkedCount===boxes.length){ mmCb.checked=true; mmCb.indeterminate=false; }
+          else { mmCb.checked=false; mmCb.indeterminate=true; }
+          mmCb.title = `${checkedCount} / ${boxes.length} permissions`;
+        });
+        // user direct
+        if(state.selectedUser){
+          const uCb = tr.querySelector('input.mm-user');
+          if(uCb){
+            const boxes = bodyEl.querySelectorAll(`tr[data-module="${mod}"] td[data-user-cell] input.user-direct`);
+            if(boxes.length===0){ uCb.checked=false; uCb.indeterminate=false; }
+            else {
+              let checkedCount=0; boxes.forEach(b=>{ if(b.checked) checkedCount++; });
+              if(checkedCount===0){ uCb.checked=false; uCb.indeterminate=false; }
+              else if(checkedCount===boxes.length){ uCb.checked=true; uCb.indeterminate=false; }
+              else { uCb.checked=false; uCb.indeterminate=true; }
+              uCb.title = `${checkedCount} / ${boxes.length} direct overrides`;
+            }
+          }
+        }
+      });
+    }
+    document.getElementById('toggleModuleManager').addEventListener('click', ()=>{
+      const body = document.getElementById('moduleManagerBody');
+      const collapsed = body.style.display==='none';
+      if(collapsed){ body.style.display='block'; document.getElementById('toggleModuleManager').textContent='Hide'; localStorage.setItem('mmCollapsed','0'); }
+      else { body.style.display='none'; document.getElementById('toggleModuleManager').textContent='Show'; localStorage.setItem('mmCollapsed','1'); }
+    });
+    // Restore module manager collapse state
+    (function(){
+      const body = document.getElementById('moduleManagerBody');
+      if(localStorage.getItem('mmCollapsed')==='1'){ body.style.display='none'; document.getElementById('toggleModuleManager').textContent='Show'; }
+    })();
+    // Global select all/none
+    document.getElementById('modulesSelectAll').addEventListener('click', ()=>{
+      moduleManagerBodyRows.querySelectorAll('input.mm-role').forEach(cb=>{ if(!cb.checked || cb.indeterminate){ cb.checked=true; cb.indeterminate=false; cb.dispatchEvent(new Event('change')); }});
+      if(state.selectedUser){ moduleManagerBodyRows.querySelectorAll('input.mm-user').forEach(cb=>{ if(!cb.checked){ cb.checked=true; cb.dispatchEvent(new Event('change')); }}); }
+    });
+    document.getElementById('modulesSelectNone').addEventListener('click', ()=>{
+      moduleManagerBodyRows.querySelectorAll('input.mm-role').forEach(cb=>{ if(cb.checked || cb.indeterminate){ cb.checked=false; cb.indeterminate=false; cb.dispatchEvent(new Event('change')); }});
+      if(state.selectedUser){ moduleManagerBodyRows.querySelectorAll('input.mm-user').forEach(cb=>{ if(cb.checked || cb.indeterminate){ cb.checked=false; cb.dispatchEvent(new Event('change')); }}); }
+    });
+    // Module filter
+    document.getElementById('moduleManagerFilter').addEventListener('input', e=>{
+      const v = e.target.value.toLowerCase();
+      moduleManagerBodyRows.querySelectorAll('tr[data-module]').forEach(tr=>{
+        tr.style.display = !v || tr.dataset.module.toLowerCase().includes(v) ? '' : 'none';
+      });
+    });
+
+    // -------- Revert Module Functionality --------
+    function revertModule(mod){
+      // revert role assignments
+      bodyEl.querySelectorAll(`tr[data-module="${mod}"] td[data-role-cell]`).forEach(td=>{
+        const permKey = td.dataset.perm; const rid = td.dataset.role; const originalSet = state.original[permKey] || new Set();
+        const cb = td.querySelector('input[type=checkbox]'); if(!cb) return; cb.checked = originalSet.has(rid);
+      });
+      // revert user direct for module
+      if(state.selectedUser){
+        bodyEl.querySelectorAll(`tr[data-module="${mod}"] td[data-user-cell] input.user-direct`).forEach(cb=>{
+          const pid = cb.dataset.permissionId; if(!pid) return; const orig = state.userOriginalDirect.has(pid); cb.checked = orig; if(orig) state.userDirectWorking.add(pid); else state.userDirectWorking.delete(pid);
+        });
+        updateUserDetail();
+      }
+      updateChangeHighlights();
+    }
+
+    // -------- Export / Import JSON --------
+    document.getElementById('exportJsonBtn').addEventListener('click', ()=>{
+      const snapshot = { generated_at: new Date().toISOString(), cells: collectUpdate() };
+      const blob = new Blob([JSON.stringify(snapshot,null,2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const ts = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
+      a.download = `permission-matrix-${ts}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+    document.getElementById('importJsonBtn').addEventListener('click', ()=> document.getElementById('importJsonFile').click());
+    document.getElementById('importJsonFile').addEventListener('change', async (e)=>{
+      const file = e.target.files[0]; if(!file) return; try {
+        const text = await file.text(); const data = JSON.parse(text);
+        if(!data.cells) { alert('Invalid file: missing cells'); return; }
+        // Map existing cells by key
+        const cellIndex = {}; state.cells.forEach(c=> cellIndex[`${c.module}|${c.action}|${c.resource}`]=c);
+        let newAdded=0;
+        data.cells.forEach(c=>{
+          const key = `${c.module}|${c.action}|${c.resource}`;
+          if(cellIndex[key]){ cellIndex[key].role_ids = c.role_ids || []; }
+          else { state.cells.push({ module:c.module, action:c.action, resource:c.resource, permission_id:null, role_ids:c.role_ids||[] }); newAdded++; }
+        });
+        snapshotOriginal(); // original snapshot resets (import considered baseline?) or we could keep old baseline; choose keep old baseline for diff so re-snapshot disabled.
+        // Actually we want to keep old baseline so highlight shows differences, so restore original from saved copy: do nothing here.
+        buildTable(); setStatus(`Imported ${data.cells.length} cells (${newAdded} new). Remember to Save Changes to persist / create permissions.`,'text-info');
+      } catch(err){ alert('Import failed: '+ err); }
+      e.target.value='';
+    });
+
+    // -------- Auto-save --------
+    let autoSaveTimer = null; const AUTO_SAVE_DELAY = 1200; let lastMatrixHash='';
+    document.getElementById('autoSaveSwitch').addEventListener('change', ()=>{
+      if(document.getElementById('autoSaveSwitch').checked){ scheduleAutoSave(); }
+    });
+  function scheduleAutoSave(){
+      if(!document.getElementById('autoSaveSwitch').checked) return;
+      if(autoSaveTimer) clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(async ()=>{
+        const hash = JSON.stringify(collectUpdate().map(c=>({k:`${c.module}|${c.action}|${c.resource}`,r:c.role_ids.slice().sort()})));
+        if(hash!==lastMatrixHash){ await saveMatrix(); lastMatrixHash = hash; }
+        scheduleAutoSave();
+      }, AUTO_SAVE_DELAY);
+    }
+    // Hook into change detection to trigger autosave schedule
+    const _origUpdateChangeHighlights = updateChangeHighlights;
+    updateChangeHighlights = function(){ _origUpdateChangeHighlights(); scheduleAutoSave(); };
+
+    function showSavingOverlay(show){
+      savingOverlay.style.display = show? 'flex':'none';
+    }
+    // Wrapper to mark auto-save context
+    const _origSaveMatrix = saveMatrix;
+    saveMatrix = async function(){
+      saveMatrix.__auto = arguments[0] === 'auto';
+      return _origSaveMatrix.apply(this, []);
+    }
+    function hasUnsavedChanges(){
+      for(const [key,set] of Object.entries(state.original)){
+        const [module,action,resource] = key.split('|');
+        const boxes = bodyEl.querySelectorAll(`td[data-perm="${module}|${action}|${resource}"][data-role-cell] input[type=checkbox]`);
+        for(const b of boxes){ const rid=b.dataset.role; const current=b.checked; const orig=set.has(rid); if(current!==orig) return true; }
+      }
+      if(state.selectedUser){
+        if(state.userOriginalDirect.size !== state.userDirectWorking.size) return true;
+        for(const pid of state.userOriginalDirect){ if(!state.userDirectWorking.has(pid)) return true; }
+        for(const pid of state.userDirectWorking){ if(!state.userOriginalDirect.has(pid)) return true; }
+      }
+      return false;
+    }
+    function updateUnsavedGuard(){
+      if(hasUnsavedChanges()){
+        window.onbeforeunload = (e)=>{ e.preventDefault(); e.returnValue='You have unsaved permission changes.'; return e.returnValue; };
+      } else { window.onbeforeunload = null; }
+    }
+    document.getElementById('showOnlyChanged').addEventListener('change', applyShowOnlyChanged);
+    function applyShowOnlyChanged(){
+      const only = document.getElementById('showOnlyChanged').checked;
+      if(!only){ bodyEl.querySelectorAll('tr').forEach(r=> r.style.display=''); return; }
+      bodyEl.querySelectorAll('tr').forEach(r=>{ const changed = r.querySelector('td.changed'); r.style.display = changed ? '' : 'none'; });
+    }
+    function assignMatrixCoordinates(){
+      const rows = Array.from(bodyEl.querySelectorAll('tr'));
+      rows.forEach((tr,rIdx)=>{
+        const boxes = tr.querySelectorAll('input[type=checkbox][data-matrix-row]');
+        let c=0; boxes.forEach(b=>{ b.dataset.matrixRow=rIdx; b.dataset.matrixCol=c++; });
+      });
+    }
+    document.addEventListener('keydown', (e)=>{
+      const active=document.activeElement;
+      if(!active || active.tagName!=='INPUT' || active.type!=='checkbox' || !active.dataset.matrixRow) return;
+      const row=parseInt(active.dataset.matrixRow); const col=parseInt(active.dataset.matrixCol);
+      let targetRow=row, targetCol=col; let handled=false;
+      if(e.key==='ArrowDown'){ targetRow=row+1; handled=true; }
+      else if(e.key==='ArrowUp'){ targetRow=row-1; handled=true; }
+      else if(e.key==='ArrowRight'){ targetCol=col+1; handled=true; }
+      else if(e.key==='ArrowLeft'){ targetCol=col-1; handled=true; }
+      else if(e.key===' ' || e.key==='Enter'){ active.click(); handled=true; }
+      if(!handled) return; e.preventDefault(); if(e.key===' '|| e.key==='Enter') return;
+      const rowEls = Array.from(bodyEl.querySelectorAll('tr'));
+      if(targetRow<0||targetRow>=rowEls.length) return;
+      let targetTr = rowEls[targetRow];
+      if(targetTr.style.display==='none'){
+        const dir = targetRow>row?1:-1;
+        while(targetTr && targetTr.style.display==='none'){ targetRow += dir; if(targetRow<0||targetRow>=rowEls.length) return; targetTr=rowEls[targetRow]; }
+      }
+      const targetBox = targetTr.querySelector(`input[type=checkbox][data-matrix-row][data-matrix-col="${targetCol}"]`);
+      if(targetBox) targetBox.focus();
+    });
+    function freezeSecondColumn(){
+      const firstHeader = headEl.querySelector('.freeze-col-1');
+      const secondHeader = headEl.querySelector('[data-freeze-second]');
+      if(!firstHeader || !secondHeader) return;
+      const firstWidth = firstHeader.getBoundingClientRect().width;
+      headEl.querySelectorAll('[data-freeze-second]').forEach(el=> el.style.left=firstWidth+'px');
+      bodyEl.querySelectorAll('[data-freeze-second]').forEach(el=> el.style.left=firstWidth+'px');
+    }
+
+    async function loadMatrix(){
+      setStatus('Loading matrix...');
+      const res = await fetch('/api/v1/roles/permissions/matrix/extended', { headers: auth.authHeader() });
+      if(!res.ok){ setStatus('Failed to load matrix','text-danger'); return; }
+      const data = await res.json();
+      state.roles = data.roles; state.cells=data.cells; state.users=data.users||[];
+      snapshotOriginal();
+      if(state.selectedUser){ const refreshed = state.users.find(u=> u.id===state.selectedUser.id); state.selectedUser = refreshed || null; snapshotUserOriginal(); }
+      buildTable(); renderUsers(); updateUserDetail(); setStatus('Loaded '+state.cells.length+' permission cells');
+    }
+
+    async function createRoleFromSelection(){
+      const name = prompt('New role name?'); if(!name) return;
+      const cells=collectUpdate().filter(c=> c.role_ids && c.role_ids.length);
+      const minimal = cells.map(c=>({module:c.module, action:c.action, resource:c.resource}));
+      setStatus('Creating role...','text-warning');
+      const res = await fetch('/api/v1/roles/permissions/matrix/roles', { method:'POST', headers:{ 'Content-Type':'application/json', ...auth.authHeader() }, body: JSON.stringify({ name, description:'Created from matrix', permission_cells: minimal }) });
+      if(!res.ok){ setStatus('Role creation failed','text-danger'); return; }
+      setStatus('Role created','text-success'); loadMatrix();
+    }
+    document.getElementById('newRoleBtn').addEventListener('click', createRoleFromSelection);
+
+    loadMatrix();
+  </script>
+</body>
+</html>

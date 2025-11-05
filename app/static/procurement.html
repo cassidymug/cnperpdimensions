@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Procurement</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        /* Make all tab text purple */
+        .nav-tabs .nav-link {
+            color: purple !important;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #5a32a3 !important;
+        }
+
+        .nav-tabs .nav-link:focus {
+            color: purple !important;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: purple !important;
+            border-bottom-color: purple !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    <script src="js/navbar.js?v=20250106001"></script>
+
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="h3 mb-0"><i class="bi bi-clipboard-check text-primary"></i> Procurement</h1>
+                <p class="text-muted mb-0">Requisitions, RFQs, quotes, awards, and supplier performance</p>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs" id="procTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="requisitions-tab" data-bs-toggle="tab"
+                    data-bs-target="#requisitions" type="button" role="tab">Requisitions</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rfqs-tab" data-bs-toggle="tab" data-bs-target="#rfqs" type="button"
+                    role="tab">RFQs & Quotes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="awards-tab" data-bs-toggle="tab" data-bs-target="#awards" type="button"
+                    role="tab">Awards</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="performance-tab" data-bs-toggle="tab" data-bs-target="#performance"
+                    type="button" role="tab">Supplier Performance</button>
+            </li>
+        </ul>
+        <div class="tab-content mt-3">
+            <div class="tab-pane fade show active" id="requisitions" role="tabpanel">
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRequisitionModal"><i
+                            class="bi bi-plus"></i> New Requisition</button>
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-3">
+                        <label class="form-label">Stock Status</label>
+                        <select class="form-select" id="reqStockFilter">
+                            <option value="">All</option>
+                            <option value="in-stock">In Stock</option>
+                            <option value="low-stock">Low Stock</option>
+                            <option value="out-of-stock">Out of Stock</option>
+                            <option value="unknown">Unknown</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Stock</th>
+                                        <th>Status</th>
+                                        <th>Needed By</th>
+                                        <th>Branch</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="requisitionsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="rfqs" role="tabpanel">
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRFQModal"><i
+                            class="bi bi-plus"></i> New RFQ</button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>RFQ #</th>
+                                        <th>Title</th>
+                                        <th>Status</th>
+                                        <th>Closing Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rfqsTable"></tbody>
+                            </table>
+                        </div>
+                        <hr>
+                        <h6>Quotes</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>RFQ</th>
+                                        <th>Supplier</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="quotesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="awards" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Award #</th>
+                                        <th>Quote #</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>PO #</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="awardsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="performance" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Supplier</th>
+                                        <th>Period</th>
+                                        <th>Overall Score</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="performanceTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Requisition Modal -->
+    <div class="modal fade" id="newRequisitionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle"></i> New Requisition</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reqForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Title *</label>
+                                    <input type="text" class="form-control" name="title" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Needed By</label>
+                                    <input type="date" class="form-control" name="needed_by">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Supplier (Company Being Requisitioned)</label>
+                                    <select class="form-select" name="supplier_id" id="reqSupplierSelect">
+                                        <option value="">Select Supplier</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h6>Items</h6>
+                        <div id="reqItems"></div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addReqItem()"><i
+                                class="bi bi-plus"></i> Add Item</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createRequisition()">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New RFQ Modal -->
+    <div class="modal fade" id="newRFQModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle"></i> New RFQ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="rfqForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">RFQ Number</label>
+                                    <input type="text" class="form-control" name="rfq_number">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Title *</label>
+                                    <input type="text" class="form-control" name="title" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Issue Date</label>
+                                    <input type="date" class="form-control" name="issue_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Closing Date</label>
+                                    <input type="date" class="form-control" name="closing_date">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Associated Requisition</label>
+                            <select class="form-select" name="requisition_id" id="rfqReqSelect">
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Invite Suppliers</label>
+                            <select class="form-select" id="rfqSuppliers" multiple></select>
+                            <small class="text-muted">Hold Ctrl (Cmd on Mac) to select multiple suppliers</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createRFQ()">Create RFQ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Quote Modal -->
+    <div class="modal fade" id="submitQuoteModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-file-earmark-plus"></i> Submit Quote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="quoteForm">
+                        <input type="hidden" name="rfq_id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Supplier *</label>
+                                    <select class="form-select" name="supplier_id" id="quoteSupplier" required></select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Quote Number</label>
+                                    <input type="text" class="form-control" name="quote_number">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Quote Date</label>
+                                    <input type="date" class="form-control" name="quote_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Valid Until</label>
+                                    <input type="date" class="form-control" name="valid_until">
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h6>Items</h6>
+                        <div id="quoteItems"></div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuoteItem()"><i
+                                class="bi bi-plus"></i> Add Item</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitQuote()">Submit Quote</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PO Preview Modal -->
+    <div class="modal fade" id="poPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-receipt"></i> Purchase Order Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="poPreviewHeader" class="mb-2 text-muted"></div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Unit Cost</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="poPreviewItems"></tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end">VAT</td>
+                                    <td class="text-end" id="poPreviewVat">P0.00</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Total</strong></td>
+                                    <td class="text-end" id="poPreviewTotal"><strong>P0.00</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="/static/purchase-orders.html" class="btn btn-outline-primary"><i
+                            class="bi bi-box-arrow-up-right"></i> Open Purchase Orders</a>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const API_BASE = '/api/v1/procurement';
+        const SUPPLIERS_API = '/api/v1/purchases/suppliers';
+        const PRODUCTS_API = '/api/v1/purchases/products';
+        const SETTINGS_BUSINESS_API = '/api/v1/settings/business';
+
+        // Fetch helper with auth + UnifiedResponse unwrap + rich error context
+        async function fetchJSON(url, options = {}) {
+            const baseHeaders = (window.auth && auth.authHeader) ? auth.authHeader() : {};
+            const opts = { ...options, headers: { ...baseHeaders, ...(options.headers || {}) } };
+            if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
+                opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+                opts.body = JSON.stringify(opts.body);
+            }
+            let res;
+            try {
+                res = await fetch(url, opts);
+            } catch (netErr) {
+                // Network-level failure
+                const err = new Error('Network error while contacting server');
+                err.cause = netErr;
+                throw err;
+            }
+            // Try to parse response body
+            const contentType = res.headers.get('content-type') || '';
+            let parsed = null, rawText = '';
+            try {
+                if (contentType.includes('application/json')) {
+                    parsed = await res.json();
+                } else {
+                    rawText = await res.text();
+                }
+            } catch (parseErr) {
+                try { rawText = await res.text(); } catch { }
+            }
+            if (!res.ok) {
+                const err = new Error(
+                    (parsed && (parsed.message || parsed.detail || (parsed.error && parsed.error.message))) || rawText || `HTTP ${res.status}`
+                );
+                err.status = res.status;
+                err.statusText = res.statusText;
+                err.url = url;
+                err.data = parsed;
+                err.raw = rawText;
+                throw err;
+            }
+            const data = parsed !== null ? parsed : rawText;
+            // Unwrap `{ data: ... }` shape used by purchases endpoints
+            if (data && typeof data === 'object' && 'data' in data) return data.data;
+            return data;
+        }
+
+        // Inventory cache for stock checks
+        let _inventoryMap = null; // product_id -> { quantity, reorder_point }
+
+        async function ensureInventoryMap() {
+            if (_inventoryMap) return _inventoryMap;
+            try {
+                const list = await fetchJSON('/api/v1/inventory/products');
+                _inventoryMap = new Map();
+                (Array.isArray(list) ? list : []).forEach(p => {
+                    _inventoryMap.set(p.id, { quantity: Number(p.quantity || 0), reorder_point: Number(p.reorder_point || 5) });
+                });
+            } catch (e) { console.warn('Failed to load inventory products', e); _inventoryMap = new Map(); }
+            return _inventoryMap;
+        }
+
+        function computeItemStockStatus(item) {
+            if (!item || !item.product_id || !_inventoryMap) return 'unknown';
+            const inv = _inventoryMap.get(item.product_id);
+            if (!inv) return 'unknown';
+            const qty = inv.quantity || 0;
+            const rp = inv.reorder_point || 5;
+            if (qty <= 0) return 'out-of-stock';
+            if (qty > 0 && qty <= rp) return 'low-stock';
+            return 'in-stock';
+        }
+
+        function computeRequisitionStockStatus(req) {
+            const items = req.items || [];
+            let hasItem = false, anyOut = false, anyLow = false, anyIn = false;
+            items.forEach(it => {
+                if (it.product_id) {
+                    hasItem = true;
+                    const s = computeItemStockStatus(it);
+                    if (s === 'out-of-stock') anyOut = true;
+                    else if (s === 'low-stock') anyLow = true;
+                    else if (s === 'in-stock') anyIn = true;
+                }
+            });
+            if (!hasItem) return 'unknown';
+            if (anyOut) return 'out-of-stock';
+            if (anyLow) return 'low-stock';
+            if (anyIn) return 'in-stock';
+            return 'unknown';
+        }
+
+        function stockBadge(status) {
+            const map = {
+                'in-stock': '<span class="badge-modern badge-success">In Stock</span>',
+                'low-stock': '<span class="badge-modern badge-warning">Low Stock</span>',
+                'out-of-stock': '<span class="badge-modern badge-danger">Out of Stock</span>',
+                'unknown': '<span class="badge-modern badge-secondary">Unknown</span>'
+            };
+            return map[status] || map['unknown'];
+        }
+
+        async function loadRequisitions() {
+            try {
+                // Load inventory map first for stock-aware rendering
+                await ensureInventoryMap();
+                const data = await fetchJSON(`${API_BASE}/requisitions`);
+                const tbody = document.getElementById('requisitionsTable');
+                tbody.innerHTML = '';
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No requisitions</td></tr>`;
+                    return;
+                }
+                await ensureSuppliersCache();
+                // Apply stock filter if selected
+                const filter = (document.getElementById('reqStockFilter')?.value || '').toLowerCase();
+                const rows = data.filter(r => {
+                    const st = computeRequisitionStockStatus(r);
+                    return !filter || st === filter;
+                });
+                if (!rows.length) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No requisitions match stock filter</td></tr>`;
+                    return;
+                }
+                rows.forEach(r => {
+                    const st = computeRequisitionStockStatus(r);
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${r.title}</td>
+                        <td>${stockBadge(st)}</td>
+                        <td><span class="badge-modern badge-${r.status === 'approved' ? 'success' : r.status === 'submitted' ? 'warning' : 'secondary'}">${r.status}</span></td>
+                        <td>${r.needed_by || ''}</td>
+                        <td>${r.branch_id || ''}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn-modern btn-outline btn-sm" onclick="openSubmitQuoteFromReq('${r.id}')"><i class="bi bi-megaphone"></i></button>
+                                <button class="btn-modern btn-outline btn-sm" onclick="printRequisition('${r.id}')"><i class="bi bi-printer"></i></button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error('Failed to load requisitions', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to load requisitions: ${msg}`, true);
+            }
+        }
+        async function loadRFQs() {
+            try {
+                const data = await fetchJSON(`${API_BASE}/rfqs`);
+                const tbody = document.getElementById('rfqsTable');
+                tbody.innerHTML = '';
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No RFQs</td></tr>`;
+                    return;
+                }
+                data.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${r.rfq_number || ''}</td>
+                        <td>${r.title}</td>
+                        <td><span class="badge-modern badge-${r.status === 'issued' ? 'primary' : r.status === 'closed' ? 'secondary' : 'warning'}">${r.status}</span></td>
+                        <td>${r.closing_date || ''}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn-modern btn-outline btn-sm" onclick="openSubmitQuote('${r.id}')"><i class="bi bi-file-earmark-plus"></i></button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+                await loadQuotes();
+            } catch (e) {
+                console.error('Failed to load RFQs', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to load RFQs: ${msg}`, true);
+            }
+        }
+        async function loadQuotes(rfqId = null) {
+            try {
+                const url = rfqId ? `${API_BASE}/quotes?rfq_id=${encodeURIComponent(rfqId)}` : `${API_BASE}/quotes`;
+                const data = await fetchJSON(url);
+                const tbody = document.getElementById('quotesTable');
+                tbody.innerHTML = '';
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No quotes</td></tr>`;
+                    return;
+                }
+                await ensureSuppliersCache();
+                data.forEach(q => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${q.rfq_id}</td>
+                        <td>${supplierName(q.supplier_id)}</td>
+                        <td>${formatCurrency(q.total_amount || 0)}</td>
+                        <td>${q.status}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn-modern btn-outline btn-sm" onclick="awardQuote('${q.id}')"><i class="bi bi-award"></i></button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error('Failed to load quotes', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to load quotes: ${msg}`, true);
+            }
+        }
+        async function loadAwards() {
+            try {
+                const data = await fetchJSON(`${API_BASE}/awards`);
+                const tbody = document.getElementById('awardsTable');
+                tbody.innerHTML = '';
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No awards</td></tr>`;
+                    return;
+                }
+                data.forEach(a => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${a.award_number || a.id.slice(-6)}</td>
+                        <td>${a.quote_id}</td>
+                        <td>${a.award_date || ''}</td>
+                        <td>${a.status}</td>
+                        <td>${a.po_number || ''}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn-modern btn-outline btn-sm" onclick="openPOPreview('${a.id}','${a.quote_id}')"><i class="bi bi-eye"></i> View PO</button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error('Failed to load awards', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to load awards: ${msg}`, true);
+            }
+        }
+
+        async function openPOPreview(awardId, quoteId) {
+            try {
+                // Find the quote by id
+                const quotes = await fetchJSON(`${API_BASE}/quotes`);
+                const q = (Array.isArray(quotes) ? quotes : []).find(x => x.id === quoteId);
+                if (!q) { notify('Quote not found for award', true); return; }
+                await ensureSuppliersCache();
+                const sup = _cache.suppliers.get(q.supplier_id);
+                const header = document.getElementById('poPreviewHeader');
+                const tbody = document.getElementById('poPreviewItems');
+                const vatEl = document.getElementById('poPreviewVat');
+                const totalEl = document.getElementById('poPreviewTotal');
+                const supName = sup ? sup.name : q.supplier_id;
+                header.innerHTML = `<strong>Supplier:</strong> ${supName} &nbsp; <strong>Date:</strong> ${q.quote_date || ''} &nbsp; <strong>Award:</strong> ${awardId}`;
+                tbody.innerHTML = '';
+                let total = 0, totalVat = 0;
+                (q.items || []).forEach((it, idx) => {
+                    const qty = Number(it.quantity || 0);
+                    const unit = Number(it.unit_cost || 0);
+                    const line = qty * unit;
+                    const vat = line * (Number(it.vat_rate || 0) / 100);
+                    total += line; totalVat += vat;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${idx + 1}</td>
+                        <td>${it.description || ''}</td>
+                        <td class="text-end">${qty.toLocaleString()}</td>
+                        <td class="text-end">${formatCurrency(unit)}</td>
+                        <td class="text-end">${formatCurrency(line)}</td>`;
+                    tbody.appendChild(tr);
+                });
+                vatEl.textContent = formatCurrency(totalVat);
+                totalEl.textContent = formatCurrency(total + totalVat);
+                new bootstrap.Modal(document.getElementById('poPreviewModal')).show();
+            } catch (e) {
+                console.error('Open PO preview failed', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to open PO preview: ${msg}`, true);
+            }
+        }
+        async function loadPerformance() {
+            try {
+                const data = await fetchJSON(`${API_BASE}/performance`);
+                const tbody = document.getElementById('performanceTable');
+                tbody.innerHTML = '';
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No performance records</td></tr>`;
+                    return;
+                }
+                data.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${p.supplier_id}</td>
+                        <td>${p.period_start || ''} - ${p.period_end || ''}</td>
+                        <td>${p.overall_score}</td>
+                        <td>${p.notes || ''}</td>`;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error('Failed to load performance', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to load performance: ${msg}`, true);
+            }
+        }
+        function formatCurrency(amount) {
+            const num = Number(amount || 0);
+            return `P${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        // Requisition item rows
+        function addReqItem() {
+            const container = document.getElementById('reqItems');
+            const row = document.createElement('div');
+            row.className = 'row g-2 align-items-end mb-2';
+            row.innerHTML = `
+                <div class="col-md-4">
+                    <input type="text" class="form-control" name="item_description" placeholder="Description" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" name="item_quantity" placeholder="Qty" min="0" step="0.01" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control" name="item_uom" placeholder="Unit">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" name="item_est_unit_cost" placeholder="Est. Unit Cost" step="0.01">
+                </div>
+                <div class="col-md-2 text-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.row').remove()"><i class="bi bi-trash"></i></button>
+                </div>`;
+            container.appendChild(row);
+        }
+
+        // Simple in-memory caches for display names
+        const _cache = { suppliers: new Map() };
+
+        async function ensureSuppliersCache() {
+            if (_cache.suppliers.size > 0) return _cache.suppliers;
+            try {
+                const list = await fetchJSON(SUPPLIERS_API);
+                // purchases API returns array of supplier objects
+                const arr = Array.isArray(list) ? list : (list?.items || []);
+                arr.forEach(s => _cache.suppliers.set(s.id, s));
+            } catch (e) { console.warn('Supplier cache load failed', e); }
+            return _cache.suppliers;
+        }
+
+        function supplierName(supplier_id) {
+            if (!supplier_id) return '';
+            const s = _cache.suppliers.get(supplier_id);
+            return s ? s.name : supplier_id;
+        }
+
+        async function createRequisition() {
+            const form = document.getElementById('reqForm');
+            const fd = new FormData(form);
+            const title = (fd.get('title') || '').trim();
+            if (!title) { notify('Title is required', true); return; }
+            const needed_by = fd.get('needed_by');
+            const description = fd.get('description');
+            const supplier_id = fd.get('supplier_id') || null;
+            const items = [];
+            document.querySelectorAll('#reqItems .row').forEach(r => {
+                const description = r.querySelector('input[name="item_description"]').value;
+                const quantity = r.querySelector('input[name="item_quantity"]').value;
+                const uom = r.querySelector('input[name="item_uom"]').value;
+                const est = r.querySelector('input[name="item_est_unit_cost"]').value;
+                if (description && quantity) {
+                    items.push({ description, quantity, unit_of_measure: uom || null, estimated_unit_cost: est || null });
+                }
+            });
+            const payload = { title, needed_by: needed_by || null, description: description || null, supplier_id, items };
+            try {
+                await fetchJSON(`${API_BASE}/requisitions`, { method: 'POST', body: payload });
+                bootstrap.Modal.getInstance(document.getElementById('newRequisitionModal')).hide();
+                form.reset();
+                document.getElementById('reqItems').innerHTML = '';
+                await loadRequisitions();
+                notify('Requisition created');
+            } catch (e) {
+                console.error('Create requisition failed', e);
+                notify(`Failed to create requisition: ${e.message || e}`, true);
+            }
+        }
+
+        async function preloadRequisitionModal() {
+            try {
+                const sups = await fetchJSON(SUPPLIERS_API);
+                const sel = document.getElementById('reqSupplierSelect');
+                sel.innerHTML = '<option value="">Select Supplier</option>';
+                sups.forEach(s => { const opt = document.createElement('option'); opt.value = s.id; opt.textContent = s.name; sel.appendChild(opt); });
+                // Warm cache
+                _cache.suppliers.clear();
+                sups.forEach(s => _cache.suppliers.set(s.id, s));
+            } catch (e) {
+                console.error('Preload requisition modal failed', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to prepare requisition modal: ${msg}`, true);
+            }
+        }
+
+        async function loadBusinessSettings() {
+            try {
+                const res = await fetchJSON(SETTINGS_BUSINESS_API);
+                return res.data || {};
+            } catch (e) {
+                console.error('Load business settings failed', e);
+                return {};
+            }
+        }
+
+        async function printRequisition(reqId) {
+            try {
+                const reqs = await fetchJSON(`${API_BASE}/requisitions`);
+                const req = reqs.find(r => r.id === reqId);
+                if (!req) return notify('Requisition not found', true);
+                const biz = await loadBusinessSettings();
+                const companyName = biz.company_name || 'Our Company';
+                const companyAddress = biz.company_address || '';
+                const companyEmail = biz.company_email || '';
+                const companyPhone = biz.company_phone || '';
+                const logoUrl = biz.company_logo_url || biz.logo_url || '';
+
+                const itemsRows = (req.items || []).map((it, idx) => `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${it.description || ''}</td>
+                        <td style="text-align:right">${it.quantity || ''}</td>
+                        <td>${it.unit_of_measure || ''}</td>
+                        <td style="text-align:right">${it.estimated_unit_cost || ''}</td>
+                    </tr>`).join('');
+
+                const supplierBlock = req.supplier_id ? `<p><strong>To (Supplier):</strong> ${req.supplier_id}</p>` : '';
+
+                const html = `
+<html><head><meta charset='utf-8'><title>Requisition</title>
+<style>
+@page { size: A4; margin: 18mm; }
+body { font-family: Arial, sans-serif; color: #222; }
+.header { display: flex; align-items: center; gap: 16px; }
+.header img { max-height: 60px; }
+.title { font-size: 20px; font-weight: 600; margin-top: 16px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+th, td { border: 1px solid #999; padding: 8px; font-size: 12px; }
+th { background: #f2f2f2; text-align: left; }
+.footer { margin-top: 24px; font-size: 12px; }
+</style></head>
+<body>
+  <div class='header'>
+    ${logoUrl ? `<img src='${logoUrl}' alt='Logo'>` : ''}
+    <div>
+      <div style='font-weight:700;font-size:18px'>${companyName}</div>
+      <div>${companyAddress}</div>
+      <div>${companyEmail} ${companyPhone ? ' | ' + companyPhone : ''}</div>
+    </div>
+  </div>
+  <div class='title'>Requisition</div>
+  <div class='grid'>
+    <div>
+      <p><strong>Requisition Title:</strong> ${req.title}</p>
+      <p><strong>Needed By:</strong> ${req.needed_by || ''}</p>
+      <p><strong>Status:</strong> ${req.status}</p>
+    </div>
+    <div>
+      ${supplierBlock}
+      <p><strong>Branch:</strong> ${req.branch_id || ''}</p>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Description</th><th style='text-align:right'>Qty</th><th>Unit</th><th style='text-align:right'>Est. Unit Cost</th></tr></thead>
+    <tbody>${itemsRows || `<tr><td colspan='5' style='text-align:center;color:#777'>No items</td></tr>`}</tbody>
+  </table>
+  <div class='footer'>
+    <p><strong>Notes:</strong> ${req.description || ''}</p>
+    <p>This document is generated by CNPERP Procurement. All values are indicative unless otherwise approved.</p>
+  </div>
+</body></html>`;
+
+                const w = window.open('', '_blank');
+                w.document.write(html);
+                w.document.close();
+                w.focus();
+                w.print();
+            } catch (e) {
+                console.error('Print requisition failed', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to print requisition: ${msg}`, true);
+            }
+        }
+
+        async function preloadRFQModal() {
+            try {
+                // Load requisitions
+                const reqs = await fetchJSON(`${API_BASE}/requisitions`);
+                const reqSelect = document.getElementById('rfqReqSelect');
+                reqSelect.innerHTML = '<option value="">None</option>';
+                reqs.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.id; opt.textContent = `${r.title}`;
+                    reqSelect.appendChild(opt);
+                });
+                // Load suppliers
+                const sups = await fetchJSON(SUPPLIERS_API);
+                const supSelect = document.getElementById('rfqSuppliers');
+                supSelect.innerHTML = '';
+                sups.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id; opt.textContent = s.name;
+                    supSelect.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Preload RFQ modal failed', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to prepare RFQ modal: ${msg}`, true);
+            }
+        }
+
+        async function createRFQ() {
+            try {
+                const form = document.getElementById('rfqForm');
+                const fd = new FormData(form);
+                const rfq_number = fd.get('rfq_number');
+                const title = fd.get('title');
+                const issue_date = fd.get('issue_date');
+                const closing_date = fd.get('closing_date');
+                const requisition_id = fd.get('requisition_id') || null;
+                const invites = Array.from(document.getElementById('rfqSuppliers').selectedOptions).map(o => ({ supplier_id: o.value }));
+                const payload = { rfq_number: rfq_number || null, title, issue_date: issue_date || null, closing_date: closing_date || null, requisition_id, invites };
+                await fetchJSON(`${API_BASE}/rfqs`, { method: 'POST', body: payload });
+                bootstrap.Modal.getInstance(document.getElementById('newRFQModal')).hide();
+                form.reset();
+                loadRFQs();
+                notify('RFQ created');
+            } catch (e) {
+                console.error('Create RFQ failed', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to create RFQ: ${msg}`, true);
+            }
+        }
+
+        function openSubmitQuote(rfqId) {
+            const form = document.getElementById('quoteForm');
+            form.reset();
+            form.querySelector('input[name="rfq_id"]').value = rfqId;
+            preloadQuoteModal();
+            new bootstrap.Modal(document.getElementById('submitQuoteModal')).show();
+        }
+
+        async function preloadQuoteModal() {
+            try {
+                const sups = await fetchJSON(SUPPLIERS_API);
+                const sel = document.getElementById('quoteSupplier');
+                sel.innerHTML = '<option value="">Select supplier</option>';
+                sups.forEach(s => {
+                    const opt = document.createElement('option'); opt.value = s.id; opt.textContent = s.name; sel.appendChild(opt);
+                });
+                // Warm cache for display names
+                _cache.suppliers.clear();
+                sups.forEach(s => _cache.suppliers.set(s.id, s));
+            } catch (e) {
+                console.error('Preload quote modal failed', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to prepare quote modal: ${msg}`, true);
+            }
+        }
+
+        function addQuoteItem() {
+            const container = document.getElementById('quoteItems');
+            const row = document.createElement('div');
+            row.className = 'row g-2 align-items-end mb-2';
+            row.innerHTML = `
+                <div class="col-md-4"><input type="text" class="form-control" name="qi_description" placeholder="Description" required></div>
+                <div class="col-md-2"><input type="number" class="form-control" name="qi_quantity" placeholder="Qty" min="0" step="0.01" required></div>
+                <div class="col-md-2"><input type="number" class="form-control" name="qi_unit_cost" placeholder="Unit Cost" step="0.01"></div>
+                <div class="col-md-2"><input type="number" class="form-control" name="qi_vat_rate" placeholder="VAT %" step="0.01" value="0"></div>
+                <div class="col-md-2 text-end"><button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.row').remove()"><i class="bi bi-trash"></i></button></div>`;
+            container.appendChild(row);
+        }
+
+        async function submitQuote() {
+            try {
+                const form = document.getElementById('quoteForm');
+                const fd = new FormData(form);
+                const rfq_id = fd.get('rfq_id');
+                const supplier_id = fd.get('supplier_id');
+                const quote_number = fd.get('quote_number') || null;
+                const quote_date = fd.get('quote_date') || null;
+                const valid_until = fd.get('valid_until') || null;
+                const items = [];
+                document.querySelectorAll('#quoteItems .row').forEach(r => {
+                    const description = r.querySelector('input[name="qi_description"]').value;
+                    const quantity = r.querySelector('input[name="qi_quantity"]').value;
+                    const unit_cost = r.querySelector('input[name="qi_unit_cost"]').value;
+                    const vat_rate = r.querySelector('input[name="qi_vat_rate"]').value || 0;
+                    if (description && quantity) {
+                        items.push({ description, quantity, unit_cost, vat_rate });
+                    }
+                });
+                const payload = { rfq_id, supplier_id, quote_number, quote_date, valid_until, items };
+                await fetchJSON(`${API_BASE}/quotes`, { method: 'POST', body: payload });
+                bootstrap.Modal.getInstance(document.getElementById('submitQuoteModal')).hide();
+                form.reset(); document.getElementById('quoteItems').innerHTML = '';
+                await loadQuotes(rfq_id);
+                notify('Quote submitted');
+            } catch (e) {
+                console.error('Submit quote failed', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to submit quote: ${msg}`, true);
+            }
+        }
+
+        async function awardQuote(quoteId) {
+            try {
+                const payload = { quote_id: quoteId, award_date: new Date().toISOString().slice(0, 10) };
+                await fetchJSON(`${API_BASE}/awards`, { method: 'POST', body: payload });
+                notify('Award created. Linked Purchase Order generated.');
+                await Promise.all([loadAwards(), loadQuotes()]);
+            } catch (e) {
+                console.error('Award failed', e);
+                const msg = (window.CNPERP && CNPERP.Utils && CNPERP.Utils.getErrorMessage) ? CNPERP.Utils.getErrorMessage(e) : (e.message || 'Unknown error');
+                notify(`Failed to award quote: ${msg}`, true);
+            }
+        }
+
+        function notify(msg, isError = false) {
+            if (window.modernUI && window.modernUI.showNotification) {
+                window.modernUI.showNotification(msg, isError ? 'error' : 'success');
+            } else {
+                if (isError) { console.error(msg); alert(msg); } else { console.log(msg); }
+            }
+        }
+
+        // Placeholder for future: create RFQ from requisition
+        function openSubmitQuoteFromReq(reqId) {
+            // Could pre-fill RFQ modal with requisition
+            document.getElementById('rfqReqSelect').value = reqId;
+            new bootstrap.Modal(document.getElementById('newRFQModal')).show();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for Bootstrap to be available before initializing navbar
+            if (typeof bootstrap !== 'undefined' && window.initializeNavbar) {
+                initializeNavbar();
+            }
+
+            // Ensure suppliers cache for friendly names
+            ensureSuppliersCache();
+            loadRequisitions();
+            loadRFQs();
+            loadAwards();
+            loadPerformance();
+            document.getElementById('newRFQModal').addEventListener('show.bs.modal', preloadRFQModal);
+            document.getElementById('newRequisitionModal').addEventListener('show.bs.modal', preloadRequisitionModal);
+        });
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

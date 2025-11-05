@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manufacturing Module - IFRS Compliant | CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .help-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .help-header {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        .help-header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .help-content {
+            padding: 3rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        .section h2 {
+            color: #330867;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #30cfd0;
+        }
+        .section h3 {
+            color: #30cfd0;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            border-left: 4px solid #30cfd0;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .icon-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #30cfd0, #330867);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .compliance-badge {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #dee2e6;
+        }
+        ul.check-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        ul.check-list li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+        ul.check-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .benefit-box {
+            background: white;
+            border: 2px solid #30cfd0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="help-container">
+        <div class="help-header">
+            <h1><i class="bi bi-gear-wide-connected me-3"></i>Manufacturing Module</h1>
+            <p class="lead">IFRS Compliant Cost Accounting System</p>
+            <div class="mt-3">
+                <span class="compliance-badge">IAS 2</span>
+                <span class="compliance-badge">IAS 16</span>
+                <span class="compliance-badge">IAS 38</span>
+                <span class="compliance-badge">IFRS 15</span>
+            </div>
+        </div>
+
+        <div class="help-content">
+            <!-- Overview -->
+            <div class="section">
+                <h2><i class="bi bi-info-circle-fill me-2"></i>Overview</h2>
+                <p class="lead">The enhanced Manufacturing module provides a comprehensive, IFRS-compliant cost accounting system designed to handle both tangible and intangible products. This system supports advanced cost allocation methods and adheres to international accounting standards for proper financial reporting.</p>
+            </div>
+
+            <!-- Key Features -->
+            <div class="section">
+                <h2><i class="bi bi-star-fill text-warning me-2"></i>Key Features & Improvements</h2>
+
+                <h3><i class="bi bi-1-circle-fill me-2"></i>IFRS Compliance Dashboard</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h5><i class="bi bi-shield-check text-success me-2"></i>IAS 2 Compliance</h5>
+                            <p class="mb-0">Inventory valuation for tangible goods</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h5><i class="bi bi-shield-check text-success me-2"></i>IAS 38 Compliance</h5>
+                            <p class="mb-0">Intangible asset accounting</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h5><i class="bi bi-shield-check text-success me-2"></i>IAS 16 Compliance</h5>
+                            <p class="mb-0">Property, Plant & Equipment allocation</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h5><i class="bi bi-shield-check text-success me-2"></i>IFRS 15 Integration</h5>
+                            <p class="mb-0">Revenue recognition for digital products</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="mt-4"><i class="bi bi-2-circle-fill me-2"></i>Multi-Product Type Support</h3>
+                
+                <div class="accordion" id="productTypes">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#tangible">
+                                <i class="bi bi-box-seam me-2"></i>Tangible Products
+                            </button>
+                        </h2>
+                        <div id="tangible" class="accordion-collapse collapse show" data-bs-parent="#productTypes">
+                            <div class="accordion-body">
+                                <ul class="check-list">
+                                    <li>Raw material cost tracking</li>
+                                    <li>Direct labor cost allocation</li>
+                                    <li>Manufacturing overhead distribution</li>
+                                    <li>Work-in-progress (WIP) inventory management</li>
+                                    <li>Standard inventory valuation methods</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#digital">
+                                <i class="bi bi-phone me-2"></i>Digital Products & Services
+                            </button>
+                        </h2>
+                        <div id="digital" class="accordion-collapse collapse" data-bs-parent="#productTypes">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>Airtime/Phone Credits:</strong> Platform costs, commission tracking</li>
+                                    <li><strong>Software Applications:</strong> Development, licensing, and maintenance costs</li>
+                                    <li><strong>Digital Content:</strong> Creation, distribution, and marketing costs</li>
+                                    <li><strong>Subscription Services:</strong> Operating and customer acquisition costs</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#intangible">
+                                <i class="bi bi-lightbulb me-2"></i>Intangible Assets
+                            </button>
+                        </h2>
+                        <div id="intangible" class="accordion-collapse collapse" data-bs-parent="#productTypes">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>Software Licenses:</strong> Acquisition and implementation costs</li>
+                                    <li><strong>Patents & Trademarks:</strong> Legal and registration costs</li>
+                                    <li><strong>Development Assets:</strong> R&D capitalization</li>
+                                    <li><strong>Intellectual Property:</strong> Valuation and amortization</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="mt-4"><i class="bi bi-3-circle-fill me-2"></i>Advanced Cost Allocation Methods</h3>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Direct Cost Assignment</h6>
+                                <p class="card-text small">Direct allocation to specific products</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-diagram-3 text-success me-2"></i>Activity-Based Costing (ABC)</h6>
+                                <p class="card-text small">Cost drivers and activity pools</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-speedometer2 text-info me-2"></i>Standard Costing</h6>
+                                <p class="card-text small">Predetermined costs with variance analysis</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-briefcase text-warning me-2"></i>Job Order Costing</h6>
+                                <p class="card-text small">Project-specific cost tracking</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-arrow-repeat text-danger me-2"></i>Process Costing</h6>
+                                <p class="card-text small">Continuous production cost averaging</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="mt-4"><i class="bi bi-4-circle-fill me-2"></i>Real-Time Analytics & Reporting</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h5><i class="bi bi-bar-chart-fill text-primary me-2"></i>Interactive Charts</h5>
+                            <ul>
+                                <li><strong>Cost Breakdown Analysis:</strong> Bar chart showing cost categories</li>
+                                <li><strong>Product Type Distribution:</strong> Doughnut chart of product mix</li>
+                                <li><strong>Cost Allocation Summary:</strong> Pie chart of allocation methods</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h5><i class="bi bi-graph-up text-success me-2"></i>Summary Metrics</h5>
+                            <ul>
+                                <li>Raw Materials Total</li>
+                                <li>Direct Labor Costs</li>
+                                <li>Manufacturing Overhead</li>
+                                <li>Intangible Assets Value</li>
+                                <li>Work-in-Progress Inventory</li>
+                                <li>Total Production Costs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Examples -->
+            <div class="section">
+                <h2><i class="bi bi-code-square me-2"></i>Data Management Examples</h2>
+
+                <h3>Tangible Goods</h3>
+                <div class="code-block">
+{
+  type: 'tangible',
+  rawMaterialCost: 50.00,
+  directLaborCost: 25.00,
+  manufacturingOverhead: 15.00,
+  totalUnitCost: 90.00,
+  inventoryValue: 4500.00
+}
+                </div>
+
+                <h3>Digital Products</h3>
+                <div class="code-block">
+{
+  type: 'digital',
+  category: 'airtime',
+  developmentCost: 5000.00,
+  platformCost: 1000.00,
+  marketingCost: 2000.00,
+  operatingCost: 500.00,
+  revenueModel: 'commission'
+}
+                </div>
+
+                <h3>Intangible Assets</h3>
+                <div class="code-block">
+{
+  type: 'intangible',
+  acquisitionCost: 10000.00,
+  licensingCost: 2000.00,
+  implementationCost: 3000.00,
+  usefulLife: 5,
+  amortizationMethod: 'straight-line'
+}
+                </div>
+            </div>
+
+            <!-- Benefits -->
+            <div class="section">
+                <h2><i class="bi bi-trophy-fill text-warning me-2"></i>Benefits & Value Proposition</h2>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="benefit-box">
+                            <h4 class="text-success"><i class="bi bi-shield-check me-2"></i>Compliance</h4>
+                            <ul class="check-list">
+                                <li>IFRS Standardization</li>
+                                <li>Complete Audit Trail</li>
+                                <li>Regulatory Reporting</li>
+                                <li>Financial Transparency</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="benefit-box">
+                            <h4 class="text-primary"><i class="bi bi-gear me-2"></i>Operational</h4>
+                            <ul class="check-list">
+                                <li>Better Cost Control</li>
+                                <li>Data-Driven Decisions</li>
+                                <li>Efficiency Tracking</li>
+                                <li>Scalability</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="benefit-box">
+                            <h4 class="text-info"><i class="bi bi-graph-up-arrow me-2"></i>Strategic</h4>
+                            <ul class="check-list">
+                                <li>Product Profitability</li>
+                                <li>Resource Optimization</li>
+                                <li>Cost Benchmarking</li>
+                                <li>Investment Planning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Reporting -->
+            <div class="section">
+                <h2><i class="bi bi-clipboard-data me-2"></i>Financial Reporting Features</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-pie-chart-fill me-2"></i>Cost Center Analysis
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>Departmental cost allocation</li>
+                                    <li>Activity-based cost distribution</li>
+                                    <li>Overhead absorption rates</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-currency-dollar me-2"></i>Product Profitability
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>Unit cost calculations</li>
+                                    <li>Margin analysis</li>
+                                    <li>Break-even analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-warning mb-3">
+                            <div class="card-header bg-warning">
+                                <i class="bi bi-clipboard-check me-2"></i>Variance Reporting
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>Standard vs. actual comparison</li>
+                                    <li>Material, labor, overhead variances</li>
+                                    <li>Performance metrics</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-info mb-3">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-box-seam-fill me-2"></i>Inventory Valuation
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>FIFO, LIFO, weighted average</li>
+                                    <li>Lower of cost or market adjustments</li>
+                                    <li>Obsolescence provisions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow -->
+            <div class="section">
+                <h2><i class="bi bi-arrow-right-circle me-2"></i>Workflow Integration</h2>
+                
+                <h3>Product Creation Process</h3>
+                <div class="alert alert-light border-start border-primary border-4">
+                    <ol>
+                        <li class="mb-2"><strong>Product Type Selection:</strong> Choose from tangible, digital, service, license, or intangible</li>
+                        <li class="mb-2"><strong>Cost Structure Definition:</strong> Set up relevant cost categories</li>
+                        <li class="mb-2"><strong>Allocation Method Selection:</strong> Choose appropriate costing method</li>
+                        <li class="mb-2"><strong>Initial Cost Entry:</strong> Record baseline costs</li>
+                        <li class="mb-2"><strong>Ongoing Cost Tracking:</strong> Regular cost updates and adjustments</li>
+                    </ol>
+                </div>
+
+                <h3>Cost Entry Workflow</h3>
+                <div class="alert alert-light border-start border-success border-4">
+                    <ol>
+                        <li class="mb-2"><strong>Product Selection:</strong> Choose existing product</li>
+                        <li class="mb-2"><strong>Cost Type Classification:</strong> Select appropriate cost category</li>
+                        <li class="mb-2"><strong>Allocation Method:</strong> Specify cost allocation approach</li>
+                        <li class="mb-2"><strong>Quantity & Unit Cost:</strong> Enter detailed cost information</li>
+                        <li class="mb-2"><strong>Documentation:</strong> Add notes and supporting information</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="nav-buttons">
+                <a href="/static/help-center.html" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Help Center
+                </a>
+                <a href="/static/manufacturing.html" class="btn btn-primary btn-lg">
+                    <i class="bi bi-gear-wide-connected me-2"></i>Open Manufacturing Module
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{
+  "account_overrides": {
+    "3100": { "section": "EQUITY", "line_item": "Share Capital" },
+    "3200": { "section": "EQUITY", "line_item": "Retained Earnings" },
+    "3300": { "section": "EQUITY", "line_item": "Other Comprehensive Income" },
+    "2100": { "section": "CURRENT_LIABILITY", "line_item": "Trade Payables" },
+    "2200": { "section": "CURRENT_LIABILITY", "line_item": "Accrued Liabilities" },
+    "2300": { "section": "CURRENT_LIABILITY", "line_item": "Current Portion of Long-term Debt" },
+    "2400": { "section": "NON_CURRENT_LIABILITY", "line_item": "Long-term Loans" },
+    "2500": { "section": "NON_CURRENT_LIABILITY", "line_item": "Bonds Payable" }
+  },
+  "category_mapping": {
+    "Retained Earnings": { "section": "EQUITY", "line_item": "Retained Earnings", "sort_order": 90 },
+    "Equity Capital": { "section": "EQUITY", "line_item": "Share Capital", "sort_order": 10 },
+    "Common Stock": { "section": "EQUITY", "line_item": "Share Capital", "sort_order": 10 },
+    "Loans Payable": { "section": "NON_CURRENT_LIABILITY", "line_item": "Long-term Loans", "sort_order": 20 },
+    "Current Liability": { "section": "CURRENT_LIABILITY", "line_item": "Other Current Liabilities", "sort_order": 80 },
+    "Long-Term Liability": { "section": "NON_CURRENT_LIABILITY", "line_item": "Other Non-current Liabilities", "sort_order": 90 }
+  },
+  "keyword_rules": {
+    "retained_earnings": ["retained", "accumulated profit", "accumulated loss", "undistributed profit"],
+    "current_loans": ["current portion", "short-term loan", "due within", "payable within 12"],
+    "non_current_loans": ["long-term loan", "term loan", "mortgage", "bond", "debenture", "note payable"],
+    "current_assets": ["cash", "bank", "receivable", "inventory", "prepaid", "short-term investment"],
+    "non_current_assets": ["fixed asset", "property", "plant", "equipment", "intangible", "goodwill", "long-term investment"]
+  },
+  "maturity_split_rules": {
+    "enabled": true,
+    "current_threshold_months": 12,
+    "liability_keywords": ["loan", "debt", "borrowing", "finance", "credit facility"],
+    "maturity_indicators": {
+      "due_date_field": "maturity_date",
+      "term_keywords": {
+        "short_term": ["short", "current", "due within", "12 month", "one year"],
+        "long_term": ["long", "term", "multi-year", "5 year", "10 year"]
+      }
+    }
+  },
+  "presentation_order": {
+    "CURRENT_ASSET": ["Cash and Cash Equivalents", "Trade Receivables", "Inventory", "Prepaid Expenses", "Other Current Assets"],
+    "NON_CURRENT_ASSET": ["Property, Plant & Equipment", "Intangible Assets", "Long-term Investments", "Other Non-current Assets"],
+    "CURRENT_LIABILITY": ["Trade Payables", "Accrued Liabilities", "Current Portion of Long-term Debt", "Other Current Liabilities"],
+    "NON_CURRENT_LIABILITY": ["Long-term Loans", "Bonds Payable", "Other Non-current Liabilities"],
+    "EQUITY": ["Share Capital", "Retained Earnings", "Other Comprehensive Income", "Other Equity"]
+  }
+}

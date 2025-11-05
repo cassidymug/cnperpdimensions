@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Center - CNPERP ERP System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+            padding-bottom: 40px;
+        }
+        
+        .help-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .help-header {
+            background: white;
+            border-radius: 15px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .help-header h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        
+        .search-box {
+            max-width: 600px;
+            margin: 2rem auto 0;
+        }
+        
+        .search-box input {
+            border-radius: 25px;
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            border: 2px solid #667eea;
+        }
+        
+        .search-box input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #764ba2;
+        }
+        
+        .topic-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-color: #667eea;
+        }
+        
+        .topic-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .topic-icon.setup { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .topic-icon.accounting { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
+        .topic-icon.banking { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; }
+        .topic-icon.inventory { background: linear-gradient(135deg, #43e97b, #38f9d7); color: white; }
+        .topic-icon.sales { background: linear-gradient(135deg, #fa709a, #fee140); color: white; }
+        .topic-icon.manufacturing { background: linear-gradient(135deg, #30cfd0, #330867); color: white; }
+        .topic-icon.reports { background: linear-gradient(135deg, #a8edea, #fed6e3); color: #333; }
+        .topic-icon.weight { background: linear-gradient(135deg, #ff9a9e, #fecfef); color: white; }
+        .topic-icon.backup { background: linear-gradient(135deg, #ffecd2, #fcb69f); color: #333; }
+        .topic-icon.pos { background: linear-gradient(135deg, #ff6e7f, #bfe9ff); color: white; }
+        
+        .topic-card h4 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .topic-card p {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .topic-count {
+            display: inline-block;
+            background: #f8f9fa;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .quick-links {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .quick-links a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .quick-links a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(10px);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .doc-content {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .doc-content h1, .doc-content h2 {
+            color: #667eea;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .doc-content h3 {
+            color: #764ba2;
+            margin-top: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .doc-content code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #e83e8c;
+        }
+        
+        .doc-content pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .badge-new {
+            background: #28a745;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    <div id="navbar-container"></div>
+    
+    <div class="help-container">
+        <!-- Header -->
+        <div class="help-header">
+            <h1><i class="bi bi-question-circle-fill me-3"></i>CNPERP Help Center</h1>
+            <p class="lead text-muted mb-0">Comprehensive Documentation & Guides</p>
+            
+            <!-- Search Box -->
+            <div class="search-box">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchInput" 
+                           placeholder="Search for help topics, guides, or keywords..." 
+                           onkeyup="searchTopics()">
+                    <button class="btn btn-primary" type="button">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- F1 Shortcut Notice -->
+        <div class="alert alert-warning mb-3" role="alert" style="background: linear-gradient(135deg, #ffd700, #ff8c00); color: white; border: none; border-radius: 10px; box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);">
+            <div class="text-center">
+                <i class="bi bi-keyboard-fill me-2" style="font-size: 1.5rem;"></i>
+                <strong>Quick Access:</strong> Press <kbd class="bg-white text-dark px-3 py-2 mx-2" style="font-size: 1.1rem; border-radius: 8px;">F1</kbd> from any page to open the Help System Guide!
+            </div>
+        </div>
+
+        <!-- Quick Link to Complete Guide -->
+        <div class="alert alert-info mb-4" role="alert" style="background: white; border-left: 4px solid #667eea; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+            <div class="row align-items-center">
+                <div class="col-md-1 text-center">
+                    <i class="bi bi-book-fill" style="font-size: 3rem; color: #667eea;"></i>
+                </div>
+                <div class="col-md-9">
+                    <h5 class="alert-heading mb-1" style="color: #667eea;">📖 Complete User Guide - All Topics in One Page</h5>
+                    <p class="mb-0">Access all help documentation in a single comprehensive page. Perfect for printing, offline reference, or browsing all features at once!</p>
+                </div>
+                <div class="col-md-2 text-center">
+                    <a href="/complete-user-guide.html" class="btn btn-primary">
+                        <i class="bi bi-arrow-right-circle me-2"></i>View Guide
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Topics Grid -->
+        <div class="row" id="topicsGrid">
+            <!-- Setup & Configuration -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('setup')">
+                    <div class="topic-icon setup">
+                        <i class="bi bi-gear-fill"></i>
+                    </div>
+                    <h4>System Setup & Configuration</h4>
+                    <p>Initial setup, branches, users, and system settings</p>
+                    <span class="topic-count">8 articles</span>
+                </div>
+            </div>
+
+            <!-- Accounting Codes -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('accounting-codes')">
+                    <div class="topic-icon accounting">
+                        <i class="bi bi-calculator-fill"></i>
+                    </div>
+                    <h4>Accounting Codes & Chart of Accounts</h4>
+                    <p>Setup and manage accounting codes, sub-accounts, IFRS compliance</p>
+                    <span class="topic-count">12 articles</span> <span class="badge-new">GUIDE</span>
+                </div>
+            </div>
+
+            <!-- Banking System -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('banking')">
+                    <div class="topic-icon banking">
+                        <i class="bi bi-bank"></i>
+                    </div>
+                    <h4>Banking & Reconciliation</h4>
+                    <p>Bank accounts, transactions, transfers, and reconciliations</p>
+                    <span class="topic-count">10 articles</span>
+                </div>
+            </div>
+
+            <!-- Inventory Management -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('inventory')">
+                    <div class="topic-icon inventory">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <h4>Inventory Management</h4>
+                    <p>Products, stock levels, allocation, and tracking</p>
+                    <span class="topic-count">9 articles</span>
+                </div>
+            </div>
+
+            <!-- Sales & Invoicing -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('sales')">
+                    <div class="topic-icon sales">
+                        <i class="bi bi-cart-fill"></i>
+                    </div>
+                    <h4>Sales & Invoicing</h4>
+                    <p>Invoices, quotations, credit notes, and receipts</p>
+                    <span class="topic-count">11 articles</span> <span class="badge-new">GUIDE</span>
+                </div>
+            </div>
+
+            <!-- Purchasing & Procurement -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('purchasing')">
+                    <div class="topic-icon accounting">
+                        <i class="bi bi-bag-check-fill"></i>
+                    </div>
+                    <h4>Purchasing & Procurement</h4>
+                    <p>Suppliers, purchase orders, goods receiving, payments</p>
+                    <span class="topic-count">8 articles</span> <span class="badge-new">GUIDE</span>
+                </div>
+            </div>
+
+            <!-- POS System -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('pos')">
+                    <div class="topic-icon pos">
+                        <i class="bi bi-cash-register"></i>
+                    </div>
+                    <h4>Point of Sale (POS)</h4>
+                    <p>POS terminal, sessions, and cash management</p>
+                    <span class="topic-count">6 articles</span>
+                </div>
+            </div>
+
+            <!-- Manufacturing -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('manufacturing')">
+                    <div class="topic-icon manufacturing">
+                        <i class="bi bi-gear-wide-connected"></i>
+                    </div>
+                    <h4>Manufacturing & COGS</h4>
+                    <p>Bill of materials, production, and cost tracking</p>
+                    <span class="topic-count">7 articles</span>
+                </div>
+            </div>
+
+            <!-- Weight-Based Products -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('weight-products')">
+                    <div class="topic-icon weight">
+                        <i class="bi bi-upc-scan"></i>
+                    </div>
+                    <h4>Weight-Based Products <span class="badge-new">NEW</span></h4>
+                    <p>Barcode generation, scale integration, butchery & produce</p>
+                    <span class="topic-count">6 articles</span>
+                </div>
+            </div>
+
+            <!-- Reports & Analytics -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('reports')">
+                    <div class="topic-icon reports">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h4>Reports & Analytics</h4>
+                    <p>Financial reports, business intelligence, and dashboards</p>
+                    <span class="topic-count">10 articles</span> <span class="badge-new">GUIDE</span>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('settings')">
+                    <div class="topic-icon setup">
+                        <i class="bi bi-sliders"></i>
+                    </div>
+                    <h4>System Settings <span class="badge-new">GUIDE</span></h4>
+                    <p>Application settings, customization, and configuration</p>
+                    <span class="topic-count">10 articles</span>
+                </div>
+            </div>
+
+            <!-- Backup & Recovery -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="topic-card" onclick="showTopic('backup')">
+                    <div class="topic-icon backup">
+                        <i class="bi bi-cloud-upload-fill"></i>
+                    </div>
+                    <h4>Backup & Data Management</h4>
+                    <p>Database backups, restoration, and data security</p>
+                    <span class="topic-count">5 articles</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links Section -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="quick-links">
+                    <h5 class="mb-3"><i class="bi bi-lightning-fill text-warning me-2"></i>Quick Start Guides</h5>
+                    <a href="#" onclick="loadDoc('/IMPLEMENTATION_GUIDE.md'); return false;">
+                        <i class="bi bi-play-circle me-2"></i>Implementation Guide
+                    </a>
+                    <a href="#" onclick="loadDoc('/CNPERP_ERP_TRAINING_MANUAL.md'); return false;">
+                        <i class="bi bi-book me-2"></i>Training Manual
+                    </a>
+                    <a href="#" onclick="loadDoc('/DATABASE_SEEDING_README.md'); return false;">
+                        <i class="bi bi-database me-2"></i>Database Setup
+                    </a>
+                    <a href="#" onclick="loadDoc('/USER_MANAGEMENT_TESTING_GUIDE.md'); return false;">
+                        <i class="bi bi-people me-2"></i>User Management
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="quick-links">
+                    <h5 class="mb-3"><i class="bi bi-bookmark-star-fill text-primary me-2"></i>Popular Topics</h5>
+                    <a href="#" onclick="showTopic('accounting-codes'); return false;">
+                        <i class="bi bi-calculator me-2"></i>Setting Up Accounting Codes
+                    </a>
+                    <a href="#" onclick="showTopic('banking'); return false;">
+                        <i class="bi bi-bank me-2"></i>Bank Account Configuration
+                    </a>
+                    <a href="#" onclick="showTopic('weight-products'); return false;">
+                        <i class="bi bi-upc-scan me-2"></i>Weight-Based Products
+                    </a>
+                    <a href="#" onclick="loadDoc('/INVOICE_PRINT_FACILITY_README.md'); return false;">
+                        <i class="bi bi-printer me-2"></i>Invoice Printing
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Topic Details Modal -->
+    <div class="modal fade" id="topicModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="bi bi-book me-2"></i><span id="modalTitleText">Topic</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalContent" class="doc-content">
+                        <!-- Content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printContent()">
+                        <i class="bi bi-printer me-2"></i>Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/navbar.js?v=20251015-HELP"></script>
+    
+    <script>
+        // Topic definitions with documentation files
+        const topics = {
+            'setup': {
+                title: 'System Setup & Configuration',
+                icon: 'bi-gear-fill',
+                docs: [
+                    { title: '📘 Comprehensive Setup Guide', file: '/docs/help/setup-configuration-guide.md', badge: 'NEW' },
+                    { title: 'Implementation Guide', file: '/IMPLEMENTATION_GUIDE.md' },
+                    { title: 'Training Manual', file: '/CNPERP_ERP_TRAINING_MANUAL.md' },
+                    { title: 'Database Seeding Guide', file: '/DATABASE_SEEDING_README.md' },
+                    { title: 'WSL Startup Guide', file: '/WSL_STARTUP_GUIDE.md' },
+                    { title: 'User Management Testing', file: '/USER_MANAGEMENT_TESTING_GUIDE.md' },
+                    { title: 'Branch Management Settings', file: '/BRANCH_MANAGEMENT_SETTINGS.md' },
+                    { title: 'Authentication Changes', file: '/AUTHENTICATION_CHANGES.md' },
+                    { title: 'API Standardization Guide', file: '/API_STANDARDIZATION_GUIDE.md' }
+                ]
+            },
+            'accounting-codes': {
+                title: 'Accounting Codes & Chart of Accounts',
+                icon: 'bi-calculator-fill',
+                docs: [
+                    { title: '🎯 Accounting Codes & Chart of Accounts Guide', file: '/static/help/accounting-codes.html', badge: 'NEW' },
+                    { title: '📘 Comprehensive Accounting Codes Guide', file: '/docs/help/accounting-codes-guide.md', badge: 'NEW' },
+                    { title: 'Accounting Logic Implementation', file: '/ACCOUNTING_LOGIC_IMPLEMENTATION.md' },
+                    { title: 'VAT Chart of Accounts Update', file: '/VAT_CHART_OF_ACCOUNTS_UPDATE.md' },
+                    { title: 'Journal Entry Flow', file: '/JOURNAL_ENTRY_FLOW.md' },
+                    { title: 'Accounting Codes Compliance', file: '/ACCOUNTING_CODES_COMPLIANCE_ANALYSIS.txt' },
+                    { title: 'Enterprise Consistency Framework', file: '/ENTERPRISE_CONSISTENCY_FRAMEWORK.md' },
+                    { title: 'VAT Account Auto-Selection', file: '/VAT_ACCOUNT_AUTO_SELECTION_UPDATE.md' },
+                    { title: 'Models Completeness Report', file: '/MODELS_COMPLETENESS_REPORT.md' }
+                ]
+            },
+            'banking': {
+                title: 'Banking & Reconciliation',
+                icon: 'bi-bank',
+                docs: [
+                    { title: '📘 Comprehensive Banking Guide', file: '/docs/help/banking-guide.md', badge: 'NEW' },
+                    { title: '🏦 Banking System Guide', file: '/static/help/banking-system.html', badge: 'NEW' },
+                    { title: 'VAT Migration Success Report', file: '/VAT_MIGRATION_SUCCESS_REPORT.md' }
+                ]
+            },
+            'inventory': {
+                title: 'Inventory Management',
+                icon: 'bi-box-seam-fill',
+                docs: [
+                    { title: '📘 Comprehensive Inventory Guide', file: '/docs/help/inventory-guide.md', badge: 'NEW' },
+                    { title: 'Inventory Image Enhancement', file: '/INVENTORY_IMAGE_ENHANCEMENT.md' },
+                    { title: 'UOM BI Module Completion', file: '/UOM_BI_MODULE_COMPLETION_REPORT.md' }
+                ]
+            },
+            'sales': {
+                title: 'Sales & Invoicing',
+                icon: 'bi-cart-fill',
+                docs: [
+                    { title: '� Invoice System Designer Guide', file: '/static/help/invoice-system.html', badge: 'NEW' },
+                    { title: '�📘 Comprehensive Sales & Invoicing Guide', file: '/docs/help/sales-invoicing-guide.md', badge: 'NEW' },
+                    { title: 'Invoice System Implementation', file: '/INVOICE_SYSTEM_IMPLEMENTATION_SUMMARY.md' },
+                    { title: 'Invoice Print Facility', file: '/INVOICE_PRINT_FACILITY_README.md' },
+                    { title: 'Invoice Reversal System', file: '/INVOICE_REVERSAL_README.md' },
+                    { title: 'Credit Note System', file: '/CREDIT_NOTE_SYSTEM_README.md' },
+                    { title: 'Enhanced Cash Sales & Receipts', file: '/ENHANCED_CASH_SALES_AND_RECEIPTS_README.md' },
+                    { title: 'Receipts Username Display Fix', file: '/RECEIPTS_USERNAME_DISPLAY_FIX.md' },
+                    { title: 'Quotation to Invoice Audit Trail', file: '/QUOTATION_TO_INVOICE_AUDIT_TRAIL.md' },
+                    { title: 'Sales Update Summary', file: '/SALES_UPDATE_SUMMARY.md' },
+                    { title: 'Logo Implementation Guide', file: '/LOGO_IMPLEMENTATION_GUIDE.md' },
+                    { title: 'Logo Centralization', file: '/LOGO_CENTRALIZATION_README.md' },
+                    { title: 'Comprehensive Print Functionality', file: '/COMPREHENSIVE_PRINT_FUNCTIONALITY_REPORT.txt' }
+                ]
+            },
+            'purchasing': {
+                title: 'Purchasing & Procurement',
+                icon: 'bi-bag-check-fill',
+                docs: [
+                    { title: '📘 Comprehensive Purchasing Guide', file: '/docs/help/purchasing-guide.md', badge: 'NEW' },
+                    { title: 'Supplier Management', file: '/docs/help/purchasing-guide.md#supplier-management' },
+                    { title: 'Purchase Orders', file: '/docs/help/purchasing-guide.md#purchase-orders' },
+                    { title: 'Goods Receiving', file: '/docs/help/purchasing-guide.md#goods-receiving' },
+                    { title: 'Supplier Invoices', file: '/docs/help/purchasing-guide.md#supplier-invoices' },
+                    { title: 'Supplier Payments', file: '/docs/help/purchasing-guide.md#supplier-payments' },
+                    { title: 'Purchase Returns', file: '/docs/help/purchasing-guide.md#purchase-returns' },
+                    { title: 'Procurement Analytics', file: '/docs/help/purchasing-guide.md#procurement-analytics' }
+                ]
+            },
+            'pos': {
+                title: 'Point of Sale (POS)',
+                icon: 'bi-cash-register',
+                docs: [
+                    { title: 'POS System README', file: '/POS_README.md' },
+                    { title: 'Cash Sales & Customer Input Demo', file: '/CASH_SALES_AND_CUSTOMER_INPUT_DEMO.md' }
+                ]
+            },
+            'manufacturing': {
+                title: 'Manufacturing & COGS',
+                icon: 'bi-gear-wide-connected',
+                docs: [
+                    { title: '� Job Cards & BOM Integration Guide', file: '/static/help/job-cards-bom.html', badge: 'NEW' },
+                    { title: '�🚀 Recipe Manager Quick Start Guide', file: '/static/help/recipe-manager-quick-start.html', badge: 'NEW' },
+                    { title: '📘 Manufacturing Module Guide', file: '/static/help/manufacturing-module.html', badge: 'NEW' },
+                    { title: 'COGS Module Enhancements', file: '/COGS_MODULE_ENHANCEMENTS.md' }
+                ]
+            },
+            'weight-products': {
+                title: 'Weight-Based Products',
+                icon: 'bi-upc-scan',
+                docs: [
+                    { title: 'Weight Products Overview', file: '/README_WEIGHT_PRODUCTS.md' },
+                    { title: 'Setup Guide', file: '/SETUP_GUIDE_WEIGHT_PRODUCTS.md' },
+                    { title: 'Scale Integration Guide', file: '/SCALE_INTEGRATION_GUIDE.md' },
+                    { title: 'Scale Configuration Templates', file: '/SCALE_CONFIGURATION_TEMPLATES.md' },
+                    { title: 'System Summary', file: '/WEIGHT_BASED_SYSTEM_SUMMARY.md' },
+                    { title: 'Quick Reference for Staff', file: '/QUICK_REFERENCE_WEIGHT_PRODUCTS.md' }
+                ]
+            },
+            'reports': {
+                title: 'Reports & Analytics',
+                icon: 'bi-graph-up',
+                docs: [
+                    { title: '📘 Comprehensive Reports & BI Guide', file: '/docs/help/reports-guide.md', badge: 'NEW' },
+                    { title: 'Comprehensive Reports Implementation', file: '/COMPREHENSIVE_REPORTS_IMPLEMENTATION.md' },
+                    { title: 'UOM BI Module', file: '/UOM_BI_MODULE_COMPLETION_REPORT.md' }
+                ]
+            },
+            'settings': {
+                title: 'System Settings & Configuration',
+                icon: 'bi-sliders',
+                docs: [
+                    { title: '📘 Comprehensive Settings Guide', file: '/docs/help/settings-guide.md', badge: 'NEW' },
+                    { title: 'Application Settings', file: '/docs/help/settings-guide.md#application-settings' },
+                    { title: 'Company Information', file: '/docs/help/settings-guide.md#company-information' },
+                    { title: 'Currency & Localization', file: '/docs/help/settings-guide.md#currency--localization' },
+                    { title: 'VAT & Tax Settings', file: '/docs/help/settings-guide.md#vat--tax-settings' },
+                    { title: 'Invoice Customization', file: '/docs/help/settings-guide.md#invoice-customization' },
+                    { title: 'Email Configuration', file: '/docs/help/settings-guide.md#email-configuration' },
+                    { title: 'Printer Settings', file: '/docs/help/settings-guide.md#printer-settings' },
+                    { title: 'User Management', file: '/docs/help/settings-guide.md#user-management' },
+                    { title: 'Security Settings', file: '/docs/help/settings-guide.md#security-settings' }
+                ]
+            },
+            'backup': {
+                title: 'Backup & Data Management',
+                icon: 'bi-cloud-upload-fill',
+                docs: [
+                    { title: '💾 Backup Management System Guide', file: '/static/help/backup-system.html', badge: 'NEW' },
+                    { title: 'Backup Quick Start', file: '/BACKUP_QUICK_START.md' },
+                    { title: 'Backup Testing Results', file: '/BACKUP_TESTING_RESULTS.md' }
+                ]
+            },
+        };
+
+        // Map comprehensive guides to their HTML pages
+        const comprehensiveGuides = {
+            '/docs/help/setup-configuration-guide.md': '/static/help/setup-configuration-guide.html',
+            '/docs/help/accounting-codes-guide.md': '/static/help/accounting-codes-guide.html',
+            '/docs/help/banking-guide.md': '/static/help/banking-guide.html',
+            '/docs/help/inventory-guide.md': '/static/help/inventory-guide.html',
+            '/docs/help/sales-invoicing-guide.md': '/static/help/sales-invoicing-guide.html',
+            '/docs/help/purchasing-guide.md': '/static/help/purchasing-guide.html',
+            '/docs/help/reports-guide.md': '/static/help/reports-guide.html',
+            '/docs/help/settings-guide.md': '/static/help/settings-guide.html'
+        };
+
+        // Show topic details
+        function showTopic(topicKey) {
+            const topic = topics[topicKey];
+            if (!topic) return;
+
+            document.getElementById('modalTitleText').textContent = topic.title;
+            
+            let content = `
+                <div class="mb-4">
+                    <h2><i class="${topic.icon} me-2"></i>${topic.title}</h2>
+                    <p class="lead text-muted">Available documentation and guides:</p>
+                </div>
+                <div class="list-group">
+            `;
+
+            topic.docs.forEach((doc, index) => {
+                // Check if this is a comprehensive guide that has a dedicated HTML page
+                const htmlPage = comprehensiveGuides[doc.file];
+                
+                // Check if this is already an HTML file in /static/help/ directory
+                const isHtmlGuide = doc.file.endsWith('.html') || htmlPage;
+                const targetUrl = htmlPage || doc.file;
+                
+                if (isHtmlGuide) {
+                    // Navigate to dedicated HTML page
+                    content += `
+                        <a href="${targetUrl}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h5 class="mb-1">
+                                    <i class="bi bi-file-richtext me-2"></i>${doc.title}
+                                    ${doc.badge ? `<span class="badge bg-success ms-2">${doc.badge}</span>` : ''}
+                                </h5>
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </div>
+                            <p class="mb-1 text-muted"><small><i class="bi bi-book me-1"></i>Professional guide - Click to view</small></p>
+                        </a>
+                    `;
+                } else {
+                    // Load in modal as before
+                    content += `
+                        <a href="#" class="list-group-item list-group-item-action" onclick="loadDoc('${doc.file}'); return false;">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h5 class="mb-1">
+                                    <i class="bi bi-file-text me-2"></i>${doc.title}
+                                </h5>
+                                <i class="bi bi-arrow-right-circle"></i>
+                            </div>
+                            <p class="mb-1 text-muted"><small><i class="bi bi-folder me-1"></i>${doc.file}</small></p>
+                        </a>
+                    `;
+                }
+            });
+
+            content += '</div>';
+            
+            document.getElementById('modalContent').innerHTML = content;
+            
+            const modal = new bootstrap.Modal(document.getElementById('topicModal'));
+            modal.show();
+        }
+
+        // Load documentation file
+        async function loadDoc(filename) {
+            try {
+                const response = await fetch(filename);
+                if (!response.ok) {
+                    throw new Error('Document not found');
+                }
+                
+                const text = await response.text();
+                let html;
+                
+                // Convert markdown to HTML if marked is available
+                if (filename.endsWith('.md') && typeof marked !== 'undefined') {
+                    html = marked.parse(text);
+                } else {
+                    // Plain text display
+                    html = '<pre>' + escapeHtml(text) + '</pre>';
+                }
+                
+                document.getElementById('modalContent').innerHTML = html;
+                document.getElementById('modalTitleText').textContent = filename.split('/').pop();
+                
+                const modal = new bootstrap.Modal(document.getElementById('topicModal'));
+                modal.show();
+            } catch (error) {
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Error loading documentation:</strong> ${error.message}
+                        <p class="mb-0 mt-2">The file <code>${filename}</code> could not be loaded.</p>
+                    </div>
+                `;
+                
+                const modal = new bootstrap.Modal(document.getElementById('topicModal'));
+                modal.show();
+            }
+        }
+
+        // Search topics
+        function searchTopics() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.topic-card');
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.parentElement.style.display = '';
+                } else {
+                    card.parentElement.style.display = 'none';
+                }
+            });
+        }
+
+        // Print content
+        function printContent() {
+            const content = document.getElementById('modalContent').innerHTML;
+            const title = document.getElementById('modalTitleText').textContent;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${title} - CNPERP Help</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        body { padding: 20px; }
+                        h1, h2 { color: #667eea; }
+                        h3 { color: #764ba2; }
+                        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; }
+                        pre { background: #f8f9fa; padding: 1rem; border-radius: 8px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${title}</h1>
+                    ${content}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+    
+    <!-- Navbar Script -->
+    <script src="js/navbar.js?v=20251015-HELP"></script>
+</body>
+</html>

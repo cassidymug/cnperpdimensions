@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight-Based Products - Help & Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px; /* Space for navbar */
+            padding-bottom: 20px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .help-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .help-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        .help-nav {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+        .help-nav .nav-link {
+            color: #495057;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .help-nav .nav-link:hover,
+        .help-nav .nav-link.active {
+            background: #667eea;
+            color: white;
+        }
+        .doc-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .doc-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
+        }
+        .doc-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .quick-link-btn {
+            margin: 0.5rem;
+        }
+        .video-thumbnail {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+        }
+        .video-thumbnail img {
+            width: 100%;
+            opacity: 0.8;
+        }
+        .video-thumbnail .play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            color: white;
+            opacity: 0.9;
+        }
+        .faq-item {
+            border-bottom: 1px solid #e9ecef;
+            padding: 1rem 0;
+        }
+        .faq-question {
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .faq-question:hover {
+            background: #f8f9fa;
+        }
+        .faq-answer {
+            display: none;
+            padding: 1rem;
+            color: #6c757d;
+        }
+        .faq-answer.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    <div id="navbar-container"></div>
+    
+    <div class="help-container">
+        <!-- Header -->
+        <div class="help-header">
+            <h1><i class="fas fa-weight"></i> Weight-Based Products System</h1>
+            <p class="mb-0 fs-5">Complete Help & Documentation Center</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="help-nav">
+            <ul class="nav nav-pills justify-content-center" id="helpTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#overview">
+                        <i class="bi bi-house-door me-2"></i>Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#documentation">
+                        <i class="bi bi-book me-2"></i>Documentation
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#quickstart">
+                        <i class="bi bi-rocket me-2"></i>Quick Start
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#faq">
+                        <i class="bi bi-question-circle me-2"></i>FAQ
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#tools">
+                        <i class="bi bi-tools me-2"></i>Tools
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content p-4">
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="overview">
+                <h2 class="mb-4">System Overview</h2>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-info-circle text-primary me-2"></i>What is This?</h5>
+                                <p class="card-text">
+                                    The Weight-Based Products system enables your store to sell items like meat, fruits, 
+                                    and vegetables by weight using EAN-13 barcodes that encode both product identity and weight.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-check-circle text-success me-2"></i>Key Features</h5>
+                                <ul class="mb-0">
+                                    <li>EAN-13 compatible barcodes</li>
+                                    <li>Weight embedded in barcode</li>
+                                    <li>Automatic price calculation</li>
+                                    <li>Tare weight handling</li>
+                                    <li>Works with any compatible scale</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <h5><i class="bi bi-lightbulb me-2"></i>How It Works</h5>
+                    <ol class="mb-0">
+                        <li><strong>Create Products:</strong> Configure weight-based products with pricing and tare weights</li>
+                        <li><strong>Export to Scale:</strong> Download CSV and import to your label-printing scale</li>
+                        <li><strong>Weigh Items:</strong> Staff weighs items and scale generates barcodes automatically</li>
+                        <li><strong>Scan at Checkout:</strong> POS reads barcode, extracts weight, calculates price</li>
+                        <li><strong>Complete Sale:</strong> Customer pays the exact amount for the exact weight</li>
+                    </ol>
+                </div>
+
+                <h4 class="mt-4 mb-3">Barcode Format</h4>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="font-monospace text-center mb-3">2 0 1 2 3 4 5 0 1 5 0 0 7</h5>
+                        <div class="row text-center">
+                            <div class="col">
+                                <div class="badge bg-danger">20</div>
+                                <p class="small mt-2">Type<br>(Meat)</p>
+                            </div>
+                            <div class="col">
+                                <div class="badge bg-primary">12345</div>
+                                <p class="small mt-2">Product<br>Code</p>
+                            </div>
+                            <div class="col">
+                                <div class="badge bg-success">01500</div>
+                                <p class="small mt-2">Weight<br>(1500g)</p>
+                            </div>
+                            <div class="col">
+                                <div class="badge bg-warning">7</div>
+                                <p class="small mt-2">Check<br>Digit</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="mt-4 mb-3">Product Categories</h4>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="text-center p-3 border rounded">
+                            <div class="display-4">🥩</div>
+                            <strong>Meat (20)</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center p-3 border rounded">
+                            <div class="display-4">🍎</div>
+                            <strong>Fruits (21)</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center p-3 border rounded">
+                            <div class="display-4">🥬</div>
+                            <strong>Vegetables (22)</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center p-3 border rounded">
+                            <div class="display-4">🧀</div>
+                            <strong>Dairy (23)</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center p-3 border rounded">
+                            <div class="display-4">🍞</div>
+                            <strong>Bakery (24)</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documentation Tab -->
+            <div class="tab-pane fade" id="documentation">
+                <h2 class="mb-4">Complete Documentation</h2>
+                
+                <div class="row">
+                    <!-- Setup Guide -->
+                    <div class="col-md-6">
+                        <div class="doc-card" onclick="openDoc('setup')">
+                            <div class="doc-icon text-center">
+                                <i class="bi bi-rocket-takeoff"></i>
+                            </div>
+                            <h4 class="text-center">Setup Guide</h4>
+                            <p class="text-muted text-center">
+                                Complete step-by-step instructions to set up the system from scratch.
+                                Covers database migration, product creation, testing, and deployment.
+                            </p>
+                            <div class="text-center">
+                                <a href="../SETUP_GUIDE_WEIGHT_PRODUCTS.md" class="btn btn-primary" target="_blank">
+                                    <i class="bi bi-file-text me-2"></i>Open Setup Guide
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scale Integration -->
+                    <div class="col-md-6">
+                        <div class="doc-card" onclick="openDoc('integration')">
+                            <div class="doc-icon text-center">
+                                <i class="bi bi-broadcast"></i>
+                            </div>
+                            <h4 class="text-center">Scale Integration Guide</h4>
+                            <p class="text-muted text-center">
+                                How to integrate with different types of scales. Covers label-printing scales,
+                                external printers, Android/Tablet, and PC-based solutions.
+                            </p>
+                            <div class="text-center">
+                                <a href="../SCALE_INTEGRATION_GUIDE.md" class="btn btn-primary" target="_blank">
+                                    <i class="bi bi-file-text me-2"></i>Open Integration Guide
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Templates -->
+                    <div class="col-md-6">
+                        <div class="doc-card" onclick="openDoc('config')">
+                            <div class="doc-icon text-center">
+                                <i class="bi bi-gear-fill"></i>
+                            </div>
+                            <h4 class="text-center">Configuration Templates</h4>
+                            <p class="text-muted text-center">
+                                Specific setup instructions for popular scale models including CAS, Bizerba,
+                                Toledo, Avery Berkel, and Digi scales.
+                            </p>
+                            <div class="text-center">
+                                <a href="../SCALE_CONFIGURATION_TEMPLATES.md" class="btn btn-primary" target="_blank">
+                                    <i class="bi bi-file-text me-2"></i>Open Configuration Guide
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Summary -->
+                    <div class="col-md-6">
+                        <div class="doc-card" onclick="openDoc('technical')">
+                            <div class="doc-icon text-center">
+                                <i class="bi bi-cpu"></i>
+                            </div>
+                            <h4 class="text-center">Technical Summary</h4>
+                            <p class="text-muted text-center">
+                                In-depth technical documentation covering system architecture, database schema,
+                                API endpoints, and price calculation logic.
+                            </p>
+                            <div class="text-center">
+                                <a href="../WEIGHT_BASED_SYSTEM_SUMMARY.md" class="btn btn-primary" target="_blank">
+                                    <i class="bi bi-file-text me-2"></i>Open Technical Docs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Reference -->
+                    <div class="col-md-6">
+                        <div class="doc-card" onclick="openDoc('quickref')">
+                            <div class="doc-icon text-center">
+                                <i class="bi bi-bookmark-check"></i>
+                            </div>
+                            <h4 class="text-center">Staff Quick Reference</h4>
+                            <p class="text-muted text-center">
+                                Simple guide for counter staff. Print and laminate for quick access
+                                at butchery, produce, and deli counters.
+                            </p>
+                            <div class="text-center">
+                                <a href="../QUICK_REFERENCE_WEIGHT_PRODUCTS.md" class="btn btn-primary" target="_blank">
+                                    <i class="bi bi-file-text me-2"></i>Open Quick Reference
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Master README -->
+                    <div class="col-md-6">
+                        <div class="doc-card" onclick="openDoc('readme')">
+                            <div class="doc-icon text-center">
+                                <i class="bi bi-book"></i>
+                            </div>
+                            <h4 class="text-center">Complete Documentation Index</h4>
+                            <p class="text-muted text-center">
+                                Master index with links to all documentation, quick start guide,
+                                and navigation to specific topics.
+                            </p>
+                            <div class="text-center">
+                                <a href="../README_WEIGHT_PRODUCTS.md" class="btn btn-primary" target="_blank">
+                                    <i class="bi bi-file-text me-2"></i>Open Master Index
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Start Tab -->
+            <div class="tab-pane fade" id="quickstart">
+                <h2 class="mb-4">Quick Start (30 Minutes)</h2>
+                
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Prerequisites:</strong> CNPERP system running, PostgreSQL database configured, 
+                    FastAPI server active on port 8010.
+                </div>
+
+                <div class="accordion" id="quickStartAccordion">
+                    <!-- Step 1 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#step1">
+                                <strong>Step 1:</strong> Run Database Migration (5 min)
+                            </button>
+                        </h2>
+                        <div id="step1" class="accordion-collapse collapse show" data-bs-parent="#quickStartAccordion">
+                            <div class="accordion-body">
+                                <p>Add weight-based product fields to your database:</p>
+                                <div class="bg-dark text-white p-3 rounded">
+                                    <code>
+cd C:\dev\cnperp-python<br>
+.\.venv\Scripts\Activate.ps1<br>
+python add_weight_based_products.py
+                                    </code>
+                                </div>
+                                <div class="alert alert-success mt-3">
+                                    <strong>Expected:</strong> ✅ Weight-based product fields added successfully!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step2">
+                                <strong>Step 2:</strong> Create Products (10 min)
+                            </button>
+                        </h2>
+                        <div id="step2" class="accordion-collapse collapse" data-bs-parent="#quickStartAccordion">
+                            <div class="accordion-body">
+                                <p>Create weight-based products:</p>
+                                <ol>
+                                    <li>Open: <a href="/static/products.html" target="_blank">Products Page</a></li>
+                                    <li>Click "Add New Product"</li>
+                                    <li>Fill in basic details (Name, SKU, Category)</li>
+                                    <li>Check "Enable Weight-Based Selling"</li>
+                                    <li>Select Product Type (Meat, Fruits, etc.)</li>
+                                    <li>Enter 5-digit Product Code (e.g., 12345)</li>
+                                    <li>Set Price per kg (e.g., 125.00)</li>
+                                    <li>Set Tare weight if applicable (e.g., 50g for packaging)</li>
+                                    <li>Save Product</li>
+                                </ol>
+                                <p><strong>Tip:</strong> Create 5-10 sample products to test with.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step3">
+                                <strong>Step 3:</strong> Test System (10 min)
+                            </button>
+                        </h2>
+                        <div id="step3" class="accordion-collapse collapse" data-bs-parent="#quickStartAccordion">
+                            <div class="accordion-body">
+                                <h6>Option A: Web Generator</h6>
+                                <p>
+                                    <a href="/static/weight-barcode-generator.html" class="btn btn-success" target="_blank">
+                                        <i class="bi bi-barcode me-2"></i>Open Barcode Generator
+                                    </a>
+                                </p>
+                                <ol>
+                                    <li>Select a product from dropdown</li>
+                                    <li>Enter weight (e.g., 1500 grams)</li>
+                                    <li>Click "Generate Barcode Label"</li>
+                                    <li>Verify barcode and price are correct</li>
+                                </ol>
+
+                                <h6 class="mt-3">Option B: Scale Simulator</h6>
+                                <div class="bg-dark text-white p-3 rounded">
+                                    <code>python scripts/scale_simulator.py</code>
+                                </div>
+                                <p class="mt-2">Follow interactive prompts to simulate complete workflow.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step4">
+                                <strong>Step 4:</strong> Export for Scale (5 min)
+                            </button>
+                        </h2>
+                        <div id="step4" class="accordion-collapse collapse" data-bs-parent="#quickStartAccordion">
+                            <div class="accordion-body">
+                                <p>Export products to import into your scale:</p>
+                                <div class="btn-group" role="group">
+                                    <a href="/api/v1/weight-products/export-for-scale" class="btn btn-primary" download>
+                                        <i class="bi bi-download me-2"></i>All Products
+                                    </a>
+                                    <a href="/api/v1/weight-products/export-for-scale?category=meat" class="btn btn-outline-primary" download>
+                                        Meat Only
+                                    </a>
+                                    <a href="/api/v1/weight-products/export-for-scale?category=fruits" class="btn btn-outline-primary" download>
+                                        Fruits Only
+                                    </a>
+                                    <a href="/api/v1/weight-products/export-for-scale?category=vegetables" class="btn btn-outline-primary" download>
+                                        Vegetables Only
+                                    </a>
+                                </div>
+                                <p class="mt-3">
+                                    <strong>Next:</strong> Import CSV to your scale via USB, Network, or manual entry.
+                                    See <a href="../SCALE_CONFIGURATION_TEMPLATES.md" target="_blank">Configuration Templates</a> 
+                                    for your specific scale model.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Tab -->
+            <div class="tab-pane fade" id="faq">
+                <h2 class="mb-4">Frequently Asked Questions</h2>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <i class="bi bi-chevron-right me-2"></i>
+                        <strong>Q: What scales are compatible with this system?</strong>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>A:</strong> Any label-printing scale that supports EAN-13 barcodes with configurable format.
+                        Popular models include CAS CL-5000, Bizerba GLMI-800, Mettler Toledo 8530, Avery Berkel HL122, and Digi SM-300.
+                        See the <a href="../SCALE_INTEGRATION_GUIDE.md" target="_blank">Scale Integration Guide</a> for details.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <i class="bi bi-chevron-right me-2"></i>
+                        <strong>Q: How is the price calculated?</strong>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>A:</strong> Price = (Gross Weight - Tare Weight) × Price per kg<br>
+                        Example: 1500g gross - 50g tare = 1450g net = 1.45kg × R125/kg = R181.25
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <i class="bi bi-chevron-right me-2"></i>
+                        <strong>Q: What is tare weight?</strong>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>A:</strong> Tare weight is the weight of packaging (tray, wrapper, container) that should not
+                        be charged to the customer. The system automatically subtracts this when calculating the price.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <i class="bi bi-chevron-right me-2"></i>
+                        <strong>Q: Can I test without a physical scale?</strong>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>A:</strong> Yes! Use the <a href="/static/weight-barcode-generator.html">Barcode Generator</a>
+                        web interface or run the scale simulator: <code>python scripts/scale_simulator.py</code>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <i class="bi bi-chevron-right me-2"></i>
+                        <strong>Q: Why won't my barcode scan?</strong>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>A:</strong> Common causes:
+                        <ul>
+                            <li>Scale configured for wrong barcode type (must be EAN-13, not CODE-128)</li>
+                            <li>Checksum calculation not enabled in scale</li>
+                            <li>Poor print quality - clean the printhead</li>
+                            <li>Barcode too small or damaged</li>
+                        </ul>
+                        See the <a href="../SETUP_GUIDE_WEIGHT_PRODUCTS.md#troubleshooting" target="_blank">Troubleshooting Guide</a>.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <i class="bi bi-chevron-right me-2"></i>
+                        <strong>Q: How do I update prices on the scale?</strong>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>A:</strong> 
+                        <ol>
+                            <li>Update prices in CNPERP products page</li>
+                            <li>Export new CSV: <a href="/api/v1/weight-products/export-for-scale">Download Here</a></li>
+                            <li>Import to scale via USB/Network</li>
+                        </ol>
+                        For automated sync, see the Network Scale Management section in the setup guide.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <i class="bi bi-chevron-right me-2"></i>
+                        <strong>Q: What do the barcode prefixes mean?</strong>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>A:</strong> The first 2 digits identify the product category:
+                        <ul>
+                            <li><strong>20</strong> = Meat (Beef, Pork, Chicken, Lamb)</li>
+                            <li><strong>21</strong> = Fruits (Apples, Bananas, Oranges)</li>
+                            <li><strong>22</strong> = Vegetables (Tomatoes, Lettuce, Carrots)</li>
+                            <li><strong>23</strong> = Dairy (Cheese, Butter by weight)</li>
+                            <li><strong>24</strong> = Bakery (Bread, Cakes by weight)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <i class="bi bi-chevron-right me-2"></i>
+                        <strong>Q: Can I use this for items sold by piece?</strong>
+                    </div>
+                    <div class="faq-answer">
+                        <strong>A:</strong> No, this system is specifically for weight-based products. For items sold by piece
+                        (count), use regular products with standard barcodes.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tools Tab -->
+            <div class="tab-pane fade" id="tools">
+                <h2 class="mb-4">Tools & Utilities</h2>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-barcode display-1 text-primary mb-3"></i>
+                                <h5 class="card-title">Barcode Generator</h5>
+                                <p class="card-text">
+                                    Generate and print weight-based barcode labels for your counter staff.
+                                </p>
+                                <a href="/static/weight-barcode-generator.html" class="btn btn-primary" target="_blank">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>Open Tool
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-box display-1 text-success mb-3"></i>
+                                <h5 class="card-title">Product Management</h5>
+                                <p class="card-text">
+                                    Create and configure weight-based products with pricing and constraints.
+                                </p>
+                                <a href="/static/products.html" class="btn btn-success" target="_blank">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>Manage Products
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-download display-1 text-info mb-3"></i>
+                                <h5 class="card-title">Export for Scale</h5>
+                                <p class="card-text">
+                                    Download CSV file to import products into your label-printing scale.
+                                </p>
+                                <a href="/api/v1/weight-products/export-for-scale" class="btn btn-info" download>
+                                    <i class="bi bi-download me-2"></i>Download CSV
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="mt-4 mb-3">API Endpoints</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/api/v1/weight-products/weight-products</code></td>
+                                <td><span class="badge bg-success">GET</span></td>
+                                <td>List all weight-based products (filter by category optional)</td>
+                                <td>
+                                    <a href="/api/v1/weight-products/weight-products" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        Test
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>/api/v1/weight-products/parse-weight-barcode</code></td>
+                                <td><span class="badge bg-primary">POST</span></td>
+                                <td>Parse barcode and return product with calculated price</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="testParseBarcode()">
+                                        Test
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>/api/v1/weight-products/export-for-scale</code></td>
+                                <td><span class="badge bg-success">GET</span></td>
+                                <td>Export products as CSV for scale import</td>
+                                <td>
+                                    <a href="/api/v1/weight-products/export-for-scale" class="btn btn-sm btn-outline-primary" download>
+                                        Download
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documentation Modal -->
+    <div class="modal fade" id="docModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="docModalTitle">Documentation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="docModalBody" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading documentation...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printDoc()">
+                        <i class="bi bi-printer me-2"></i>Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/navbar.js?v=20251015-HELPCENTER"></script>
+    <script>
+        // Modal instance
+        let docModal;
+        
+        // Initialize modal
+        document.addEventListener('DOMContentLoaded', function() {
+            docModal = new bootstrap.Modal(document.getElementById('docModal'));
+        });
+        
+        // Document file mapping
+        const docFiles = {
+            'setup': {
+                title: 'Setup Guide - Weight-Based Products',
+                file: '/SETUP_GUIDE_WEIGHT_PRODUCTS.md'
+            },
+            'integration': {
+                title: 'Scale Integration Guide',
+                file: '/SCALE_INTEGRATION_GUIDE.md'
+            },
+            'config': {
+                title: 'Scale Configuration Templates',
+                file: '/SCALE_CONFIGURATION_TEMPLATES.md'
+            },
+            'technical': {
+                title: 'Technical Summary',
+                file: '/WEIGHT_BASED_SYSTEM_SUMMARY.md'
+            },
+            'reference': {
+                title: 'Staff Quick Reference',
+                file: '/QUICK_REFERENCE_WEIGHT_PRODUCTS.md'
+            },
+            'index': {
+                title: 'Complete Documentation Index',
+                file: '/README_WEIGHT_PRODUCTS.md'
+            }
+        };
+        
+        // Load and display documentation
+        async function openDoc(docType) {
+            const docInfo = docFiles[docType];
+            if (!docInfo) {
+                console.error('Unknown document type:', docType);
+                return;
+            }
+            
+            // Set modal title
+            document.getElementById('docModalTitle').textContent = docInfo.title;
+            
+            // Show modal with loading spinner
+            document.getElementById('docModalBody').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading ${docInfo.title}...</p>
+                </div>
+            `;
+            docModal.show();
+            
+            try {
+                // Fetch the markdown file
+                const response = await fetch(docInfo.file);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const markdown = await response.text();
+                
+                // Convert markdown to HTML using marked.js
+                const html = marked.parse(markdown);
+                
+                // Display the content
+                document.getElementById('docModalBody').innerHTML = html;
+                
+                // Add styling to the rendered content
+                const modalBody = document.getElementById('docModalBody');
+                modalBody.querySelectorAll('h1, h2').forEach(h => h.style.color = '#667eea');
+                modalBody.querySelectorAll('h3').forEach(h => h.style.color = '#764ba2');
+                modalBody.querySelectorAll('code').forEach(c => {
+                    c.style.background = '#f8f9fa';
+                    c.style.padding = '2px 6px';
+                    c.style.borderRadius = '4px';
+                    c.style.color = '#e83e8c';
+                });
+                modalBody.querySelectorAll('pre').forEach(p => {
+                    p.style.background = '#f8f9fa';
+                    p.style.padding = '1rem';
+                    p.style.borderRadius = '8px';
+                    p.style.overflowX = 'auto';
+                });
+                modalBody.querySelectorAll('table').forEach(t => {
+                    t.classList.add('table', 'table-bordered', 'table-striped');
+                });
+                
+            } catch (error) {
+                console.error('Error loading documentation:', error);
+                document.getElementById('docModalBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4><i class="bi bi-exclamation-triangle me-2"></i>Error Loading Documentation</h4>
+                        <p>Could not load the documentation file: <code>${docInfo.file}</code></p>
+                        <p class="mb-0">Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Print documentation
+        function printDoc() {
+            const content = document.getElementById('docModalBody').innerHTML;
+            const title = document.getElementById('docModalTitle').textContent;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${title} - CNPERP</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        body { padding: 20px; }
+                        h1, h2 { color: #667eea; }
+                        h3 { color: #764ba2; }
+                        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; color: #e83e8c; }
+                        pre { background: #f8f9fa; padding: 1rem; border-radius: 8px; }
+                        table { margin: 1rem 0; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${title}</h1>
+                    ${content}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        function toggleFaq(element) {
+            const answer = element.nextElementSibling;
+            const icon = element.querySelector('i');
+            
+            if (answer.classList.contains('show')) {
+                answer.classList.remove('show');
+                icon.className = 'bi bi-chevron-right me-2';
+            } else {
+                // Close all other FAQs
+                document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('show'));
+                document.querySelectorAll('.faq-question i').forEach(i => i.className = 'bi bi-chevron-right me-2');
+                
+                // Open this one
+                answer.classList.add('show');
+                icon.className = 'bi bi-chevron-down me-2';
+            }
+        }
+
+        function openDoc(type) {
+            // Document cards are already clickable
+        }
+
+        async function testParseBarcode() {
+            const barcode = prompt('Enter a weight barcode to test (e.g., 2012345015007):');
+            if (!barcode) return;
+            
+            try {
+                const response = await fetch('/api/v1/weight-products/parse-weight-barcode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ barcode })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ Barcode Valid!\n\n` +
+                          `Product: ${result.product_name}\n` +
+                          `Category: ${result.category}\n` +
+                          `Weight: ${result.weight_kg} kg\n` +
+                          `Price/kg: R${result.price_per_kg}\n` +
+                          `Tare: ${result.tare_weight}g\n` +
+                          `Total Price: R${result.unit_price}`);
+                } else {
+                    alert(`❌ Error: ${result.error}`);
+                }
+            } catch (error) {
+                alert(`❌ Request failed: ${error.message}`);
+            }
+        }
+    </script>
+    <script src="js/navbar.js?v=20251015-HELP"></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting - CNPERP ERP System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        .table-responsive {
+            max-height: 60vh;
+        }
+        .account-name {
+            cursor: pointer;
+        }
+        .account-level-1 { font-weight: bold; }
+        .account-level-2 { padding-left: 1.5rem; }
+        .account-level-3 { padding-left: 3rem; }
+        .account-level-4 { padding-left: 4.5rem; }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid mt-4">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-book me-2"></i>Accounting</h1>
+            <div class="d-flex">
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addJournalEntryModal">
+                    <i class="bi bi-plus-circle"></i> New Journal Entry
+                </button>
+                <button class="btn btn-outline-info" onclick="fetchAllAccountingData()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+        </header>
+
+        <ul class="nav nav-tabs" id="accountingTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="chart-of-accounts-tab" data-bs-toggle="tab" data-bs-target="#chart-of-accounts" type="button" role="tab">Chart of Accounts</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="general-ledger-tab" data-bs-toggle="tab" data-bs-target="#general-ledger" type="button" role="tab">General Ledger</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="trial-balance-tab" data-bs-toggle="tab" data-bs-target="#trial-balance" type="button" role="tab">Trial Balance</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="accountingTabsContent">
+            <!-- Chart of Accounts Tab -->
+            <div class="tab-pane fade show active" id="chart-of-accounts" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Chart of Accounts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Account Name</th>
+                                        <th>Type</th>
+                                        <th class="text-end">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chartOfAccountsBody">
+                                    <!-- Data will be loaded here by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Ledger Tab -->
+            <div class="tab-pane fade" id="general-ledger" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>General Ledger</h5>
+                    </div>
+                    <div class="card-body">
+                         <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Account</th>
+                                        <th>Description</th>
+                                        <th class="text-end">Debit</th>
+                                        <th class="text-end">Credit</th>
+                                        <th class="text-end">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="generalLedgerBody">
+                                    <!-- Data will be loaded here by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Trial Balance Tab -->
+            <div class="tab-pane fade" id="trial-balance" role="tabpanel">
+                 <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Trial Balance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Account</th>
+                                        <th class="text-end">Debit</th>
+                                        <th class="text-end">Credit</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trialBalanceBody">
+                                    <!-- Data will be loaded here by JavaScript -->
+                                </tbody>
+                                <tfoot id="trialBalanceFooter">
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Navbar Loader -->
+    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchAllAccountingData);
+
+        function fetchAllAccountingData() {
+            loadChartOfAccounts();
+            loadGeneralLedger();
+            loadTrialBalance();
+        }
+
+        async function loadChartOfAccounts() {
+            const tbody = document.getElementById('chartOfAccountsBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading Chart of Accounts...</td></tr>';
+            try {
+                // Use accounting-codes endpoint which provides live totals/balances
+                const response = await fetch('/api/v1/accounting-codes/');
+                if (!response.ok) throw new Error('Failed to fetch Chart of Accounts');
+                const accounts = await response.json();
+
+                // Build hierarchy from flat list using parent_id
+                const accountMap = new Map(accounts.map(acc => [acc.id, { ...acc, children: [] }]));
+                const rootAccounts = [];
+
+                for (const account of accountMap.values()) {
+                    if (account.parent_id && accountMap.has(account.parent_id)) {
+                        accountMap.get(account.parent_id).children.push(account);
+                    } else {
+                        rootAccounts.push(account);
+                    }
+                }
+                
+                tbody.innerHTML = '';
+                rootAccounts.forEach(acc => renderAccountRow(acc, 1, tbody));
+
+            } catch (error) {
+                console.error('Error loading Chart of Accounts:', error);
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${error.message}</td></tr>`;
+            }
+        }
+
+        function renderAccountRow(account, level, tbody) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${account.code}</td>
+                <td class="account-name account-level-${level}">${account.name}</td>
+                <td>${account.account_type}</td>
+                <td class="text-end">${formatCurrency(account.balance)}</td>
+            `;
+            tbody.appendChild(tr);
+            if (account.children) {
+                account.children.sort((a, b) => a.code.localeCompare(b.code)).forEach(child => renderAccountRow(child, level + 1, tbody));
+            }
+        }
+
+        async function loadGeneralLedger() {
+            const tbody = document.getElementById('generalLedgerBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading General Ledger...</td></tr>';
+            try {
+                const response = await fetch('/api/v1/general-ledger/general-ledger');
+                if (!response.ok) throw new Error('Failed to fetch General Ledger');
+                const data = await response.json();
+                const entries = Array.isArray(data) ? data : (data.entries || []);
+                if (entries.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No journal entries found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = entries.map(entry => `
+                    <tr>
+                        <td>${new Date(entry.date).toLocaleDateString()}</td>
+                        <td>${entry.account_name} (${entry.account_code})</td>
+                        <td>${entry.description}</td>
+                        <td class="text-end text-success">${entry.debit_amount ? formatCurrency(entry.debit_amount) : ''}</td>
+                        <td class="text-end text-danger">${entry.credit_amount ? formatCurrency(entry.credit_amount) : ''}</td>
+                        <td class="text-end">${formatCurrency(entry.running_balance)}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading General Ledger:', error);
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${error.message}</td></tr>`;
+            }
+        }
+        
+        async function loadTrialBalance() {
+            const tbody = document.getElementById('trialBalanceBody');
+            const tfoot = document.getElementById('trialBalanceFooter');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading Trial Balance...</td></tr>';
+            tfoot.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/v1/general-ledger/trial-balance');
+                if (!response.ok) throw new Error('Failed to fetch Trial Balance');
+                const data = await response.json();
+
+                const entries = data.entries || data.trial_balance || [];
+
+                tbody.innerHTML = entries.map(entry => `
+                    <tr>
+                        <td>${entry.code || entry.account_code}</td>
+                        <td>${entry.account || entry.account_name}</td>
+                        <td class="text-end">${formatCurrency(entry.debit ?? entry.debit_balance ?? 0)}</td>
+                        <td class="text-end">${formatCurrency(entry.credit ?? entry.credit_balance ?? 0)}</td>
+                    </tr>
+                `).join('');
+
+                const totals = data.totals || { total_debits: data.total_debits, total_credits: data.total_credits };
+                const totalsDeb = (totals && typeof totals.total_debits === 'number') ? totals.total_debits : 0;
+                const totalsCred = (totals && typeof totals.total_credits === 'number') ? totals.total_credits : 0;
+                tfoot.innerHTML = `
+                    <tr class="table-group-divider">
+                        <th colspan="2" class="text-end">Totals:</th>
+                        <th class="text-end">${formatCurrency(totalsDeb)}</th>
+                        <th class="text-end">${formatCurrency(totalsCred)}</th>
+                    </tr>
+                `;
+
+            } catch (error) {
+                console.error('Error loading Trial Balance:', error);
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${error.message}</td></tr>`;
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+        }
+
+    </script>
+
+    
+    <script src="js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <script src="js/navbar.js?v=20250106001"></script>
+    
+    
+</body>
+</html>

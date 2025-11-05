@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manufacturing - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="/static/js/auth-bootstrap.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        .dark-mode {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        /* Make all tab text purple */
+        .nav-tabs .nav-link {
+            color: purple !important;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #5a32a3 !important;
+        }
+
+        .nav-tabs .nav-link:focus {
+            color: purple !important;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: purple !important;
+            border-bottom-color: purple !important;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .entry-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .entry-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .filter-section {
+            background-color: var(--bg-primary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-card {
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background-color: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .form-control,
+        .form-select {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .navbar-toggler {
+            border-color: var(--border-color);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.5%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='m4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        .dropdown-menu {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+        }
+
+        .dropdown-item {
+            color: var(--text-primary);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .alert {
+            border-radius: 10px;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        .progress {
+            height: 20px;
+            border-radius: 10px;
+        }
+
+        .accordion-button {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .accordion-body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .list-group-item {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .list-group-item:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .tooltip-inner {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+        }
+
+        .tooltip-arrow::before {
+            border-top-color: var(--dark-color);
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        .dark-mode .btn-close {
+            filter: invert(0);
+        }
+
+        .spinner-border {
+            color: var(--primary-color);
+        }
+
+        .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        .border {
+            border-color: var(--border-color) !important;
+        }
+
+        .border-top {
+            border-top-color: var(--border-color) !important;
+        }
+
+        .border-bottom {
+            border-bottom-color: var(--border-color) !important;
+        }
+
+        .border-start {
+            border-start-color: var(--border-color) !important;
+        }
+
+        .border-end {
+            border-end-color: var(--border-color) !important;
+        }
+
+        /* Custom styles for dimensional reporting */
+        .dimensional-controls {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .dimensional-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .dimensional-table {
+            background-color: var(--bg-primary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .dimensional-table th {
+            background-color: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .dimensional-table td {
+            border-bottom: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/static/index.html">
+                <i class="bi bi-gear-fill"></i> CNPERP
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/static/index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/static/chart-of-accounts.html">Accounting</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/static/asset-management.html">Assets</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/static/manufacturing.html">Manufacturing</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/static/credit-notes.html">Credit Notes</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> User
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="toggleTheme()">
+                                    <i class="bi bi-moon-stars"></i> Toggle Theme
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">
+                    <i class="bi bi-gear"></i> Manufacturing Management
+                </h1>
+
+                <!-- Alert container -->
+                <div id="alertContainer"></div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs" id="manufacturingTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="products-tab" data-bs-toggle="tab"
+                            data-bs-target="#tab-products" type="button" role="tab">
+                            <i class="bi bi-box"></i> Products
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="boms-tab" data-bs-toggle="tab" data-bs-target="#tab-boms"
+                            type="button" role="tab">
+                            <i class="bi bi-diagram-3"></i> BOMs
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="production-tab" data-bs-toggle="tab"
+                            data-bs-target="#tab-production" type="button" role="tab">
+                            <i class="bi bi-cogs"></i> Production Orders
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="dimensions-tab" data-bs-toggle="tab"
+                            data-bs-target="#tab-dimensions" type="button" role="tab">
+                            <i class="bi bi-bar-chart"></i> Dimensional Reports
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content mt-4" id="manufacturingTabsContent">
+                    <!-- Products Tab -->
+                    <div class="tab-pane fade show active" id="tab-products" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>Products</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal">
+                                <i class="bi bi-plus"></i> Add Product
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="productsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>SKU</th>
+                                        <th>Description</th>
+                                        <th>Unit of Measure</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- BOMs Tab -->
+                    <div class="tab-pane fade" id="tab-boms" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>Bill of Materials</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bomModal">
+                                <i class="bi bi-plus"></i> Create BOM
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="bomsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Version</th>
+                                        <th>Components</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Production Orders Tab -->
+                    <div class="tab-pane fade" id="tab-production" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>Production Orders</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#productionOrderModal">
+                                <i class="bi bi-plus"></i> Create Production Order
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="productionOrdersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Status</th>
+                                        <th>Start Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Dimensional Reports Tab -->
+                    <div class="tab-pane fade" id="tab-dimensions" role="tabpanel">
+                        <h3>Dimensional Manufacturing Reports</h3>
+
+                        <!-- Report Controls -->
+                        <div class="dimensional-controls">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="dimensionType" class="form-label">Dimension Type</label>
+                                    <select class="form-select" id="dimensionType">
+                                        <option value="cost_center">Cost Center</option>
+                                        <option value="project">Project</option>
+                                        <option value="department">Department</option>
+                                        <option value="location">Location</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="reportPeriod" class="form-label">Period</label>
+                                    <select class="form-select" id="reportPeriod">
+                                        <option value="current_month">Current Month</option>
+                                        <option value="last_month">Last Month</option>
+                                        <option value="current_quarter">Current Quarter</option>
+                                        <option value="last_quarter">Last Quarter</option>
+                                        <option value="current_year">Current Year</option>
+                                        <option value="last_year">Last Year</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="groupBy" class="form-label">Group By</label>
+                                    <select class="form-select" id="groupBy">
+                                        <option value="product">Product</option>
+                                        <option value="production_order">Production Order</option>
+                                        <option value="bom">BOM</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-primary w-100" onclick="loadDimensionalReport()">
+                                        <i class="bi bi-search"></i> Generate Report
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div id="dimensionalSummary" class="dimensional-summary">
+                            <!-- Summary cards will be populated by JavaScript -->
+                        </div>
+
+                        <!-- Export Button -->
+                        <div class="d-flex justify-content-end mb-3">
+                            <button class="btn btn-success" onclick="exportDimensionalReport()">
+                                <i class="bi bi-download"></i> Export to Excel
+                            </button>
+                        </div>
+
+                        <!-- Report Table -->
+                        <div class="table-responsive">
+                            <table class="table table-striped dimensional-table" id="dimensionalReportTable">
+                                <thead>
+                                    <tr>
+                                        <th>Dimension</th>
+                                        <th>Product/BOM/Order</th>
+                                        <th>Quantity Produced</th>
+                                        <th>Total Cost</th>
+                                        <th>Labor Cost</th>
+                                        <th>Overhead Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dimensionalReportBody">
+                                    <!-- Report data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add/Edit Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="productName" class="form-label">Name *</label>
+                                <input type="text" class="form-control" id="productName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="productSku" class="form-label">SKU *</label>
+                                <input type="text" class="form-control" id="productSku" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="productDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="productDescription" rows="3"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="unitOfMeasure" class="form-label">Unit of Measure</label>
+                                <select class="form-select" id="unitOfMeasure">
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOM Modal -->
+    <div class="modal fade" id="bomModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create/Edit BOM</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bomForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="bomProduct" class="form-label">Product *</label>
+                                <select class="form-select" id="bomProduct" required>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="bomVersion" class="form-label">Version</label>
+                                <input type="text" class="form-control" id="bomVersion" value="1.0">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Components</label>
+                                <div id="bomComponents">
+                                    <!-- Component rows will be added dynamically -->
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-2"
+                                    onclick="addBomComponent()">
+                                    <i class="bi bi-plus"></i> Add Component
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBom()">Save BOM</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Production Order Modal -->
+    <div class="modal fade" id="productionOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Production Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productionOrderForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="poProduct" class="form-label">Product *</label>
+                                <select class="form-select" id="poProduct" required>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="poQuantity" class="form-label">Quantity *</label>
+                                <input type="number" class="form-control" id="poQuantity" min="1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="poStartDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="poStartDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="poDueDate" class="form-label">Due Date</label>
+                                <input type="date" class="form-control" id="poDueDate">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="poCostCenter" class="form-label">Cost Center *</label>
+                                <select class="form-select" id="poCostCenter" required>
+                                    <option value="">-- Select --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="poProject" class="form-label">Project</label>
+                                <select class="form-select" id="poProject">
+                                    <option value="">-- Select --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="poDepartment" class="form-label">Department</label>
+                                <select class="form-select" id="poDepartment">
+                                    <option value="">-- Select --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="poGLAccount" class="form-label">GL Account (WIP) *</label>
+                                <select class="form-select" id="poGLAccount" required>
+                                    <option value="">-- Select GL Account --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="poLaborAccount" class="form-label">Labor GL Account *</label>
+                                <select class="form-select" id="poLaborAccount" required>
+                                    <option value="">-- Select GL Account --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createProductionOrder()">Create
+                        Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const apiBase = '/api/v1';
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.remove('light-mode');
+            document.body.classList.add('dark-mode');
+        }
+
+        // Show alert
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            alertContainer.innerHTML = `
+                <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            setTimeout(() => {
+                const alert = document.getElementById(alertId);
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // Load products
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/products/`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to load products');
+
+                const tbody = document.querySelector('#productsTable tbody');
+                tbody.innerHTML = '';
+
+                data.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.name}</td>
+                        <td>${product.sku}</td>
+                        <td>${product.description || ''}</td>
+                        <td>${product.unit_of_measure || ''}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editProduct('${product.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct('${product.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                showAlert('Error loading products: ' + error.message, 'danger');
+            }
+        }
+
+        // Load BOMs
+        async function loadBoms() {
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/boms/`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to load BOMs');
+
+                const tbody = document.querySelector('#bomsTable tbody');
+                tbody.innerHTML = '';
+
+                data.forEach(bom => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${bom.product_name}</td>
+                        <td>${bom.version}</td>
+                        <td>${bom.components_count} components</td>
+                        <td><span class="badge bg-success">Active</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editBom('${bom.id}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteBom('${bom.id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                showAlert('Error loading BOMs: ' + error.message, 'danger');
+            }
+        }
+
+        // Load production orders
+        async function loadProductionOrders() {
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/production-orders/`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to load production orders');
+
+                const tbody = document.querySelector('#productionOrdersTable tbody');
+                tbody.innerHTML = '';
+
+                data.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${order.order_number}</td>
+                        <td>${order.product_name}</td>
+                        <td>${order.quantity}</td>
+                        <td><span class="badge bg-warning">${order.status}</span></td>
+                        <td>${order.start_date || ''}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewProductionOrder('${order.id}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="completeProductionOrder('${order.id}')">
+                                <i class="bi bi-check"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                showAlert('Error loading production orders: ' + error.message, 'danger');
+            }
+        }
+
+        // Load dimensional report
+        async function loadDimensionalReport() {
+            const dimensionType = document.getElementById('dimensionType').value;
+            const reportPeriod = document.getElementById('reportPeriod').value;
+            const groupBy = document.getElementById('groupBy').value;
+
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/dimensional-report?dimension=${dimensionType}&period=${reportPeriod}&group_by=${groupBy}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to load dimensional report');
+
+                // Update summary cards
+                const summaryContainer = document.getElementById('dimensionalSummary');
+                summaryContainer.innerHTML = `
+                    <div class="summary-card">
+                        <div class="summary-value">${data.summary.total_production_orders}</div>
+                        <div>Total Production Orders</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${data.summary.total_quantity_produced}</div>
+                        <div>Total Quantity Produced</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">$${data.summary.total_cost.toFixed(2)}</div>
+                        <div>Total Cost</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${data.summary.unique_dimensions}</div>
+                        <div>Unique ${dimensionType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}s</div>
+                    </div>
+                `;
+
+                // Update report table
+                const tbody = document.getElementById('dimensionalReportBody');
+                tbody.innerHTML = '';
+
+                data.report.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.dimension_name}</td>
+                        <td>${item.group_name}</td>
+                        <td>${item.quantity_produced}</td>
+                        <td>$${item.total_cost.toFixed(2)}</td>
+                        <td>$${item.labor_cost.toFixed(2)}</td>
+                        <td>$${item.overhead_cost.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                showAlert('Error loading dimensional report: ' + error.message, 'danger');
+            }
+        }
+
+        // Export dimensional report
+        async function exportDimensionalReport() {
+            const dimensionType = document.getElementById('dimensionType').value;
+            const reportPeriod = document.getElementById('reportPeriod').value;
+            const groupBy = document.getElementById('groupBy').value;
+
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/dimensional-report/export?dimension=${dimensionType}&period=${reportPeriod}&group_by=${groupBy}`);
+                if (!res.ok) throw new Error('Failed to export report');
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `manufacturing_dimensional_report_${dimensionType}_${reportPeriod}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                showAlert('Error exporting report: ' + error.message, 'danger');
+            }
+        }
+
+        // Save product
+        async function saveProduct() {
+            const form = document.getElementById('productForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const payload = {
+                name: document.getElementById('productName').value.trim(),
+                sku: document.getElementById('productSku').value.trim(),
+                description: document.getElementById('productDescription').value.trim(),
+                unit_of_measure_id: document.getElementById('unitOfMeasure').value || null
+            };
+
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/products/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to save product');
+
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                await loadProducts();
+                showAlert('Product saved successfully', 'success');
+            } catch (error) {
+                showAlert('Error saving product: ' + error.message, 'danger');
+            }
+        }
+
+        // Create production order
+        async function createProductionOrder() {
+            const form = document.getElementById('productionOrderForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const payload = {
+                product_id: document.getElementById('poProduct').value,
+                quantity: parseInt(document.getElementById('poQuantity').value),
+                start_date: document.getElementById('poStartDate').value || null,
+                due_date: document.getElementById('poDueDate').value || null,
+                cost_center_id: document.getElementById('poCostCenter').value || null,
+                project_id: document.getElementById('poProject').value || null,
+                department_id: document.getElementById('poDepartment')?.value || null,
+                wip_account_id: document.getElementById('poGLAccount')?.value || null,
+                labor_account_id: document.getElementById('poLaborAccount')?.value || null
+            };
+
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/production-orders/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to create production order');
+
+                bootstrap.Modal.getInstance(document.getElementById('productionOrderModal')).hide();
+                await loadProductionOrders();
+                showAlert('Production order created with accounting integration', 'success');
+            } catch (error) {
+                showAlert('Error creating production order: ' + error.message, 'danger');
+            }
+        }
+
+        // Post production costs to accounting
+        async function postProductionToAccounting(productionOrderId) {
+            if (!confirm('Post this production order to General Ledger?')) return;
+
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/production-orders/${productionOrderId}/post-accounting`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to post');
+
+                showAlert(`Posted ${data.entries_created} journal entries to GL`, 'success');
+                await loadProductionOrders();
+            } catch (error) {
+                showAlert('Error posting to accounting: ' + error.message, 'danger');
+            }
+        }
+
+        // View production order with accounting details
+        async function viewProductionOrder(id) {
+            try {
+                const res = await fetch(`${apiBase}/manufacturing/production-orders/${id}/accounting-details`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to load');
+
+                const details = data.accounting_details;
+                alert(`Production Order Accounting:\n\nWIP Account: ${details.wip_account}\nLabor Account: ${details.labor_account}\nDimensions: ${details.dimensions}\nCost: $${details.total_cost.toFixed(2)}\nStatus: ${details.posting_status}`);
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'danger');
+            }
+        }
+
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadProducts();
+            await loadBoms();
+            await loadProductionOrders();
+
+            // Wire tab switch for dimensional report
+            document.getElementById('manufacturingTabs').addEventListener('shown.bs.tab', (e) => {
+                const target = e.target.getAttribute('data-bs-target');
+                if (target === '#tab-dimensions') {
+                    loadDimensionalReport();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

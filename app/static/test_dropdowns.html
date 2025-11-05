@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dropdowns</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        select { width: 300px; padding: 5px; margin: 10px 0; }
+        .status { font-weight: bold; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+    
+    
+</head>
+<body>
+    
+    
+    
+    
+    
+    
+    
+    <h1>Dropdown Test Page</h1>
+
+    <div class="test-section">
+        <h3>Suppliers</h3>
+        <div id="suppliers-status" class="status">Loading...</div>
+        <select id="suppliers-dropdown">
+            <option value="">Select a supplier...</option>
+        </select>
+    </div>
+
+    <div class="test-section">
+        <h3>Products</h3>
+        <div id="products-status" class="status">Loading...</div>
+        <select id="products-dropdown">
+            <option value="">Select a product...</option>
+        </select>
+    </div>
+
+    <div class="test-section">
+        <h3>Bank Accounts</h3>
+        <div id="bank-status" class="status">Loading...</div>
+        <select id="bank-dropdown">
+            <option value="">Select a bank account...</option>
+        </select>
+    </div>
+
+    <div class="test-section">
+        <h3>Accounting Codes</h3>
+        <div id="accounting-status" class="status">Loading...</div>
+        <select id="accounting-dropdown">
+            <option value="">Select an accounting code...</option>
+        </select>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8010/api/v1';
+
+        async function testSuppliers() {
+            try {
+                const response = await fetch(`${API_BASE}/purchases/suppliers`);
+                const data = await response.json();
+                
+                const status = document.getElementById('suppliers-status');
+                const dropdown = document.getElementById('suppliers-dropdown');
+                
+                if (response.ok && Array.isArray(data) && data.length > 0) {
+                    status.textContent = `✅ Success: ${data.length} suppliers loaded`;
+                    status.className = 'status success';
+                    
+                    data.forEach(supplier => {
+                        const option = document.createElement('option');
+                        option.value = supplier.id;
+                        option.textContent = supplier.name;
+                        dropdown.appendChild(option);
+                    });
+                } else {
+                    status.textContent = `❌ Error: Invalid response or no data`;
+                    status.className = 'status error';
+                }
+            } catch (error) {
+                const status = document.getElementById('suppliers-status');
+                status.textContent = `❌ Error: ${error.message}`;
+                status.className = 'status error';
+            }
+        }
+
+        async function testProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/purchases/products`);
+                const data = await response.json();
+                
+                const status = document.getElementById('products-status');
+                const dropdown = document.getElementById('products-dropdown');
+                
+                if (response.ok && Array.isArray(data) && data.length > 0) {
+                    status.textContent = `✅ Success: ${data.length} products loaded`;
+                    status.className = 'status success';
+                    
+                    data.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.id;
+                        option.textContent = product.name;
+                        dropdown.appendChild(option);
+                    });
+                } else {
+                    status.textContent = `❌ Error: Invalid response or no data`;
+                    status.className = 'status error';
+                }
+            } catch (error) {
+                const status = document.getElementById('products-status');
+                status.textContent = `❌ Error: ${error.message}`;
+                status.className = 'status error';
+            }
+        }
+
+        async function testBankAccounts() {
+            try {
+                const response = await fetch(`${API_BASE}/banking/accounts`);
+                const data = await response.json();
+                
+                const status = document.getElementById('bank-status');
+                const dropdown = document.getElementById('bank-dropdown');
+                
+                // Handle different response formats
+                const accounts = Array.isArray(data) ? data : (data.data || []);
+                
+                if (response.ok && accounts.length > 0) {
+                    status.textContent = `✅ Success: ${accounts.length} bank accounts loaded`;
+                    status.className = 'status success';
+                    
+                    accounts.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.id;
+                        option.textContent = `${account.name} (${account.account_number})`;
+                        dropdown.appendChild(option);
+                    });
+                } else {
+                    status.textContent = `❌ Error: Invalid response or no data`;
+                    status.className = 'status error';
+                }
+            } catch (error) {
+                const status = document.getElementById('bank-status');
+                status.textContent = `❌ Error: ${error.message}`;
+                status.className = 'status error';
+            }
+        }
+
+        async function testAccountingCodes() {
+            try {
+                const response = await fetch(`${API_BASE}/accounting-codes/`);
+                const data = await response.json();
+                
+                const status = document.getElementById('accounting-status');
+                const dropdown = document.getElementById('accounting-dropdown');
+                
+                if (response.ok && Array.isArray(data) && data.length > 0) {
+                    status.textContent = `✅ Success: ${data.length} accounting codes loaded`;
+                    status.className = 'status success';
+                    
+                    // Filter for relevant codes
+                    const relevantCodes = data.filter(code => {
+                        const name = code.name?.toLowerCase() || '';
+                        return name.includes('inventory') || 
+                               name.includes('cash') || 
+                               name.includes('expense') || 
+                               name.includes('asset');
+                    });
+                    
+                    relevantCodes.forEach(code => {
+                        const option = document.createElement('option');
+                        option.value = code.id;
+                        option.textContent = `${code.code} - ${code.name}`;
+                        dropdown.appendChild(option);
+                    });
+                    
+                    status.textContent += ` (${relevantCodes.length} relevant codes)`;
+                } else {
+                    status.textContent = `❌ Error: Invalid response or no data`;
+                    status.className = 'status error';
+                }
+            } catch (error) {
+                const status = document.getElementById('accounting-status');
+                status.textContent = `❌ Error: ${error.message}`;
+                status.className = 'status error';
+            }
+        }
+
+        // Run all tests when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Starting dropdown tests...');
+            
+            await testSuppliers();
+            await testProducts();
+            await testBankAccounts();
+            await testAccountingCodes();
+            
+            console.log('All dropdown tests completed');
+        });
+    </script>
+</body>
+</html>

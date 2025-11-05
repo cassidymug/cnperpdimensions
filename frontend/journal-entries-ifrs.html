@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP ERP - IFRS Journal Entries</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        .compliance-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        .validation-alert {
+            border-left: 4px solid;
+            padding-left: 1rem;
+        }
+        
+        .validation-alert.success {
+            border-left-color: #198754;
+            background-color: #f8fff9;
+        }
+        
+        .validation-alert.warning {
+            border-left-color: #ffc107;
+            background-color: #fffbf0;
+        }
+        
+        .validation-alert.danger {
+            border-left-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        
+        .entry-form {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .journal-entry-row {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .journal-entry-row:hover {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .debit-entry {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .credit-entry {
+            border-left: 4px solid #198754;
+        }
+        
+        .ifrs-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .compliance-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        .compliance-indicator.compliant {
+            background-color: #198754;
+        }
+        
+        .compliance-indicator.non-compliant {
+            background-color: #dc3545;
+        }
+        
+        .compliance-indicator.warning {
+            background-color: #ffc107;
+        }
+        
+        .balance-summary {
+            background: linear-gradient(135deg, #0d6efd, #198754);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .validation-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .ifrs-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .ifrs-category {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .ifrs-category:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+        
+        .ifrs-category.asset {
+            border-left: 4px solid #0d6efd;
+        }
+        
+        .ifrs-category.liability {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .ifrs-category.equity {
+            border-left: 4px solid #198754;
+        }
+        
+        .ifrs-category.revenue {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .ifrs-category.expense {
+            border-left: 4px solid #6c757d;
+        }
+    </style>
+</head>
+<body>
+    
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="mb-0">
+                            <i class="bi bi-journal-text me-2"></i>
+                            IFRS Journal Entries
+                        </h1>
+                        <p class="text-muted mb-0">Create and manage IFRS-compliant accounting entries</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="showCreateEntryModal()">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            New Entry
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="validateAllEntries()">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Validate All
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- IFRS Categories Overview -->
+                <div class="ifrs-categories">
+                    <div class="ifrs-category asset">
+                        <i class="bi bi-building text-primary mb-2" style="font-size: 2rem;"></i>
+                        <h6>Assets</h6>
+                        <small class="text-muted">A1, A1.1, A1.2, A1.3, A2, A2.1, A2.2, A2.3</small>
+                    </div>
+                    <div class="ifrs-category liability">
+                        <i class="bi bi-credit-card text-danger mb-2" style="font-size: 2rem;"></i>
+                        <h6>Liabilities</h6>
+                        <small class="text-muted">L1, L1.1, L1.2, L1.3, L2, L2.1, L2.2</small>
+                    </div>
+                    <div class="ifrs-category equity">
+                        <i class="bi bi-pie-chart text-success mb-2" style="font-size: 2rem;"></i>
+                        <h6>Equity</h6>
+                        <small class="text-muted">E1, E2, E3</small>
+                    </div>
+                    <div class="ifrs-category revenue">
+                        <i class="bi bi-graph-up-arrow text-warning mb-2" style="font-size: 2rem;"></i>
+                        <h6>Revenue</h6>
+                        <small class="text-muted">R1, R2</small>
+                    </div>
+                    <div class="ifrs-category expense">
+                        <i class="bi bi-graph-down-arrow text-secondary mb-2" style="font-size: 2rem;"></i>
+                        <h6>Expenses</h6>
+                        <small class="text-muted">X1, X2, X3, X4</small>
+                    </div>
+                </div>
+                
+                <!-- Balance Summary -->
+                <div class="balance-summary">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6 class="text-white-50">Total Debits</h6>
+                            <h3 class="mb-0" id="totalDebits">$0.00</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-white-50">Total Credits</h6>
+                            <h3 class="mb-0" id="totalCredits">$0.00</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-white-50">Balance</h6>
+                            <h3 class="mb-0" id="balance">$0.00</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-white-50">IFRS Compliance</h6>
+                            <span class="badge bg-success" id="complianceStatus">Compliant</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Validation Panel -->
+                <div class="validation-panel" id="validationPanel" style="display: none;">
+                    <h5 class="mb-3">
+                        <i class="bi bi-shield-check me-2"></i>
+                        IFRS Compliance Validation
+                    </h5>
+                    <div id="validationResults"></div>
+                </div>
+                
+                <!-- Journal Entries Form -->
+                <div class="entry-form">
+                    <h5 class="mb-3">
+                        <i class="bi bi-pencil-square me-2"></i>
+                        Create IFRS-Compliant Journal Entry
+                    </h5>
+                    
+                    <form id="journalEntryForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="entryDate" class="form-label">Entry Date</label>
+                                <input type="date" class="form-control" id="entryDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="entryBook" class="form-label">Book</label>
+                                <select class="form-select" id="entryBook" required>
+                                    <option value="">Select Book</option>
+                                    <option value="General Journal">General Journal</option>
+                                    <option value="Sales Journal">Sales Journal</option>
+                                    <option value="Purchase Journal">Purchase Journal</option>
+                                    <option value="Cash Receipts">Cash Receipts</option>
+                                    <option value="Cash Disbursements">Cash Disbursements</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="entryParticulars" class="form-label">Particulars</label>
+                            <textarea class="form-control" id="entryParticulars" rows="3" placeholder="Enter entry description..." required></textarea>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="transactionTemplate" class="form-label">Transaction Template</label>
+                                <select class="form-select" id="transactionTemplate">
+                                    <option value="">Select a template...</option>
+                                    <option value="sale_on_credit">Sale of Goods (On Credit)</option>
+                                    <option value="sale_for_cash">Sale of Goods (For Cash)</option>
+                                    <option value="purchase_on_credit">Purchase of Inventory (On Credit)</option>
+                                    <option value="purchase_for_cash">Purchase of Inventory (For Cash)</option>
+                                    <option value="expense_payment">Payment of Business Expenses</option>
+                                    <option value="capital_contribution">Capital Contribution (Cash)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Journal Entries -->
+                        <div class="mb-3">
+                            <label class="form-label">Journal Entries</label>
+                            <div id="journalEntriesContainer">
+                                <!-- Journal entry rows will be added here -->
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addJournalEntryRow()">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                Add Entry
+                            </button>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" onclick="validateEntry()">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Validate Entry
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>
+                                Save Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Recent Entries -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>
+                            Recent IFRS Journal Entries
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Particulars</th>
+                                        <th>Book</th>
+                                        <th>Debits</th>
+                                        <th>Credits</th>
+                                        <th>Balance</th>
+                                        <th>IFRS Compliance</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentEntriesTable">
+                                    <!-- Recent entries will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Entry Modal -->
+    <div class="modal fade" id="createEntryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Create New IFRS Journal Entry
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="modalEntryForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="modalEntryDate" class="form-label">Entry Date</label>
+                                <input type="date" class="form-control" id="modalEntryDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modalEntryBook" class="form-label">Book</label>
+                                <select class="form-select" id="modalEntryBook" required>
+                                    <option value="">Select Book</option>
+                                    <option value="General Journal">General Journal</option>
+                                    <option value="Sales Journal">Sales Journal</option>
+                                    <option value="Purchase Journal">Purchase Journal</option>
+                                    <option value="Cash Receipts">Cash Receipts</option>
+                                    <option value="Cash Disbursements">Cash Disbursements</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="modalEntryParticulars" class="form-label">Particulars</label>
+                            <textarea class="form-control" id="modalEntryParticulars" rows="3" placeholder="Enter entry description..." required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Journal Entries</label>
+                            <div id="modalJournalEntriesContainer">
+                                <!-- Modal journal entry rows will be added here -->
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addModalJournalEntryRow()">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                Add Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveModalEntry()">
+                        <i class="bi bi-save me-2"></i>
+                        Save Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Validation Results Modal -->
+    <div class="modal fade" id="validationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-shield-check me-2"></i>
+                        IFRS Compliance Validation Results
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="validationModalBody">
+                    <!-- Validation results will be displayed here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global variables
+        let journalEntries = [];
+        let entryCounter = 0;
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize navbar
+            cnperpNavbar = new CNPERPNavbar({
+                brandName: 'CNPERP ERP',
+                brandIcon: 'bi-building',
+                showSearch: true,
+                showNotifications: true,
+                showQuickActions: true,
+                showUserMenu: true
+            });
+            
+            // Set default date
+            document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('modalEntryDate').value = new Date().toISOString().split('T')[0];
+            
+            // Add initial journal entry row
+            addJournalEntryRow();
+            addModalJournalEntryRow();
+            
+            // Load recent entries
+            loadRecentEntries();
+            
+            // Set up form submission
+            document.getElementById('journalEntryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveJournalEntry();
+            });
+        });
+        
+        // Add event listeners
+        document.getElementById('transactionTemplate').addEventListener('change', function() {
+            applyTransactionTemplate(this.value);
+        });
+        
+        // Add journal entry row
+        function addJournalEntryRow(account = '', type = '', amount = '') {
+            entryCounter++;
+            const container = document.getElementById('journalEntriesContainer');
+            
+            const row = document.createElement('div');
+            row.className = 'journal-entry-row';
+            row.id = `entry-row-${entryCounter}`;
+            
+            row.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Account</label>
+                        <select class="form-select accounting-code-select" required>
+                            <option value="">Select Account</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Type</label>
+                        <select class="form-select entry-type-select" required>
+                            <option value="">Type</option>
+                            <option value="debit">Debit</option>
+                            <option value="credit">Credit</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-control entry-amount" step="0.01" min="0" required value="${amount}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">IFRS Tag</label>
+                        <span class="ifrs-tag" id="ifrs-tag-${entryCounter}">-</span>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeJournalEntryRow(${entryCounter})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(row);
+            
+            const accountSelect = row.querySelector('.accounting-code-select');
+            const typeSelect = row.querySelector('.entry-type-select');
+            
+            // Populate account dropdown and set values
+            populateAccountDropdown(accountSelect).then(() => {
+                if (account) {
+                    accountSelect.value = account;
+                    updateIFRSTag(entryCounter, account);
+                }
+            });
+
+            if (type) {
+                typeSelect.value = type;
+                updateEntryStyle(entryCounter, type);
+            }
+            
+            // Add event listeners
+            accountSelect.addEventListener('change', function() {
+                updateIFRSTag(entryCounter, this.value);
+            });
+            
+            typeSelect.addEventListener('change', function() {
+                updateEntryStyle(entryCounter, this.value);
+            });
+        }
+
+        async function populateAccountDropdown(selectElement) {
+            try {
+                const response = await fetch('/api/v1/accounting/codes');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch accounting codes');
+                }
+                const accounts = await response.json();
+                selectElement.innerHTML = '<option value="">Select Account</option>'; // Clear existing
+                accounts.forEach(acc => {
+                    const option = document.createElement('option');
+                    option.value = acc.id;
+                    option.textContent = `${acc.name} (${acc.code})`;
+                    option.dataset.category = acc.category;
+                    selectElement.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error populating accounts:', error);
+            }
+        }
+
+        function applyTransactionTemplate(templateName) {
+            const container = document.getElementById('journalEntriesContainer');
+            container.innerHTML = ''; // Clear existing rows
+
+            const templates = {
+                'sale_on_credit': [
+                    { account: 'Accounts Receivable', type: 'debit', amount: '' },
+                    { account: 'Sales Revenue', type: 'credit', amount: '' }
+                ],
+                'sale_for_cash': [
+                    { account: 'Cash', type: 'debit', amount: '' },
+                    { account: 'Sales Revenue', type: 'credit', amount: '' }
+                ],
+                'purchase_on_credit': [
+                    { account: 'Inventory', type: 'debit', amount: '' },
+                    { account: 'Accounts Payable', type: 'credit', amount: '' }
+                ],
+                'purchase_for_cash': [
+                    { account: 'Inventory', type: 'debit', amount: '' },
+                    { account: 'Cash', type: 'credit', amount: '' }
+                ],
+                'expense_payment': [
+                    { account: 'Operating Expenses', type: 'debit', amount: '' },
+                    { account: 'Cash', type: 'credit', amount: '' }
+                ],
+                'capital_contribution': [
+                    { account: 'Cash', type: 'debit', amount: '' },
+                    { account: 'Share Capital', type: 'credit', amount: '' }
+                ]
+            };
+
+            const selectedTemplate = templates[templateName];
+            if (selectedTemplate) {
+                // We need to find the account IDs based on their names
+                fetch('/api/v1/accounting/codes').then(res => res.json()).then(accounts => {
+                    const accountMap = new Map(accounts.map(acc => [acc.name, acc.id]));
+                    selectedTemplate.forEach(entry => {
+                        const accountId = accountMap.get(entry.account);
+                        if (accountId) {
+                            addJournalEntryRow(accountId, entry.type, entry.amount);
+                        } else {
+                            console.warn(`Account '${entry.account}' not found for template.`);
+                        }
+                    });
+                });
+            }
+        }
+        
+        // Add modal journal entry row
+        function addModalJournalEntryRow() {
+            const container = document.getElementById('modalJournalEntriesContainer');
+            
+            const row = document.createElement('div');
+            row.className = 'journal-entry-row';
+            
+            row.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Account</label>
+                        <select class="form-select accounting-code-select" required>
+                            <option value="">Select Account</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Type</label>
+                        <select class="form-select entry-type-select" required>
+                            <option value="">Type</option>
+                            <option value="debit">Debit</option>
+                            <option value="credit">Credit</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-control entry-amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">IFRS Tag</label>
+                        <span class="ifrs-tag">-</span>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.journal-entry-row').remove()">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(row);
+            populateAccountDropdown(row.querySelector('.accounting-code-select'));
+        }
+        
+        // Remove journal entry row
+        function removeJournalEntryRow(counter) {
+            const row = document.getElementById(`entry-row-${counter}`);
+            if (row) {
+                row.remove();
+            }
+        }
+        
+        // Update IFRS tag
+        function updateIFRSTag(counter, accountId) {
+            const ifrsTag = document.getElementById(`ifrs-tag-${counter}`);
+            const accountSelect = document.querySelector(`#entry-row-${counter} .accounting-code-select`);
+            const selectedOption = accountSelect.querySelector(`option[value="${accountId}"]`);
+            if (selectedOption) {
+                ifrsTag.textContent = selectedOption.dataset.category || '-';
+            }
+        }
+        
+        // Update entry style
+        function updateEntryStyle(counter, entryType) {
+            const row = document.getElementById(`entry-row-${counter}`);
+            if (row) {
+                row.classList.remove('debit-entry', 'credit-entry');
+                if (entryType === 'debit') {
+                    row.classList.add('debit-entry');
+                } else if (entryType === 'credit') {
+                    row.classList.add('credit-entry');
+                }
+            }
+        }
+        
+        // Calculate totals
+        function calculateTotals() {
+            const entries = document.querySelectorAll('.journal-entry-row');
+            let totalDebits = 0;
+            let totalCredits = 0;
+            
+            entries.forEach(entry => {
+                const amount = parseFloat(entry.querySelector('.entry-amount').value) || 0;
+                const type = entry.querySelector('.entry-type-select').value;
+                
+                if (type === 'debit') {
+                    totalDebits += amount;
+                } else if (type === 'credit') {
+                    totalCredits += amount;
+                }
+            });
+            
+            document.getElementById('totalDebits').textContent = `$${totalDebits.toFixed(2)}`;
+            document.getElementById('totalCredits').textContent = `$${totalCredits.toFixed(2)}`;
+            document.getElementById('balance').textContent = `$${(totalDebits - totalCredits).toFixed(2)}`;
+            
+            // Update compliance status
+            const balance = totalDebits - totalCredits;
+            const complianceStatus = document.getElementById('complianceStatus');
+            
+            if (Math.abs(balance) < 0.01) {
+                complianceStatus.textContent = 'Compliant';
+                complianceStatus.className = 'badge bg-success';
+            } else {
+                complianceStatus.textContent = 'Non-Compliant';
+                complianceStatus.className = 'badge bg-danger';
+            }
+        }
+        
+        // Validate entry
+        function validateEntry() {
+            const entries = document.querySelectorAll('.journal-entry-row');
+            let totalDebits = 0;
+            let totalCredits = 0;
+            let errors = [];
+            let warnings = [];
+            
+            entries.forEach((entry, index) => {
+                const account = entry.querySelector('.accounting-code-select').value;
+                const type = entry.querySelector('.entry-type-select').value;
+                const amount = parseFloat(entry.querySelector('.entry-amount').value) || 0;
+                
+                if (!account) {
+                    errors.push(`Entry ${index + 1}: Account is required`);
+                }
+                
+                if (!type) {
+                    errors.push(`Entry ${index + 1}: Entry type is required`);
+                }
+                
+                if (amount <= 0) {
+                    errors.push(`Entry ${index + 1}: Amount must be greater than zero`);
+                }
+                
+                if (type === 'debit') {
+                    totalDebits += amount;
+                } else if (type === 'credit') {
+                    totalCredits += amount;
+                }
+            });
+            
+            if (Math.abs(totalDebits - totalCredits) > 0.01) {
+                errors.push('Double-entry principle violated: Debits must equal Credits');
+            }
+            
+            if (entries.length < 2) {
+                warnings.push('At least two journal entries are required for a complete transaction');
+            }
+            
+            // Display validation results
+            const validationPanel = document.getElementById('validationPanel');
+            const validationResults = document.getElementById('validationResults');
+            
+            validationPanel.style.display = 'block';
+            
+            let html = '';
+            
+            if (errors.length === 0 && warnings.length === 0) {
+                html = `
+                    <div class="validation-alert success">
+                        <h6><i class="bi bi-check-circle me-2"></i>Entry is IFRS Compliant</h6>
+                        <p class="mb-0">All validation checks passed successfully.</p>
+                    </div>
+                `;
+            } else {
+                if (errors.length > 0) {
+                    html += `
+                        <div class="validation-alert danger">
+                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Validation Errors (${errors.length})</h6>
+                            <ul class="mb-0">
+                                ${errors.map(error => `<li>${error}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                if (warnings.length > 0) {
+                    html += `
+                        <div class="validation-alert warning">
+                            <h6><i class="bi bi-info-circle me-2"></i>Validation Warnings (${warnings.length})</h6>
+                            <ul class="mb-0">
+                                ${warnings.map(warning => `<li>${warning}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
+            
+            validationResults.innerHTML = html;
+        }
+        
+        // Save journal entry
+        function saveJournalEntry() {
+            const entries = document.querySelectorAll('.journal-entry-row');
+            const entryData = {
+                date_prepared: document.getElementById('entryDate').value,
+                date_posted: document.getElementById('entryDate').value,
+                particulars: document.getElementById('entryParticulars').value,
+                book: document.getElementById('entryBook').value,
+                entries: []
+            };
+            
+            entries.forEach(entry => {
+                const accountSelect = entry.querySelector('.accounting-code-select');
+                const typeSelect = entry.querySelector('.entry-type-select');
+                const amountInput = entry.querySelector('.entry-amount');
+                
+                if (accountSelect.value && typeSelect.value && amountInput.value) {
+                    entryData.entries.push({
+                        accounting_code_id: accountSelect.value,
+                        entry_type: typeSelect.value,
+                        amount: parseFloat(amountInput.value),
+                        description: `${typeSelect.value.toUpperCase()} ${accountSelect.options[accountSelect.selectedIndex].text}`
+                    });
+                }
+            });
+            
+            // Simulate API call
+            console.log('Saving journal entry:', entryData);
+            
+            // Show success message
+            alert('Journal entry saved successfully!');
+            
+            // Reset form
+            document.getElementById('journalEntryForm').reset();
+            document.getElementById('journalEntriesContainer').innerHTML = '';
+            addJournalEntryRow();
+            
+            // Reload recent entries
+            loadRecentEntries();
+        }
+        
+        // Show create entry modal
+        function showCreateEntryModal() {
+            const modal = new bootstrap.Modal(document.getElementById('createEntryModal'));
+            modal.show();
+        }
+        
+        // Save modal entry
+        function saveModalEntry() {
+            // Similar logic to saveJournalEntry but for modal form
+            alert('Modal entry saved successfully!');
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createEntryModal'));
+            modal.hide();
+        }
+        
+        // Validate all entries
+        function validateAllEntries() {
+            // Simulate API call to validate all entries
+            console.log('Validating all entries...');
+            alert('Validation completed! Check the validation panel for results.');
+        }
+        
+        // Load recent entries
+        function loadRecentEntries() {
+            // Simulate loading recent entries
+            const recentEntries = [
+                {
+                    date: '2024-01-15',
+                    particulars: 'Sale of goods to customer',
+                    book: 'Sales Journal',
+                    debits: 1000.00,
+                    credits: 1000.00,
+                    balance: 0.00,
+                    compliant: true
+                },
+                {
+                    date: '2024-01-14',
+                    particulars: 'Purchase of inventory',
+                    book: 'Purchase Journal',
+                    debits: 500.00,
+                    credits: 500.00,
+                    balance: 0.00,
+                    compliant: true
+                },
+                {
+                    date: '2024-01-13',
+                    particulars: 'Payment to supplier',
+                    book: 'Cash Disbursements',
+                    debits: 300.00,
+                    credits: 300.00,
+                    balance: 0.00,
+                    compliant: true
+                }
+            ];
+            
+            const tableBody = document.getElementById('recentEntriesTable');
+            tableBody.innerHTML = '';
+            
+            recentEntries.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.date}</td>
+                    <td>${entry.particulars}</td>
+                    <td>${entry.book}</td>
+                    <td>$${entry.debits.toFixed(2)}</td>
+                    <td>$${entry.credits.toFixed(2)}</td>
+                    <td>$${entry.balance.toFixed(2)}</td>
+                    <td>
+                        <span class="compliance-indicator ${entry.compliant ? 'compliant' : 'non-compliant'}"></span>
+                        <span class="compliance-badge ${entry.compliant ? 'bg-success' : 'bg-danger'}">
+                            ${entry.compliant ? 'Compliant' : 'Non-Compliant'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewEntry('${entry.date}')">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editEntry('${entry.date}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // View entry
+        function viewEntry(entryId) {
+            console.log('Viewing entry:', entryId);
+            alert('View entry functionality - Entry ID: ' + entryId);
+        }
+        
+        // Edit entry
+        function editEntry(entryId) {
+            console.log('Editing entry:', entryId);
+            alert('Edit entry functionality - Entry ID: ' + entryId);
+        }
+        
+        // Add event listeners for real-time calculation
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('entry-amount') || e.target.classList.contains('entry-type-select')) {
+                calculateTotals();
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof createNavbar === 'function') {
+                createNavbar('journal-entries');
+            } else {
+                console.error('createNavbar function not found, cannot render navigation.');
+            }
+        });
+    </script>
+</body>
+</html> 

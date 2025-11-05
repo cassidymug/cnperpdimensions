@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Menu Test - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 80px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border: 2px solid #0d6efd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .highlight {
+            background: yellow;
+            padding: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="alert alert-info">
+            <h4><i class="bi bi-info-circle"></i> Help Menu Test Page</h4>
+            <p>This page tests if the Help menu is properly loaded in the navigation.</p>
+            <p><strong>Current Time:</strong> <?php echo date('Y-m-d H:i:s'); ?> <script>document.write(new Date().toLocaleString());</script></p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Where to Find Help Menu</h3>
+            <p>The Help menu should appear in <strong>TWO</strong> locations:</p>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5>Location 1: Settings Dropdown</h5>
+                        </div>
+                        <div class="card-body">
+                            <ol>
+                                <li>Look for <span class="highlight">⚙️ Settings</span> in the main navigation bar</li>
+                                <li>Click on it to open the dropdown</li>
+                                <li>Scroll to the <strong>BOTTOM</strong> of the dropdown</li>
+                                <li>You should see:
+                                    <ul>
+                                        <li>A divider line (---)</li>
+                                        <li><strong>Help & Documentation</strong> (header)</li>
+                                        <li>❓ Help Center</li>
+                                        <li>🔍 Barcode Generator</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5>Location 2: User Menu (Top Right)</h5>
+                        </div>
+                        <div class="card-body">
+                            <ol>
+                                <li>Look for the <span class="highlight">⚙️ gear icon</span> in the TOP-RIGHT corner</li>
+                                <li>It's next to the username/login info</li>
+                                <li>Click on it to open the dropdown</li>
+                                <li>You should see:
+                                    <ul>
+                                        <li>Admin Panel</li>
+                                        <li>Users</li>
+                                        <li>Settings</li>
+                                        <li>Backup Management</li>
+                                        <li>--- (divider)</li>
+                                        <li><strong>❓ Help & Documentation</strong></li>
+                                        <li>--- (divider)</li>
+                                        <li>Logout</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Troubleshooting</h3>
+            <div class="alert alert-warning">
+                <h5>If you DON'T see the Help menu:</h5>
+                <ol>
+                    <li><strong>Hard Refresh:</strong> Press <kbd>Ctrl</kbd> + <kbd>F5</kbd> (or <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>)</li>
+                    <li><strong>Clear Cache:</strong> 
+                        <ul>
+                            <li>Chrome/Edge: Press <kbd>F12</kbd> → Right-click refresh button → "Empty Cache and Hard Reload"</li>
+                            <li>Or: Settings → Privacy → Clear browsing data</li>
+                        </ul>
+                    </li>
+                    <li><strong>Check Console:</strong> Press <kbd>F12</kbd> and look for console messages like:
+                        <code>✅ Help menu included in Settings dropdown and User menu</code>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 JavaScript Console Check</h3>
+            <div id="console-check" class="alert alert-secondary">
+                <p>Checking if navbar.js loaded correctly...</p>
+            </div>
+            <button class="btn btn-primary" onclick="checkNavbar()">
+                <i class="bi bi-check-circle"></i> Run Navbar Check
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/navbar.js?v=20251015-HELP-TEST"></script>
+    
+    <script>
+        console.log('🧪 TEST PAGE LOADED - Checking for Help menu...');
+        
+        function checkNavbar() {
+            const consoleCheck = document.getElementById('console-check');
+            let messages = [];
+            
+            // Check if navbar container exists
+            const navbarContainer = document.getElementById('navbar-container');
+            if (!navbarContainer) {
+                messages.push('❌ navbar-container not found!');
+            } else {
+                messages.push('✅ navbar-container found');
+                
+                // Check if navbar HTML was injected
+                if (navbarContainer.innerHTML.trim() === '') {
+                    messages.push('❌ navbar-container is EMPTY!');
+                } else {
+                    messages.push('✅ navbar-container has content');
+                    
+                    // Check for Help menu in Settings dropdown
+                    if (navbarContainer.innerHTML.includes('Help & Documentation')) {
+                        messages.push('✅ "Help & Documentation" text found in navbar!');
+                    } else {
+                        messages.push('❌ "Help & Documentation" NOT found in navbar!');
+                    }
+                    
+                    // Check for Help Center link
+                    if (navbarContainer.innerHTML.includes('weight-products-help.html')) {
+                        messages.push('✅ Help Center link found!');
+                    } else {
+                        messages.push('❌ Help Center link NOT found!');
+                    }
+                    
+                    // Check for Settings dropdown
+                    const settingsDropdown = navbarContainer.querySelector('.nav-item.dropdown');
+                    if (settingsDropdown) {
+                        messages.push('✅ Settings dropdown found');
+                        
+                        // Count dropdown items
+                        const dropdownItems = navbarContainer.querySelectorAll('.dropdown-item');
+                        messages.push(`📊 Total dropdown items: ${dropdownItems.length}`);
+                    } else {
+                        messages.push('❌ Settings dropdown NOT found');
+                    }
+                }
+            }
+            
+            // Display results
+            consoleCheck.className = 'alert ' + (messages.some(m => m.includes('❌')) ? 'alert-danger' : 'alert-success');
+            consoleCheck.innerHTML = '<h5>Navbar Check Results:</h5><ul>' + 
+                messages.map(m => '<li>' + m + '</li>').join('') + 
+                '</ul>';
+            
+            // Also log to console
+            console.log('📊 NAVBAR CHECK RESULTS:');
+            messages.forEach(m => console.log(m));
+        }
+        
+        // Auto-run check after navbar loads
+        setTimeout(() => {
+            console.log('⏰ Auto-running navbar check...');
+            checkNavbar();
+        }, 1000);
+    </script>
+</body>
+</html>

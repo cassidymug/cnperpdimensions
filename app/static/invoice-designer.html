@@ -1,0 +1,2360 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Designer - CNPERP ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="/static/js/auth-bootstrap.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <style>
+        :root {
+            --designer-toolbar-height: 96px;
+            --designer-accent: #2563eb;
+            --designer-shadow: rgba(37, 99, 235, 0.24);
+            --designer-panel-width: 320px;
+            --designer-grid-size: 10px;
+            --printable-margin: 15mm;
+        }
+
+        body {
+            background: #edf1f7;
+            font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        }
+
+        .toolbar {
+            position: fixed;
+            top: 204px;
+            left: 0;
+            right: 0;
+            background: #111827;
+            color: white;
+            padding: 18px 0;
+            z-index: 1100;
+            box-shadow: 0 20px 40px -22px rgba(15, 23, 42, 0.8);
+        }
+
+        .toolbar h5 {
+            font-weight: 600;
+            letter-spacing: 0.35px;
+        }
+
+        .designer-workspace {
+            margin-top: calc(var(--designer-toolbar-height) + 154px);
+            margin-bottom: 60px;
+        }
+
+        .invoice-page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 30px 60px -28px rgba(15, 23, 42, 0.2);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .invoice-safe-area {
+            position: absolute;
+            inset: var(--printable-margin);
+            border: 1px dashed rgba(37, 99, 235, 0.2);
+            border-radius: 12px;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        .invoice-grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(to right, rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+            background-size: var(--designer-grid-size) var(--designer-grid-size);
+            pointer-events: none;
+        }
+
+        .design-element {
+            position: absolute;
+            border: 1px dashed transparent;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 18px 28px -28px rgba(15, 23, 42, 0.55);
+            padding: 12px;
+            cursor: move;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+            z-index: 1;
+        }
+
+        .design-element.active {
+            border-color: var(--designer-accent);
+            box-shadow: 0 0 0 3px var(--designer-shadow), 0 25px 40px -30px rgba(15, 23, 42, 0.5);
+            z-index: 100 !important;
+        }
+
+        .design-element.dragging {
+            cursor: grabbing;
+            box-shadow: 0 0 0 3px var(--designer-shadow), 0 35px 60px -20px rgba(15, 23, 42, 0.7);
+            transform: scale(1.02);
+            z-index: 999 !important;
+        }
+
+        .design-element.resizing {
+            box-shadow: 0 0 0 3px var(--designer-shadow), 0 30px 50px -20px rgba(15, 23, 42, 0.6);
+            z-index: 999 !important;
+        }
+
+        .designer-move-handle {
+            position: absolute;
+            top: -14px;
+            left: -14px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--designer-accent);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: grab;
+            box-shadow: 0 10px 18px -12px rgba(37, 99, 235, 0.6);
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 5;
+        }
+
+        .design-element:hover .designer-move-handle,
+        .design-element.active .designer-move-handle {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .designer-move-handle:active {
+            cursor: grabbing;
+        }
+
+        .layer-indicator {
+            position: absolute;
+            top: -14px;
+            right: -14px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #10b981;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px -8px rgba(16, 185, 129, 0.6);
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .design-element:hover .layer-indicator,
+        .design-element.active .layer-indicator {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .designer-resize-handle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border: 2px solid rgba(37, 99, 235, 0.65);
+            border-radius: 50%;
+            box-shadow: 0 6px 16px -12px rgba(15, 23, 42, 0.8);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 6;
+        }
+
+        .design-element:hover .designer-resize-handle,
+        .design-element.active .designer-resize-handle {
+            opacity: 1;
+        }
+
+        .designer-resize-handle.resize-top-left {
+            top: -9px;
+            left: -9px;
+            cursor: nwse-resize;
+        }
+
+        .designer-resize-handle.resize-top {
+            top: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: ns-resize;
+        }
+
+        .designer-resize-handle.resize-top-right {
+            top: -9px;
+            right: -9px;
+            cursor: nesw-resize;
+        }
+
+        .designer-resize-handle.resize-right {
+            top: 50%;
+            right: -9px;
+            transform: translateY(-50%);
+            cursor: ew-resize;
+        }
+
+        .designer-resize-handle.resize-bottom-right {
+            bottom: -9px;
+            right: -9px;
+            cursor: nwse-resize;
+        }
+
+        .designer-resize-handle.resize-bottom {
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: ns-resize;
+        }
+
+        .designer-resize-handle.resize-bottom-left {
+            bottom: -9px;
+            left: -9px;
+            cursor: nesw-resize;
+        }
+
+        .designer-resize-handle.resize-left {
+            top: 50%;
+            left: -9px;
+            transform: translateY(-50%);
+            cursor: ew-resize;
+        }
+
+        .designer-position-badge {
+            position: fixed;
+            min-width: 160px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.92);
+            color: #f8fafc;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            box-shadow: 0 18px 40px -28px rgba(15, 23, 42, 0.75);
+            pointer-events: none;
+            z-index: 1300;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+
+        .designer-position-badge.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .design-element[data-element-type="logo"] {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .design-element[data-element-type="table"] {
+            background: rgba(255, 255, 255, 0.96);
+            overflow: hidden;
+        }
+
+        .design-content[contenteditable="true"] {
+            min-height: 32px;
+            outline: none;
+            width: 100%;
+            height: 100%;
+            white-space: pre-wrap;
+            cursor: text;
+        }
+
+        .design-content[contenteditable="true"]:focus {
+            box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.35);
+            border-radius: 8px;
+        }
+
+        .design-content input,
+        .design-content textarea,
+        .design-content select {
+            font-size: inherit;
+            font-family: inherit;
+            color: inherit;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+            border-radius: 8px;
+            padding: 8px 12px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .design-content textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .logo-dropzone {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(148, 163, 184, 0.9);
+            border-radius: 10px;
+            background: rgba(248, 250, 252, 0.95);
+            color: #475569;
+            font-size: 0.92rem;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .logo-dropzone:hover {
+            background: rgba(226, 232, 240, 0.9);
+            border-color: #94a3b8;
+        }
+
+        .logo-dropzone img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .designer-panel {
+            position: sticky;
+            top: calc(var(--designer-toolbar-height) + 164px);
+        }
+
+        .designer-panel .card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 28px 60px -30px rgba(15, 23, 42, 0.45);
+        }
+
+        .designer-panel h6 {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .designer-panel .btn-group .btn {
+            border-radius: 8px !important;
+        }
+
+        .field-library .btn-outline-primary {
+            border-style: dashed;
+        }
+
+        .mini-input {
+            width: 90px;
+        }
+
+        .invoice-page .table thead th {
+            background-color: rgba(17, 24, 39, 0.95);
+            color: #fff;
+        }
+
+        .invoice-page .table tbody td {
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        .property-control[disabled] {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        @media (max-width: 1200px) {
+            .designer-workspace {
+                margin-top: calc(var(--designer-toolbar-height) + 184px);
+            }
+
+            .designer-panel {
+                position: static;
+                margin-top: 36px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .toolbar,
+            .designer-panel,
+            .btn,
+            .field-library,
+            .designer-controls {
+                display: none !important;
+            }
+
+            .invoice-page {
+                box-shadow: none;
+                margin: 0;
+            }
+
+            .invoice-safe-area {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Include Standardized Navbar -->
+    <div id="navbar-container"></div>
+    <script src="js/navbar.js?v=20250106001"></script>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="container-fluid">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Invoice Designer</h5>
+                </div>
+                <div class="col-lg-8 col-md-6 text-md-end">
+                    <div class="btn-group me-2" role="group">
+                        <button class="btn btn-outline-light btn-sm" id="toggleGridBtn" onclick="toggleGrid()">
+                            <i class="bi bi-grid"></i> Grid Off
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" id="toggleSnapBtn" onclick="toggleSnap()">
+                            <i class="bi bi-magnet"></i> Snap On
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" onclick="snapSelectionToGrid()">
+                            <i class="bi bi-crosshair"></i> Snap Selection
+                        </button>
+                    </div>
+                    <div class="btn-group me-2" role="group" id="layerControls" style="display: none;">
+                        <button class="btn btn-outline-light btn-sm" onclick="bringToFront()"
+                            title="Bring to Front (Ctrl+])">
+                            <i class="bi bi-arrow-up-square"></i>
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" onclick="sendToBack()"
+                            title="Send to Back (Ctrl+[)">
+                            <i class="bi bi-arrow-down-square"></i>
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" onclick="bringForward()" title="Bring Forward">
+                            <i class="bi bi-chevron-up"></i>
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" onclick="sendBackward()" title="Send Backward">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="btn-group me-2" role="group">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" id="addFieldDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-plus-circle"></i> Add Field
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="addFieldDropdown">
+                            <li><a class="dropdown-item" href="#" onclick="addTextField(); return false;"><i
+                                        class="bi bi-type me-2"></i>Text Field</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="addLabelField(); return false;"><i
+                                        class="bi bi-card-text me-2"></i>Label & Input</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="addImageField(); return false;"><i
+                                        class="bi bi-image me-2"></i>Image/Logo</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="addTableField(); return false;"><i
+                                        class="bi bi-table me-2"></i>Table</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="addDividerField(); return false;"><i
+                                        class="bi bi-dash-lg me-2"></i>Divider Line</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" onclick="duplicateField(); return false;"><i
+                                        class="bi bi-files me-2"></i>Duplicate Selected (Ctrl+D)</a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group me-2" role="group">
+                        <button class="btn btn-outline-light btn-sm"
+                            onclick="document.getElementById('logoUploadToolbar').click()">
+                            <i class="bi bi-image"></i> Upload Logo
+                        </button>
+                        <input type="file" id="logoUploadToolbar" accept="image/*" style="display:none"
+                            onchange="uploadLogo(this)">
+                        <button class="btn btn-outline-light btn-sm" onclick="saveInvoice()">
+                            <i class="bi bi-save"></i> Save
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" onclick="previewInvoice()">
+                            <i class="bi bi-eye"></i> Preview
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="printInvoice()">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-light btn-sm" onclick="exportLayout()">
+                            <i class="bi bi-download"></i> Export Layout
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" onclick="importLayout()">
+                            <i class="bi bi-upload"></i> Import Layout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Designer Workspace -->
+    <div class="designer-workspace container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xxl-9 col-xl-9 col-lg-8">
+                <!-- Invoice Page -->
+                <div class="invoice-page" id="invoicePage">
+                    <div class="invoice-grid-overlay" id="invoiceGrid" hidden></div>
+                    <div class="invoice-safe-area" aria-hidden="true"></div>
+
+                    <!-- Logo Element -->
+                    <div class="design-element" data-field="companyLogo" data-element-type="logo"
+                        style="top:60px; left:60px; width:180px; height:110px;" data-x="60" data-y="60" data-width="180"
+                        data-height="110">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content logo-dropzone" id="logoDropzone">
+                            <img src="" alt="Company Logo" id="companyLogo" class="d-none">
+                            <div id="logoPlaceholder">
+                                <p class="mb-0"><i class="bi bi-image"></i></p>
+                                <small>Click or drop logo</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company Name -->
+                    <div class="design-element" data-field="companyName" data-element-type="text"
+                        style="top:60px; left:260px; width:300px;" data-x="260" data-y="60" data-width="300"
+                        data-height="70">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content" id="companyName" contenteditable="true">Your Company Name</div>
+                    </div>
+
+                    <!-- Company Address -->
+                    <div class="design-element" data-field="companyAddress" data-element-type="text"
+                        style="top:140px; left:260px; width:300px;" data-x="260" data-y="140" data-width="300"
+                        data-height="120">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content" id="companyAddress" contenteditable="true">123 Business Street
+                            City, Country
+                            Phone: +123 456 7890
+                            Email: info@company.com</div>
+                    </div>
+
+                    <!-- Invoice Title -->
+                    <div class="design-element" data-field="invoiceTitle" data-element-type="text"
+                        style="top:60px; left:520px; width:200px;" data-x="520" data-y="60" data-width="200"
+                        data-height="80">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content text-end" id="invoiceTitle" contenteditable="true">INVOICE</div>
+                    </div>
+
+                    <!-- Invoice Details Section -->
+                    <div class="design-element" data-field="invoiceDetails" data-element-type="block"
+                        style="top:220px; left:60px; width:340px;" data-x="60" data-y="220" data-width="340"
+                        data-height="160">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content">
+                            <div class="mb-2"><strong>Invoice Number:</strong>
+                                <input type="text" id="invoiceNumber" class="design-input" placeholder="INV-001">
+                            </div>
+                            <div class="mb-2"><strong>Date:</strong>
+                                <input type="date" id="invoiceDate" class="design-input">
+                            </div>
+                            <div class="mb-2"><strong>Due Date:</strong>
+                                <input type="date" id="dueDate" class="design-input">
+                            </div>
+                            <div><strong>Payment Terms:</strong>
+                                <input type="text" id="paymentTerms" class="design-input" placeholder="30 days">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Section -->
+                    <div class="design-element" data-field="customerSection" data-element-type="block"
+                        style="top:220px; left:420px; width:320px;" data-x="420" data-y="220" data-width="320"
+                        data-height="220">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content">
+                            <h6 class="fw-semibold"><i class="bi bi-person me-2"></i>Bill To</h6>
+                            <div class="mb-3">
+                                <select class="form-select" id="existingCustomers"
+                                    onchange="selectCustomer(this.value)">
+                                    <option value="">Select existing customer...</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" id="customerName" placeholder="Customer Name">
+                            </div>
+                            <div>
+                                <textarea class="form-control" id="customerAddress" placeholder="Customer Address
+City, State, ZIP
+Phone:
+Email:"></textarea>
+                            </div>
+                            <div class="mt-2 text-end">
+                                <button class="btn btn-outline-primary btn-sm" type="button"
+                                    onclick="showNewCustomerForm()">
+                                    <i class="bi bi-plus"></i> New Customer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="design-element" data-field="itemsTable" data-element-type="table"
+                        style="top:480px; left:60px; width:680px;" data-x="60" data-y="480" data-width="680"
+                        data-height="260">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content h-100">
+                            <table class="table table-striped" id="itemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th width="90">Qty</th>
+                                        <th width="120">Price</th>
+                                        <th width="120">Total</th>
+                                        <th width="50"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody">
+                                    <tr>
+                                        <td><input type="text" class="form-control"
+                                                placeholder="Product/Service description"></td>
+                                        <td><input type="number" class="form-control" value="1"
+                                                onchange="calculateRowTotal(this)"></td>
+                                        <td><input type="number" class="form-control" step="0.01"
+                                                onchange="calculateRowTotal(this)"></td>
+                                        <td><span class="fw-bold">0.00</span></td>
+                                        <td><button class="btn btn-sm btn-outline-danger" type="button"
+                                                onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn btn-outline-primary btn-sm" type="button" onclick="addItemRow()">
+                                <i class="bi bi-plus"></i> Add Item
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="design-element" data-field="notesSection" data-element-type="block"
+                        style="top:770px; left:60px; width:320px;" data-x="60" data-y="770" data-width="320"
+                        data-height="160">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content">
+                            <h6>Notes</h6>
+                            <textarea id="invoiceNotes" class="form-control" rows="4"
+                                placeholder="Additional notes..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Totals Section -->
+                    <div class="design-element" data-field="totalsSection" data-element-type="block"
+                        style="top:770px; left:420px; width:320px;" data-x="420" data-y="770" data-width="320"
+                        data-height="180">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Subtotal:</strong></td>
+                                        <td class="text-end"><span id="subtotal">0.00</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tax:</strong></td>
+                                        <td class="text-end"><span id="tax">0.00</span></td>
+                                    </tr>
+                                    <tr class="table-dark">
+                                        <td><strong>Total:</strong></td>
+                                        <td class="text-end"><strong><span id="total">0.00</span></strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer Message -->
+                    <div class="design-element" data-field="footerMessage" data-element-type="text"
+                        style="top:950px; left:60px; width:680px;" data-x="60" data-y="950" data-width="680"
+                        data-height="110">
+                        <div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div>
+                        <div class="design-content" id="footerMessage" contenteditable="true">Thank you for your
+                            business!
+                            Payment is due within 30 days.
+                            This is a computer-generated invoice.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Designer Panel -->
+            <div class="col-xxl-3 col-xl-3 col-lg-4">
+                <div class="designer-panel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="mb-3">Field Library</h6>
+                            <div class="d-grid gap-2 field-library mb-4">
+                                <h6 class="mb-2 text-muted"><i class="bi bi-plus-circle me-2"></i>Add New Field</h6>
+                                <button class="btn btn-outline-primary btn-sm" type="button" id="addTextFieldBtn">
+                                    <i class="bi bi-type me-2"></i>Text Field
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" type="button" id="addLabelFieldBtn">
+                                    <i class="bi bi-card-text me-2"></i>Label & Input
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" type="button" id="addImageFieldBtn">
+                                    <i class="bi bi-image me-2"></i>Image/Logo
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" type="button" id="addTableFieldBtn">
+                                    <i class="bi bi-table me-2"></i>Table
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" type="button" id="addDividerFieldBtn">
+                                    <i class="bi bi-dash-lg me-2"></i>Divider Line
+                                </button>
+                                <button class="btn btn-outline-success btn-sm property-control" type="button"
+                                    id="duplicateFieldBtn" disabled>
+                                    <i class="bi bi-files me-2"></i>Duplicate Selected
+                                </button>
+                            </div>
+
+                            <hr>
+
+                            <h6 class="mb-3">Selected Field</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Field ID</label>
+                                <input type="text" class="form-control form-control-sm property-control"
+                                    id="selectedFieldId" readonly>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">X</label>
+                                    <input type="number" class="form-control form-control-sm property-control"
+                                        id="positionX" min="0">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Y</label>
+                                    <input type="number" class="form-control form-control-sm property-control"
+                                        id="positionY" min="0">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Width</label>
+                                    <input type="number" class="form-control form-control-sm property-control"
+                                        id="elementWidth" min="40">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Height</label>
+                                    <input type="number" class="form-control form-control-sm property-control"
+                                        id="elementHeight" min="20">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Font Family</label>
+                                <select class="form-select form-select-sm property-control" id="fontFamilyControl">
+                                    <option value="">Inherit</option>
+                                    <option value="Inter, sans-serif">Inter</option>
+                                    <option value="Roboto, sans-serif">Roboto</option>
+                                    <option value="Montserrat, sans-serif">Montserrat</option>
+                                    <option value="Lato, sans-serif">Lato</option>
+                                    <option value="" disabled>──────────</option>
+                                    <option value="'Times New Roman', serif">Times New Roman</option>
+                                    <option value="Georgia, serif">Georgia</option>
+                                    <option value="'Courier New', monospace">Courier New</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Font Size (px)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="range" class="form-range property-control" id="fontSizeControl" min="8"
+                                        max="60" value="16">
+                                    <input type="number" class="form-control property-control mini-input"
+                                        id="fontSizeNumeric" min="8" max="72" value="16">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Font Color</label>
+                                <input type="color" class="form-control form-control-color property-control"
+                                    id="fontColorControl" value="#1f2937" title="Choose text color">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Alignment</label>
+                                <div class="btn-group w-100" role="group" id="textAlignGroup">
+                                    <button type="button" class="btn btn-outline-secondary property-control"
+                                        data-align="left"><i class="bi bi-text-left"></i></button>
+                                    <button type="button" class="btn btn-outline-secondary property-control"
+                                        data-align="center"><i class="bi bi-text-center"></i></button>
+                                    <button type="button" class="btn btn-outline-secondary property-control"
+                                        data-align="right"><i class="bi bi-text-right"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-danger w-100 property-control" type="button"
+                                    id="deleteFieldButton">
+                                    <i class="bi bi-trash"></i> Delete Field
+                                </button>
+                                <button class="btn btn-outline-secondary w-100" type="button" onclick="deselectField()">
+                                    <i class="bi bi-x-lg"></i> Clear Selection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <script>
+        const invoicePage = document.getElementById('invoicePage');
+
+        const designerState = {
+            activeElement: null,
+            gridVisible: false,
+            snapEnabled: true,
+            gridSize: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--designer-grid-size')) || 10,
+            safeBounds: null,
+            positionBadge: null,
+            lastSavedAt: null,
+            lastLoadedAt: null
+        };
+
+        designerState.positionBadge = createPositionBadge();
+
+        function createPositionBadge() {
+            const badge = document.createElement('div');
+            badge.id = 'designerPositionBadge';
+            badge.className = 'designer-position-badge';
+            badge.style.top = '12px';
+            badge.style.left = '12px';
+            document.body.appendChild(badge);
+            return badge;
+        }
+
+        function updatePositionBadge(element) {
+            const badge = designerState.positionBadge;
+            if (!badge) return;
+
+            if (!element) {
+                badge.classList.remove('show');
+                return;
+            }
+
+            const x = Math.round(parseFloat(element.dataset.x) || parseFloat(element.style.left) || 0);
+            const y = Math.round(parseFloat(element.dataset.y) || parseFloat(element.style.top) || 0);
+            const width = Math.round(parseFloat(element.dataset.width) || parseFloat(element.style.width) || element.offsetWidth);
+            const height = Math.round(parseFloat(element.dataset.height) || parseFloat(element.style.height) || element.offsetHeight);
+
+            badge.textContent = `X: ${x}px   Y: ${y}px   W: ${width}px   H: ${height}px`;
+            badge.classList.add('show');
+
+            const rect = element.getBoundingClientRect();
+            const badgeWidth = badge.offsetWidth || 160;
+            const badgeHeight = badge.offsetHeight || 32;
+
+            let top = rect.top - badgeHeight - 12;
+            if (top < 12) {
+                top = rect.bottom + 12;
+            }
+
+            let left = rect.left;
+            if (left + badgeWidth > window.innerWidth - 12) {
+                left = window.innerWidth - badgeWidth - 12;
+            }
+            left = Math.max(12, left);
+
+            badge.style.top = `${top}px`;
+            badge.style.left = `${left}px`;
+        }
+
+        function getPrintableMarginPx() {
+            if (!invoicePage) return 0;
+            const marginValue = getComputedStyle(invoicePage).getPropertyValue('--printable-margin') || '0';
+            const parsed = parseFloat(marginValue);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function getSafeBounds() {
+            if (!invoicePage) {
+                return { left: 0, top: 0, right: 794, bottom: 1123, width: 794, height: 1123 };
+            }
+            const margin = getPrintableMarginPx();
+            const pageRect = invoicePage.getBoundingClientRect();
+            const pageWidth = invoicePage.offsetWidth || 794; // 210mm in pixels at 96dpi
+            const pageHeight = invoicePage.offsetHeight || 1123; // 297mm in pixels at 96dpi
+
+            return {
+                left: margin,
+                top: margin,
+                right: pageWidth - margin,
+                bottom: pageHeight - margin,
+                width: pageWidth - (2 * margin),
+                height: pageHeight - (2 * margin)
+            };
+        }
+
+        function clampRectToBounds(x, y, width, height) {
+            const bounds = getSafeBounds();
+            const maxWidth = Math.max(0, bounds.width);
+            const maxHeight = Math.max(0, bounds.height);
+
+            const clampedWidth = Math.min(width, maxWidth || width);
+            const clampedHeight = Math.min(height, maxHeight || height);
+
+            const maxX = Math.max(bounds.left, bounds.right - clampedWidth);
+            const maxY = Math.max(bounds.top, bounds.bottom - clampedHeight);
+
+            return {
+                x: Math.min(Math.max(x, bounds.left), maxX),
+                y: Math.min(Math.max(y, bounds.top), maxY),
+                width: clampedWidth,
+                height: clampedHeight
+            };
+        }
+
+        function clampElementToPrintableArea(element) {
+            if (!element) return;
+            const rect = clampRectToBounds(
+                parseFloat(element.dataset.x) || parseFloat(element.style.left) || 0,
+                parseFloat(element.dataset.y) || parseFloat(element.style.top) || 0,
+                parseFloat(element.dataset.width) || element.offsetWidth,
+                parseFloat(element.dataset.height) || element.offsetHeight
+            );
+
+            element.style.left = `${rect.x}px`;
+            element.style.top = `${rect.y}px`;
+            element.style.width = `${rect.width}px`;
+            element.style.height = `${rect.height}px`;
+            element.dataset.x = rect.x;
+            element.dataset.y = rect.y;
+            element.dataset.width = rect.width;
+            element.dataset.height = rect.height;
+        }
+
+        function ensureElementsWithinPrintableArea() {
+            document.querySelectorAll('.design-element').forEach(clampElementToPrintableArea);
+            if (designerState.activeElement) {
+                updatePositionBadge(designerState.activeElement);
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            designerState.safeBounds = null;
+            requestAnimationFrame(() => ensureElementsWithinPrintableArea());
+        });
+
+        window.addEventListener('scroll', () => {
+            if (designerState.activeElement) {
+                updatePositionBadge(designerState.activeElement);
+            }
+        }, { passive: true });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            initializeDesigner();
+            await Promise.allSettled([
+                loadCompanySettings(),
+                loadCustomers()
+            ]);
+            await loadInvoiceLayout();
+            ensureDefaultDates();
+            calculateTotals();
+            ensureElementsWithinPrintableArea();
+        });
+
+        function initializeDesigner() {
+            document.querySelectorAll('.design-element').forEach(initDesignElement);
+            normalizeZIndexes(); // Ensure all elements have proper z-index
+            setupInteractables();
+            setupPropertyPanel();
+            setupFieldLibrary();
+            setupGlobalShortcuts();
+        }
+
+        function initDesignElement(element) {
+            const x = parseFloat(element.dataset.x || element.style.left || 0);
+            const y = parseFloat(element.dataset.y || element.style.top || 0);
+            const width = parseFloat(element.dataset.width || element.style.width || element.offsetWidth || 120);
+            const height = parseFloat(element.dataset.height || element.style.height || element.offsetHeight || 60);
+
+            if (!element.querySelector('.designer-move-handle')) {
+                const handle = document.createElement('div');
+                handle.className = 'designer-move-handle';
+                handle.title = 'Move field';
+                handle.innerHTML = '<i class="bi bi-arrows-move"></i>';
+                element.insertAdjacentElement('afterbegin', handle);
+            }
+
+            // Add layer indicator badge
+            if (!element.querySelector('.layer-indicator')) {
+                const layerBadge = document.createElement('div');
+                layerBadge.className = 'layer-indicator';
+                layerBadge.title = 'Layer order';
+                element.insertAdjacentElement('afterbegin', layerBadge);
+            }
+
+            ensureResizeHandles(element);
+
+            element.style.left = `${x}px`;
+            element.style.top = `${y}px`;
+            element.style.width = `${width}px`;
+            if (!element.style.height) {
+                element.style.height = `${height}px`;
+            }
+
+            element.dataset.x = x;
+            element.dataset.y = y;
+            element.dataset.width = width;
+            element.dataset.height = height;
+
+            // Initialize z-index if not set
+            if (!element.dataset.zIndex && !element.style.zIndex) {
+                setElementZIndex(element, 1);
+            }
+
+            element.addEventListener('mousedown', (event) => {
+                if (!event.target.closest('.design-element')) return;
+                selectDesignElement(element);
+            });
+
+            clampElementToPrintableArea(element);
+        }
+
+        function ensureResizeHandles(element) {
+            const handleConfigs = [
+                { cls: 'resize-top-left' },
+                { cls: 'resize-top' },
+                { cls: 'resize-top-right' },
+                { cls: 'resize-right' },
+                { cls: 'resize-bottom-right' },
+                { cls: 'resize-bottom' },
+                { cls: 'resize-bottom-left' },
+                { cls: 'resize-left' }
+            ];
+
+            handleConfigs.forEach(({ cls }) => {
+                if (!element.querySelector(`.designer-resize-handle.${cls}`)) {
+                    const resizeHandle = document.createElement('div');
+                    resizeHandle.className = `designer-resize-handle ${cls}`;
+                    element.appendChild(resizeHandle);
+                }
+            });
+        }
+
+        function createDesignElementFromLayout(item) {
+            const element = document.createElement('div');
+            element.className = 'design-element';
+            element.dataset.field = item.field || `custom_${Date.now()}`;
+            element.dataset.elementType = item.type || 'text';
+            element.dataset.x = Number.isFinite(item.x) ? item.x : 0;
+            element.dataset.y = Number.isFinite(item.y) ? item.y : 0;
+            element.dataset.width = Number.isFinite(item.width) ? item.width : 240;
+            element.dataset.height = Number.isFinite(item.height) ? item.height : 80;
+
+            const moveHandle = document.createElement('div');
+            moveHandle.className = 'designer-move-handle';
+            moveHandle.title = 'Move field';
+            moveHandle.innerHTML = '<i class="bi bi-arrows-move"></i>';
+            element.appendChild(moveHandle);
+
+            const elementType = element.dataset.elementType;
+            if (elementType === 'logo') {
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'design-content logo-dropzone';
+                contentWrapper.innerHTML = '<div class="text-muted">Logo Placeholder</div>';
+                element.appendChild(contentWrapper);
+            } else if (elementType === 'block') {
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'design-content';
+                contentWrapper.dataset.designContent = '';
+                contentWrapper.innerHTML = item.content || '<div class="text-muted">Custom Block</div>';
+                element.appendChild(contentWrapper);
+            } else {
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'design-content';
+                contentWrapper.dataset.designContent = '';
+                contentWrapper.contentEditable = 'true';
+                contentWrapper.textContent = item.content || 'Custom Text';
+                element.appendChild(contentWrapper);
+            }
+
+            return element;
+        }
+
+        function setupInteractables() {
+            interact('.design-element')
+                .draggable({
+                    inertia: false,
+                    autoScroll: true,
+                    listeners: {
+                        start(event) {
+                            const target = event.target;
+                            target.classList.add('dragging');
+                            selectDesignElement(target);
+                        },
+                        move(event) {
+                            const target = event.target;
+                            const elementRect = target.getBoundingClientRect();
+
+                            let x = (parseFloat(target.dataset.x) || 0) + event.dx;
+                            let y = (parseFloat(target.dataset.y) || 0) + event.dy;
+
+                            if (designerState.snapEnabled && !event.altKey) {
+                                x = snapValue(x);
+                                y = snapValue(y);
+                            }
+
+                            const rect = clampRectToBounds(
+                                x,
+                                y,
+                                parseFloat(target.dataset.width) || elementRect.width,
+                                parseFloat(target.dataset.height) || elementRect.height
+                            );
+
+                            target.style.left = `${rect.x}px`;
+                            target.style.top = `${rect.y}px`;
+
+                            target.dataset.x = rect.x;
+                            target.dataset.y = rect.y;
+
+                            if (designerState.activeElement === target) {
+                                updatePositionInputs(rect.x, rect.y);
+                                updatePositionBadge(target);
+                            }
+                        },
+                        end(event) {
+                            const target = event.target;
+                            target.classList.remove('dragging');
+                        }
+                    },
+                    modifiers: [
+                        interact.modifiers.restrictRect({
+                            restriction: 'parent',
+                            endOnly: true
+                        })
+                    ],
+                    ignoreFrom: 'input, textarea, select, button, .form-control, .form-select, .designer-resize-handle'
+                })
+                .resizable({
+                    edges: {
+                        top: '.resize-top, .resize-top-left, .resize-top-right',
+                        right: '.resize-right, .resize-top-right, .resize-bottom-right',
+                        bottom: '.resize-bottom, .resize-bottom-left, .resize-bottom-right',
+                        left: '.resize-left, .resize-top-left, .resize-bottom-left'
+                    },
+                    listeners: {
+                        start(event) {
+                            const target = event.target;
+                            target.classList.add('resizing');
+                            selectDesignElement(target);
+                        },
+                        move(event) {
+                            const target = event.target;
+                            let x = parseFloat(target.dataset.x) || 0;
+                            let y = parseFloat(target.dataset.y) || 0;
+                            let width = event.rect.width;
+                            let height = event.rect.height;
+
+                            x += event.deltaRect.left;
+                            y += event.deltaRect.top;
+
+                            const shouldSnap = designerState.snapEnabled && !event.altKey;
+                            if (shouldSnap) {
+                                x = snapValue(x);
+                                y = snapValue(y);
+                                width = Math.max(designerState.gridSize, snapValue(width));
+                                height = Math.max(designerState.gridSize, snapValue(height));
+                            } else {
+                                width = Math.max(width, designerState.gridSize);
+                                height = Math.max(height, designerState.gridSize);
+                            }
+
+                            const rect = clampRectToBounds(x, y, width, height);
+
+                            target.style.left = `${rect.x}px`;
+                            target.style.top = `${rect.y}px`;
+                            target.style.width = `${rect.width}px`;
+                            target.style.height = `${rect.height}px`;
+
+                            target.dataset.x = rect.x;
+                            target.dataset.y = rect.y;
+                            target.dataset.width = rect.width;
+                            target.dataset.height = rect.height;
+
+                            if (designerState.activeElement === target) {
+                                updatePositionInputs(rect.x, rect.y);
+                                updateDimensionInputs(rect.width, rect.height);
+                                updatePositionBadge(target);
+                            }
+                        },
+                        end(event) {
+                            const target = event.target;
+                            target.classList.remove('resizing');
+                        }
+                    },
+                    modifiers: [
+                        interact.modifiers.restrictEdges({
+                            outer: invoicePage,
+                            endOnly: true
+                        })
+                    ]
+                });
+        }
+
+        function setupGlobalShortcuts() {
+            document.addEventListener('keydown', (event) => {
+                if (!designerState.activeElement) return;
+
+                const tag = event.target?.tagName?.toLowerCase();
+                if (['input', 'textarea', 'select'].includes(tag) || event.target?.isContentEditable) {
+                    return;
+                }
+
+                const element = designerState.activeElement;
+                const isCtrl = event.ctrlKey || event.metaKey;
+                const baseStep = event.altKey ? 1 : event.shiftKey ? 10 : 2;
+                const width = parseFloat(element.dataset.width) || element.offsetWidth;
+                const height = parseFloat(element.dataset.height) || element.offsetHeight;
+
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                    event.preventDefault();
+
+                    if (isCtrl) {
+                        const delta = (event.key === 'ArrowLeft' || event.key === 'ArrowUp') ? -baseStep : baseStep;
+                        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                            updateElementSize(width + delta, null, { skipSnap: event.altKey });
+                        } else {
+                            updateElementSize(null, height + delta, { skipSnap: event.altKey });
+                        }
+                        updatePositionBadge(element);
+                        return;
+                    }
+
+                    let x = parseFloat(element.dataset.x) || 0;
+                    let y = parseFloat(element.dataset.y) || 0;
+
+                    switch (event.key) {
+                        case 'ArrowUp':
+                            y -= baseStep;
+                            break;
+                        case 'ArrowDown':
+                            y += baseStep;
+                            break;
+                        case 'ArrowLeft':
+                            x -= baseStep;
+                            break;
+                        case 'ArrowRight':
+                            x += baseStep;
+                            break;
+                    }
+
+                    if (designerState.snapEnabled && !event.altKey) {
+                        x = snapValue(x);
+                        y = snapValue(y);
+                    }
+
+                    const rect = clampRectToBounds(x, y, width, height);
+
+                    element.style.left = `${rect.x}px`;
+                    element.style.top = `${rect.y}px`;
+                    element.dataset.x = rect.x;
+                    element.dataset.y = rect.y;
+
+                    updatePositionInputs(rect.x, rect.y);
+                    updatePositionBadge(element);
+                    return;
+                }
+
+                if (event.key === 'Delete') {
+                    event.preventDefault();
+                    deleteSelectedField();
+                    updatePositionBadge(designerState.activeElement);
+                }
+
+                // Duplicate field shortcut
+                if (isCtrl && event.key === 'd') {
+                    event.preventDefault();
+                    duplicateField();
+                }
+
+                // Layer management shortcuts
+                if (isCtrl && event.key === ']') {
+                    event.preventDefault();
+                    bringToFront();
+                }
+
+                if (isCtrl && event.key === '[') {
+                    event.preventDefault();
+                    sendToBack();
+                }
+
+                if (isCtrl && event.shiftKey && event.key === ']') {
+                    event.preventDefault();
+                    bringForward();
+                }
+
+                if (isCtrl && event.shiftKey && event.key === '[') {
+                    event.preventDefault();
+                    sendBackward();
+                }
+            });
+        }
+
+        function setupFieldLibrary() {
+            document.getElementById('addTextFieldBtn').addEventListener('click', addTextField);
+            document.getElementById('addLabelFieldBtn').addEventListener('click', addLabelField);
+            document.getElementById('addImageFieldBtn').addEventListener('click', addImageField);
+            document.getElementById('addTableFieldBtn').addEventListener('click', addTableField);
+            document.getElementById('addDividerFieldBtn').addEventListener('click', addDividerField);
+            document.getElementById('duplicateFieldBtn').addEventListener('click', duplicateField);
+        }
+
+        function setupPropertyPanel() {
+            const fontFamilyControl = document.getElementById('fontFamilyControl');
+            const fontSizeControl = document.getElementById('fontSizeControl');
+            const fontSizeNumeric = document.getElementById('fontSizeNumeric');
+            const fontColorControl = document.getElementById('fontColorControl');
+            const textAlignButtons = document.querySelectorAll('#textAlignGroup button');
+            const deleteButton = document.getElementById('deleteFieldButton');
+            const positionX = document.getElementById('positionX');
+            const positionY = document.getElementById('positionY');
+            const elementWidth = document.getElementById('elementWidth');
+            const elementHeight = document.getElementById('elementHeight');
+
+            fontFamilyControl.addEventListener('change', () => applyFontFamily(fontFamilyControl.value));
+
+            fontSizeControl.addEventListener('input', () => {
+                fontSizeNumeric.value = fontSizeControl.value;
+                applyFontSize(fontSizeControl.value);
+            });
+
+            fontSizeNumeric.addEventListener('input', () => {
+                fontSizeControl.value = fontSizeNumeric.value;
+                applyFontSize(fontSizeNumeric.value);
+            });
+
+            fontColorControl.addEventListener('input', () => applyFontColor(fontColorControl.value));
+
+            textAlignButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    textAlignButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    applyTextAlignment(button.dataset.align);
+                });
+            });
+
+            deleteButton.addEventListener('click', deleteSelectedField);
+
+            positionX.addEventListener('input', () => updateElementPosition(parseFloat(positionX.value), null));
+            positionY.addEventListener('input', () => updateElementPosition(null, parseFloat(positionY.value)));
+            elementWidth.addEventListener('input', () => updateElementSize(parseFloat(elementWidth.value), null));
+            elementHeight.addEventListener('input', () => updateElementSize(null, parseFloat(elementHeight.value)));
+
+            disablePropertyControls(true);
+        }
+
+        function selectDesignElement(element) {
+            if (designerState.activeElement === element) return;
+
+            if (designerState.activeElement) {
+                designerState.activeElement.classList.remove('active');
+            }
+
+            designerState.activeElement = element;
+            element.classList.add('active');
+
+            // Update layer controls state
+            const layerControls = document.getElementById('layerControls');
+            if (layerControls) {
+                layerControls.style.display = 'inline-flex';
+            }
+
+            document.getElementById('selectedFieldId').value = element.dataset.field || '';
+
+            updatePositionInputs(parseFloat(element.dataset.x) || 0, parseFloat(element.dataset.y) || 0);
+            updateDimensionInputs(parseFloat(element.dataset.width) || element.offsetWidth, parseFloat(element.dataset.height) || element.offsetHeight);
+            updateTypographyControls(element);
+            disablePropertyControls(false);
+            updatePositionBadge(element);
+        }
+
+        function deselectField() {
+            if (designerState.activeElement) {
+                designerState.activeElement.classList.remove('active');
+                designerState.activeElement = null;
+            }
+
+            // Hide layer controls when nothing is selected
+            const layerControls = document.getElementById('layerControls');
+            if (layerControls) {
+                layerControls.style.display = 'none';
+            }
+
+            document.getElementById('selectedFieldId').value = '';
+            disablePropertyControls(true);
+            updatePositionBadge(null);
+        }
+
+        function disablePropertyControls(disabled) {
+            document.querySelectorAll('.property-control').forEach(control => {
+                control.disabled = disabled;
+            });
+        }
+
+        function updatePositionInputs(x, y) {
+            document.getElementById('positionX').value = Math.round(x);
+            document.getElementById('positionY').value = Math.round(y);
+        }
+
+        function updateDimensionInputs(width, height) {
+            document.getElementById('elementWidth').value = Math.round(width);
+            document.getElementById('elementHeight').value = Math.round(height);
+        }
+
+        function updateTypographyControls(element) {
+            const content = getEditableNode(element);
+            if (!content) return;
+
+            const styles = window.getComputedStyle(content);
+            const fontFamily = styles.fontFamily;
+            const fontSize = parseInt(styles.fontSize, 10);
+            const color = rgbToHex(styles.color);
+            const textAlign = styles.textAlign;
+
+            document.getElementById('fontFamilyControl').value = fontFamily;
+            document.getElementById('fontSizeControl').value = fontSize;
+            document.getElementById('fontSizeNumeric').value = fontSize;
+            document.getElementById('fontColorControl').value = color;
+
+            document.querySelectorAll('#textAlignGroup button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.align === textAlign);
+            });
+        }
+
+        function updateElementPosition(x, y) {
+            if (!designerState.activeElement) return;
+            const element = designerState.activeElement;
+
+            const currentX = parseFloat(element.dataset.x) || 0;
+            const currentY = parseFloat(element.dataset.y) || 0;
+            const width = parseFloat(element.dataset.width) || element.offsetWidth;
+            const height = parseFloat(element.dataset.height) || element.offsetHeight;
+
+            let nextX = Number.isFinite(x) ? x : currentX;
+            let nextY = Number.isFinite(y) ? y : currentY;
+
+            if (designerState.snapEnabled) {
+                if (Number.isFinite(x)) nextX = snapValue(nextX);
+                if (Number.isFinite(y)) nextY = snapValue(nextY);
+            }
+
+            const rect = clampRectToBounds(nextX, nextY, width, height);
+
+            element.style.left = `${rect.x}px`;
+            element.style.top = `${rect.y}px`;
+            element.dataset.x = rect.x;
+            element.dataset.y = rect.y;
+
+            updatePositionInputs(rect.x, rect.y);
+            updatePositionBadge(element);
+        }
+
+        function updateElementSize(width, height, options = {}) {
+            if (!designerState.activeElement) return;
+            const element = designerState.activeElement;
+
+            const currentWidth = parseFloat(element.dataset.width) || element.offsetWidth;
+            const currentHeight = parseFloat(element.dataset.height) || element.offsetHeight;
+            const currentX = parseFloat(element.dataset.x) || 0;
+            const currentY = parseFloat(element.dataset.y) || 0;
+
+            let nextWidth = Number.isFinite(width) && width > 40 ? width : currentWidth;
+            let nextHeight = Number.isFinite(height) && height > 20 ? height : currentHeight;
+
+            const shouldSnap = designerState.snapEnabled && !options.skipSnap;
+            if (shouldSnap) {
+                nextWidth = Math.max(designerState.gridSize, snapValue(nextWidth));
+                nextHeight = Math.max(designerState.gridSize, snapValue(nextHeight));
+            } else {
+                nextWidth = Math.max(20, nextWidth);
+                nextHeight = Math.max(20, nextHeight);
+            }
+
+            const rect = clampRectToBounds(currentX, currentY, nextWidth, nextHeight);
+
+            element.style.left = `${rect.x}px`;
+            element.style.top = `${rect.y}px`;
+            element.style.width = `${rect.width}px`;
+            element.style.height = `${rect.height}px`;
+
+            element.dataset.x = rect.x;
+            element.dataset.y = rect.y;
+            element.dataset.width = rect.width;
+            element.dataset.height = rect.height;
+
+            updatePositionInputs(rect.x, rect.y);
+            updateDimensionInputs(rect.width, rect.height);
+            updatePositionBadge(element);
+        }
+
+        function applyFontFamily(fontFamily) {
+            if (!designerState.activeElement) return;
+            const content = getEditableNode(designerState.activeElement);
+            if (content) {
+                content.style.fontFamily = fontFamily || '';
+            }
+        }
+
+        function applyFontSize(fontSize) {
+            if (!designerState.activeElement || !fontSize) return;
+            const content = getEditableNode(designerState.activeElement);
+            if (content) {
+                content.style.fontSize = `${fontSize}px`;
+            }
+        }
+
+        function applyFontColor(color) {
+            if (!designerState.activeElement) return;
+            const content = getEditableNode(designerState.activeElement);
+            if (content) {
+                content.style.color = color;
+            }
+        }
+
+        function applyTextAlignment(alignment) {
+            if (!designerState.activeElement) return;
+            const content = getEditableNode(designerState.activeElement);
+            if (content) {
+                content.style.textAlign = alignment;
+            }
+        }
+
+        function deleteSelectedField() {
+            if (!designerState.activeElement) {
+                showAlert('Please select a field to delete', 'warning');
+                return;
+            }
+
+            const element = designerState.activeElement;
+            const protectedFields = ['companyLogo', 'companyName', 'companyAddress', 'invoiceTitle', 'invoiceDetails', 'customerSection', 'itemsTable', 'totalsSection'];
+
+            if (protectedFields.includes(element.dataset.field)) {
+                showAlert('This is a core invoice field and cannot be deleted', 'error');
+                return;
+            }
+
+            // Confirmation for non-custom fields
+            const fieldName = element.dataset.field || 'this field';
+            if (confirm(`Are you sure you want to delete "${fieldName}"? This action cannot be undone.`)) {
+                element.remove();
+                deselectField();
+                showAlert('Field deleted successfully', 'success');
+            }
+        }
+
+        function addTextField() {
+            const invoicePage = document.getElementById('invoicePage');
+            const bounds = getSafeBounds();
+            const defaultX = bounds.left + 40;
+            const defaultY = bounds.top + 40;
+            const fieldId = `customText_${Date.now()}`;
+            const element = document.createElement('div');
+            element.className = 'design-element';
+            element.dataset.field = fieldId;
+            element.dataset.elementType = 'text';
+            element.style.left = `${defaultX}px`;
+            element.style.top = `${defaultY}px`;
+            element.style.width = '240px';
+            element.style.height = '80px';
+            element.dataset.x = String(defaultX);
+            element.dataset.y = String(defaultY);
+            element.dataset.width = '240';
+            element.dataset.height = '80';
+            element.innerHTML = '<div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div><div class="design-content" contenteditable="true" data-design-content>New Text Field</div>';
+            invoicePage.appendChild(element);
+            initDesignElement(element);
+            selectDesignElement(element);
+            showAlert('Text field added successfully', 'success');
+        }
+
+        function addLabelField() {
+            const invoicePage = document.getElementById('invoicePage');
+            const bounds = getSafeBounds();
+            const defaultX = bounds.left + 40;
+            const defaultY = bounds.top + 100;
+            const fieldId = `customLabel_${Date.now()}`;
+            const element = document.createElement('div');
+            element.className = 'design-element';
+            element.dataset.field = fieldId;
+            element.dataset.elementType = 'block';
+            element.style.left = `${defaultX}px`;
+            element.style.top = `${defaultY}px`;
+            element.style.width = '260px';
+            element.style.height = '90px';
+            element.dataset.x = String(defaultX);
+            element.dataset.y = String(defaultY);
+            element.dataset.width = '260';
+            element.dataset.height = '90';
+            element.innerHTML = '<div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div><div class="design-content" data-design-content><label class="form-label mb-1">Label</label><input type="text" class="form-control form-control-sm" placeholder="Value"></div>';
+            invoicePage.appendChild(element);
+            initDesignElement(element);
+            selectDesignElement(element);
+            showAlert('Label field added successfully', 'success');
+        }
+
+        function addImageField() {
+            const invoicePage = document.getElementById('invoicePage');
+            const bounds = getSafeBounds();
+            const defaultX = bounds.left + 40;
+            const defaultY = bounds.top + 160;
+            const fieldId = `customImage_${Date.now()}`;
+            const element = document.createElement('div');
+            element.className = 'design-element';
+            element.dataset.field = fieldId;
+            element.dataset.elementType = 'image';
+            element.style.left = `${defaultX}px`;
+            element.style.top = `${defaultY}px`;
+            element.style.width = '150px';
+            element.style.height = '150px';
+            element.dataset.x = String(defaultX);
+            element.dataset.y = String(defaultY);
+            element.dataset.width = '150';
+            element.dataset.height = '150';
+            element.innerHTML = '<div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div><div class="design-content" data-design-content style="display: flex; align-items: center; justify-content: center; border: 2px dashed #ccc; height: 100%; background: #f8f9fa;"><div style="text-align: center; color: #6c757d;"><i class="bi bi-image" style="font-size: 32px;"></i><div style="font-size: 12px; margin-top: 8px;">Image Placeholder</div></div></div>';
+            invoicePage.appendChild(element);
+            initDesignElement(element);
+            selectDesignElement(element);
+            showAlert('Image field added successfully', 'success');
+        }
+
+        function addTableField() {
+            const invoicePage = document.getElementById('invoicePage');
+            const bounds = getSafeBounds();
+            const defaultX = bounds.left + 40;
+            const defaultY = bounds.top + 220;
+            const fieldId = `customTable_${Date.now()}`;
+            const element = document.createElement('div');
+            element.className = 'design-element';
+            element.dataset.field = fieldId;
+            element.dataset.elementType = 'table';
+            element.style.left = `${defaultX}px`;
+            element.style.top = `${defaultY}px`;
+            element.style.width = '500px';
+            element.style.height = '200px';
+            element.dataset.x = String(defaultX);
+            element.dataset.y = String(defaultY);
+            element.dataset.width = '500';
+            element.dataset.height = '200';
+            element.innerHTML = '<div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div><div class="design-content" data-design-content><table class="table table-sm table-bordered mb-0"><thead><tr><th>Column 1</th><th>Column 2</th><th>Column 3</th></tr></thead><tbody><tr><td>Row 1 Data</td><td>Row 1 Data</td><td>Row 1 Data</td></tr><tr><td>Row 2 Data</td><td>Row 2 Data</td><td>Row 2 Data</td></tr></tbody></table></div>';
+            invoicePage.appendChild(element);
+            initDesignElement(element);
+            selectDesignElement(element);
+            showAlert('Table field added successfully', 'success');
+        }
+
+        function addDividerField() {
+            const invoicePage = document.getElementById('invoicePage');
+            const bounds = getSafeBounds();
+            const defaultX = bounds.left + 40;
+            const defaultY = bounds.top + 280;
+            const fieldId = `customDivider_${Date.now()}`;
+            const element = document.createElement('div');
+            element.className = 'design-element';
+            element.dataset.field = fieldId;
+            element.dataset.elementType = 'divider';
+            element.style.left = `${defaultX}px`;
+            element.style.top = `${defaultY}px`;
+            element.style.width = '400px';
+            element.style.height = '20px';
+            element.dataset.x = String(defaultX);
+            element.dataset.y = String(defaultY);
+            element.dataset.width = '400';
+            element.dataset.height = '20';
+            element.innerHTML = '<div class="designer-move-handle" title="Move field"><i class="bi bi-arrows-move"></i></div><div class="design-content" data-design-content><hr style="margin: 8px 0; border-top: 2px solid #333;"></div>';
+            invoicePage.appendChild(element);
+            initDesignElement(element);
+            selectDesignElement(element);
+            showAlert('Divider field added successfully', 'success');
+        }
+
+        function duplicateField() {
+            if (!designerState.activeElement) {
+                showAlert('Please select a field to duplicate', 'warning');
+                return;
+            }
+
+            const original = designerState.activeElement;
+            const bounds = getSafeBounds();
+
+            // Clone the element
+            const clone = original.cloneNode(true);
+
+            // Generate new ID
+            const timestamp = Date.now();
+            const fieldId = `${original.dataset.field}_copy_${timestamp}`;
+            clone.dataset.field = fieldId;
+
+            // Offset position
+            let newX = parseFloat(original.dataset.x) + 20;
+            let newY = parseFloat(original.dataset.y) + 20;
+
+            // Keep within bounds
+            const width = parseFloat(original.dataset.width);
+            const height = parseFloat(original.dataset.height);
+            if (newX + width > bounds.right) newX = bounds.left + 20;
+            if (newY + height > bounds.bottom) newY = bounds.top + 20;
+
+            clone.style.left = `${newX}px`;
+            clone.style.top = `${newY}px`;
+            clone.dataset.x = String(newX);
+            clone.dataset.y = String(newY);
+
+            // Remove active class from clone
+            clone.classList.remove('active');
+
+            // Add to page
+            const invoicePage = document.getElementById('invoicePage');
+            invoicePage.appendChild(clone);
+
+            // Initialize and select
+            initDesignElement(clone);
+            selectDesignElement(clone);
+
+            showAlert('Field duplicated successfully', 'success');
+        }
+
+        function setGridVisible(visible) {
+            designerState.gridVisible = Boolean(visible);
+            const grid = document.getElementById('invoiceGrid');
+            if (grid) {
+                grid.hidden = !designerState.gridVisible;
+            }
+            const button = document.getElementById('toggleGridBtn');
+            if (button) {
+                button.innerHTML = designerState.gridVisible ? '<i class="bi bi-grid"></i> Grid On' : '<i class="bi bi-grid"></i> Grid Off';
+            }
+        }
+
+        function setSnapEnabled(enabled) {
+            designerState.snapEnabled = Boolean(enabled);
+            const button = document.getElementById('toggleSnapBtn');
+            if (button) {
+                button.innerHTML = designerState.snapEnabled ? '<i class="bi bi-magnet"></i> Snap On' : '<i class="bi bi-magnet"></i> Snap Off';
+            }
+            if (designerState.snapEnabled) {
+                snapAllToGrid();
+            }
+        }
+
+        function applyMetadataPreferences(metadata) {
+            if (!metadata || typeof metadata !== 'object') return;
+            if (Object.prototype.hasOwnProperty.call(metadata, 'gridVisible')) {
+                setGridVisible(metadata.gridVisible);
+            }
+            if (Object.prototype.hasOwnProperty.call(metadata, 'snapEnabled')) {
+                setSnapEnabled(metadata.snapEnabled);
+            }
+        }
+
+        async function loadInvoiceLayout() {
+            try {
+                const response = await fetch('/api/v1/invoice-designer/layout');
+                if (!response.ok) return;
+                const data = await response.json();
+                if (Array.isArray(data.layout) && data.layout.length) {
+                    applyLayout(data.layout, { allowCreate: true });
+                }
+                if (data.form_data) {
+                    applyFormData(data.form_data);
+                }
+                applyMetadataPreferences(data.metadata);
+                designerState.lastLoadedAt = data.updated_at;
+            } catch (error) {
+                console.error('Error loading invoice layout:', error);
+            } finally {
+                ensureElementsWithinPrintableArea();
+                calculateTotals();
+            }
+        }
+
+        function applyFormData(data) {
+            if (!data || typeof data !== 'object') return;
+
+            const setValue = (id, value) => {
+                if (value === undefined || value === null) return;
+                const element = document.getElementById(id);
+                if (!element) return;
+                if ('value' in element) {
+                    element.value = value;
+                } else if (element.isContentEditable) {
+                    element.textContent = value;
+                }
+            };
+
+            setValue('customerName', data.customer_name);
+            setValue('customerAddress', data.customer_address);
+            setValue('invoiceNumber', data.invoice_number);
+            setValue('invoiceDate', data.date);
+            setValue('dueDate', data.due_date);
+            setValue('paymentTerms', data.payment_terms);
+            setValue('invoiceNotes', data.notes);
+
+            if (Array.isArray(data.items)) {
+                populateInvoiceItems(data.items);
+            }
+        }
+
+        function populateInvoiceItems(items) {
+            const tbody = document.getElementById('itemsTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (!Array.isArray(items) || items.length === 0) {
+                addItemRow();
+                calculateTotals();
+                return;
+            }
+
+            items.forEach(item => {
+                addItemRow();
+                const row = tbody.lastElementChild;
+                if (!row) return;
+                const [descriptionCell, qtyCell, priceCell, totalCell] = [
+                    row.cells[0]?.querySelector('input'),
+                    row.cells[1]?.querySelector('input'),
+                    row.cells[2]?.querySelector('input'),
+                    row.cells[3]?.querySelector('span')
+                ];
+                if (descriptionCell) descriptionCell.value = item.description || '';
+                if (qtyCell) qtyCell.value = Number(item.quantity ?? item.qty ?? 0);
+                if (priceCell) priceCell.value = Number(item.price ?? 0);
+                const computedTotal = Number(item.total ?? ((Number(qtyCell?.value) || 0) * (Number(priceCell?.value) || 0)));
+                if (totalCell && Number.isFinite(computedTotal)) {
+                    totalCell.textContent = computedTotal.toFixed(2);
+                }
+            });
+
+            calculateTotals();
+        }
+
+        function ensureDefaultDates() {
+            const invoiceDateEl = document.getElementById('invoiceDate');
+            if (invoiceDateEl && !invoiceDateEl.value) {
+                invoiceDateEl.value = new Date().toISOString().split('T')[0];
+            }
+
+            const dueDateEl = document.getElementById('dueDate');
+            if (dueDateEl && !dueDateEl.value) {
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + 30);
+                dueDateEl.value = dueDate.toISOString().split('T')[0];
+            }
+        }
+
+        function toggleGrid() {
+            setGridVisible(!designerState.gridVisible);
+        }
+
+        function toggleSnap() {
+            setSnapEnabled(!designerState.snapEnabled);
+        }
+
+        function snapSelectionToGrid() {
+            if (!designerState.activeElement) return;
+            snapElementToGrid(designerState.activeElement);
+            updatePositionInputs(parseFloat(designerState.activeElement.dataset.x), parseFloat(designerState.activeElement.dataset.y));
+            updateDimensionInputs(parseFloat(designerState.activeElement.dataset.width), parseFloat(designerState.activeElement.dataset.height));
+            updatePositionBadge(designerState.activeElement);
+        }
+
+        function snapAllToGrid() {
+            document.querySelectorAll('.design-element').forEach(snapElementToGrid);
+            if (designerState.activeElement) {
+                updatePositionBadge(designerState.activeElement);
+            }
+        }
+
+        function snapElementToGrid(element) {
+            const snappedX = snapValue(parseFloat(element.dataset.x) || parseFloat(element.style.left) || 0);
+            const snappedY = snapValue(parseFloat(element.dataset.y) || parseFloat(element.style.top) || 0);
+            const snappedWidth = Math.max(designerState.gridSize, snapValue(parseFloat(element.dataset.width) || element.offsetWidth));
+            const snappedHeight = Math.max(designerState.gridSize, snapValue(parseFloat(element.dataset.height) || element.offsetHeight));
+
+            const rect = clampRectToBounds(snappedX, snappedY, snappedWidth, snappedHeight);
+
+            element.style.left = `${rect.x}px`;
+            element.style.top = `${rect.y}px`;
+            element.style.width = `${rect.width}px`;
+            element.style.height = `${rect.height}px`;
+
+            element.dataset.x = rect.x;
+            element.dataset.y = rect.y;
+            element.dataset.width = rect.width;
+            element.dataset.height = rect.height;
+
+            if (designerState.activeElement === element) {
+                updatePositionBadge(element);
+            }
+        }
+
+        function snapValue(value) {
+            return Math.round(value / designerState.gridSize) * designerState.gridSize;
+        }
+
+        // Layer Management Functions
+        function getAllDesignElements() {
+            return Array.from(document.querySelectorAll('.design-element'));
+        }
+
+        function getElementZIndex(element) {
+            const zIndex = parseInt(element.dataset.zIndex || element.style.zIndex || '1', 10);
+            return isNaN(zIndex) ? 1 : zIndex;
+        }
+
+        function setElementZIndex(element, zIndex) {
+            element.dataset.zIndex = zIndex;
+            element.style.zIndex = zIndex;
+
+            // Update layer indicator badge
+            const layerBadge = element.querySelector('.layer-indicator');
+            if (layerBadge) {
+                layerBadge.textContent = zIndex;
+                layerBadge.title = `Layer ${zIndex}`;
+            }
+        }
+
+        function normalizeZIndexes() {
+            // Get all elements and sort by current z-index
+            const elements = getAllDesignElements();
+            elements.sort((a, b) => getElementZIndex(a) - getElementZIndex(b));
+
+            // Reassign z-indexes from 1 to n
+            elements.forEach((el, index) => {
+                setElementZIndex(el, index + 1);
+            });
+        }
+
+        function bringToFront() {
+            if (!designerState.activeElement) {
+                showAlert('Please select an element first', 'warning');
+                return;
+            }
+
+            const elements = getAllDesignElements();
+            const maxZ = Math.max(...elements.map(el => getElementZIndex(el)));
+            setElementZIndex(designerState.activeElement, maxZ + 1);
+            normalizeZIndexes();
+            showAlert('Element brought to front', 'success');
+        }
+
+        function sendToBack() {
+            if (!designerState.activeElement) {
+                showAlert('Please select an element first', 'warning');
+                return;
+            }
+
+            const elements = getAllDesignElements();
+            const minZ = Math.min(...elements.map(el => getElementZIndex(el)));
+            setElementZIndex(designerState.activeElement, minZ - 1);
+            normalizeZIndexes();
+            showAlert('Element sent to back', 'success');
+        }
+
+        function bringForward() {
+            if (!designerState.activeElement) {
+                showAlert('Please select an element first', 'warning');
+                return;
+            }
+
+            const currentZ = getElementZIndex(designerState.activeElement);
+            const elements = getAllDesignElements();
+
+            // Find the next higher z-index
+            const higherElements = elements
+                .filter(el => getElementZIndex(el) > currentZ)
+                .sort((a, b) => getElementZIndex(a) - getElementZIndex(b));
+
+            if (higherElements.length > 0) {
+                const nextZ = getElementZIndex(higherElements[0]);
+                setElementZIndex(designerState.activeElement, nextZ);
+                setElementZIndex(higherElements[0], currentZ);
+                normalizeZIndexes();
+                showAlert('Element moved forward', 'success');
+            }
+        }
+
+        function sendBackward() {
+            if (!designerState.activeElement) {
+                showAlert('Please select an element first', 'warning');
+                return;
+            }
+
+            const currentZ = getElementZIndex(designerState.activeElement);
+            const elements = getAllDesignElements();
+
+            // Find the next lower z-index
+            const lowerElements = elements
+                .filter(el => getElementZIndex(el) < currentZ)
+                .sort((a, b) => getElementZIndex(b) - getElementZIndex(a));
+
+            if (lowerElements.length > 0) {
+                const prevZ = getElementZIndex(lowerElements[0]);
+                setElementZIndex(designerState.activeElement, prevZ);
+                setElementZIndex(lowerElements[0], currentZ);
+                normalizeZIndexes();
+                showAlert('Element moved backward', 'success');
+            }
+        }
+
+        function getEditableNode(element) {
+            return element.querySelector('[data-design-content]') || element.querySelector('.design-content') || element;
+        }
+
+        function rgbToHex(rgb) {
+            const result = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/i.exec(rgb);
+            return result ? `#${((1 << 24) + (parseInt(result[1]) << 16) + (parseInt(result[2]) << 8) + parseInt(result[3])).toString(16).slice(1)}` : '#1f2937';
+        }
+
+        async function loadCompanySettings() {
+            try {
+                const response = await fetch('/api/v1/settings/simple');
+                const settings = await response.json();
+                if (!settings) return;
+
+                const companyNameEl = document.getElementById('companyName');
+                const companyAddressEl = document.getElementById('companyAddress');
+
+                if (companyNameEl) {
+                    companyNameEl.textContent = settings.company_name || 'Your Company Name';
+                }
+
+                if (companyAddressEl) {
+                    companyAddressEl.textContent = `${settings.address || '123 Business Street'}\n${settings.phone ? 'Phone: ' + settings.phone : 'Phone: +123 456 7890'}\n${settings.email ? 'Email: ' + settings.email : 'Email: info@company.com'}`;
+                }
+
+                if (settings.company_logo_url || settings.company_logo_base64) {
+                    const logo = document.getElementById('companyLogo');
+                    const placeholder = document.getElementById('logoPlaceholder');
+                    logo.src = settings.company_logo_url || settings.company_logo_base64;
+                    logo.classList.remove('d-none');
+                    placeholder?.classList.add('d-none');
+                }
+            } catch (error) {
+                console.error('Error loading company settings:', error);
+            }
+        }
+
+        async function loadCustomers() {
+            try {
+                const response = await fetch('/api/v1/sales/customers');
+                const customers = await response.json();
+                const select = document.getElementById('existingCustomers');
+                select.innerHTML = '<option value="">Select existing customer...</option>';
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = customer.name;
+                    option.dataset.customer = JSON.stringify(customer);
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+
+        function selectCustomer(customerId) {
+            if (!customerId) return;
+            const select = document.getElementById('existingCustomers');
+            const option = select.options[select.selectedIndex];
+            const customer = JSON.parse(option.dataset.customer);
+            document.getElementById('customerName').value = customer.name || '';
+            document.getElementById('customerAddress').value = `${customer.address || ''}\n${customer.phone ? 'Phone: ' + customer.phone : ''}\n${customer.email ? 'Email: ' + customer.email : ''}`;
+        }
+
+        function showNewCustomerForm() {
+            document.getElementById('existingCustomers').value = '';
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerAddress').value = '';
+            document.getElementById('customerName').focus();
+        }
+
+        function addItemRow() {
+            const tbody = document.getElementById('itemsTableBody');
+            const newRow = tbody.insertRow();
+            newRow.innerHTML = '<td><input type="text" class="form-control" placeholder="Product/Service description"></td><td><input type="number" class="form-control" value="1" onchange="calculateRowTotal(this)"></td><td><input type="number" class="form-control" step="0.01" onchange="calculateRowTotal(this)"></td><td><span class="fw-bold">0.00</span></td><td><button class="btn btn-sm btn-outline-danger" type="button" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>';
+        }
+
+        function removeRow(button) {
+            button.closest('tr').remove();
+            calculateTotals();
+        }
+
+        function calculateRowTotal(input) {
+            const row = input.closest('tr');
+            const qty = parseFloat(row.cells[1].querySelector('input').value) || 0;
+            const price = parseFloat(row.cells[2].querySelector('input').value) || 0;
+            const total = qty * price;
+            row.cells[3].querySelector('span').textContent = total.toFixed(2);
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#itemsTableBody tr');
+            let subtotal = 0;
+            rows.forEach(row => {
+                const total = parseFloat(row.cells[3].querySelector('span').textContent) || 0;
+                subtotal += total;
+            });
+            const tax = subtotal * 0.12;
+            const total = subtotal + tax;
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('tax').textContent = tax.toFixed(2);
+            document.getElementById('total').textContent = total.toFixed(2);
+        }
+
+        async function uploadLogo(input) {
+            const file = input.files?.[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('logo', file);
+            const placeholder = document.getElementById('logoPlaceholder');
+            const logo = document.getElementById('companyLogo');
+            try {
+                placeholder.innerHTML = '<span><i class="bi bi-hourglass-split"></i> Uploading...</span>';
+                const response = await fetch('/api/v1/invoice-designer/upload-logo', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error('Upload failed');
+                const result = await response.json();
+                logo.src = result.logo_url || result.logo_base64;
+                logo.classList.remove('d-none');
+                placeholder.classList.add('d-none');
+                showAlert('Logo uploaded successfully!', 'success');
+            } catch (error) {
+                console.error('Logo upload error:', error);
+                placeholder.innerHTML = '<p class="mb-0"><i class="bi bi-image"></i></p><small>Click or drop logo</small>';
+                showAlert('Failed to upload logo.', 'danger');
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top:20px; right:20px; z-index:1300; min-width:280px;';
+            alertDiv.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+
+        function collectLayoutState() {
+            return Array.from(document.querySelectorAll('.design-element')).map(el => {
+                const content = getEditableNode(el);
+                const styles = content ? window.getComputedStyle(content) : null;
+                return {
+                    field: el.dataset.field,
+                    type: el.dataset.elementType || 'text',
+                    x: parseFloat(el.dataset.x) || parseFloat(el.style.left) || 0,
+                    y: parseFloat(el.dataset.y) || parseFloat(el.style.top) || 0,
+                    width: parseFloat(el.dataset.width) || parseFloat(el.style.width) || el.offsetWidth,
+                    height: parseFloat(el.dataset.height) || parseFloat(el.style.height) || el.offsetHeight,
+                    fontFamily: styles?.fontFamily || '',
+                    fontSize: styles ? parseInt(styles.fontSize, 10) : '',
+                    color: styles ? rgbToHex(styles.color) : '#1f2937',
+                    align: styles?.textAlign || 'left',
+                    content: collectElementContent(el)
+                };
+            });
+        }
+
+        function collectElementContent(element) {
+            const type = element.dataset.elementType;
+            const node = getEditableNode(element);
+            if (type === 'text') {
+                return node?.innerText || '';
+            }
+            if (type === 'logo') {
+                return { logo: document.getElementById('companyLogo')?.src || '' };
+            }
+            return node?.innerHTML || element.innerHTML;
+        }
+
+        async function saveInvoice() {
+            const layoutState = collectLayoutState();
+            const invoiceData = {
+                customer_name: document.getElementById('customerName').value,
+                customer_address: document.getElementById('customerAddress').value,
+                invoice_number: document.getElementById('invoiceNumber').value,
+                date: document.getElementById('invoiceDate').value,
+                due_date: document.getElementById('dueDate').value,
+                payment_terms: document.getElementById('paymentTerms').value,
+                notes: document.getElementById('invoiceNotes').value,
+                items: []
+            };
+
+            document.querySelectorAll('#itemsTableBody tr').forEach(row => {
+                const descriptionInput = row.cells[0]?.querySelector('input');
+                const qtyInput = row.cells[1]?.querySelector('input');
+                const priceInput = row.cells[2]?.querySelector('input');
+                const description = descriptionInput?.value?.trim();
+                const qty = parseFloat(qtyInput?.value) || 0;
+                const price = parseFloat(priceInput?.value) || 0;
+
+                if (description) {
+                    invoiceData.items.push({
+                        description,
+                        quantity: qty,
+                        price: price,
+                        total: qty * price
+                    });
+                }
+            });
+
+            const payload = {
+                layout: layoutState,
+                form_data: invoiceData,
+                metadata: {
+                    gridVisible: designerState.gridVisible,
+                    snapEnabled: designerState.snapEnabled
+                }
+            };
+
+            try {
+                const response = await fetch('/api/v1/invoice-designer/layout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Failed to save layout');
+                }
+
+                const result = await response.json();
+                designerState.lastSavedAt = result.updated_at;
+                applyMetadataPreferences(result.metadata);
+                showAlert('Invoice layout saved successfully!', 'success');
+            } catch (error) {
+                console.error('Save invoice layout error:', error);
+                showAlert('Failed to save invoice layout.', 'danger');
+            }
+        }
+
+        function previewInvoice() {
+            const elementsToHide = document.querySelectorAll('.toolbar, .designer-panel, .field-library button, #textAlignGroup, #deleteFieldButton');
+            elementsToHide.forEach(el => el.classList.add('visually-hidden'));
+            document.querySelectorAll('.design-element').forEach(el => el.classList.remove('active'));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                elementsToHide.forEach(el => el.classList.remove('visually-hidden'));
+            }, 3000);
+        }
+
+        function printInvoice() {
+            window.print();
+        }
+
+        function exportLayout() {
+            const layout = collectLayoutState();
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(layout, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute('href', dataStr);
+            downloadAnchor.setAttribute('download', 'invoice-layout.json');
+            downloadAnchor.click();
+        }
+
+        function importLayout() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.addEventListener('change', async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                const content = await file.text();
+                try {
+                    const layout = JSON.parse(content);
+                    applyLayout(layout, { allowCreate: true });
+                    showAlert('Layout imported successfully!', 'success');
+                } catch (error) {
+                    console.error('Layout import error:', error);
+                    showAlert('Invalid layout file.', 'danger');
+                }
+            });
+            input.click();
+        }
+
+        function applyLayout(layout, options = {}) {
+            if (!Array.isArray(layout)) return;
+
+            const allowCreate = Boolean(options.allowCreate);
+            if (allowCreate) {
+                const allowedFields = new Set(layout.filter(entry => entry && entry.field).map(entry => entry.field));
+                document.querySelectorAll('.design-element').forEach(element => {
+                    const field = element.dataset.field;
+                    if (field && field.startsWith('custom') && !allowedFields.has(field)) {
+                        if (designerState.activeElement === element) {
+                            deselectField();
+                        }
+                        element.remove();
+                    }
+                });
+            }
+
+            layout.forEach(item => {
+                if (!item || !item.field) return;
+                let element = document.querySelector(`.design-element[data-field="${item.field}"]`);
+
+                if (!element && allowCreate) {
+                    const newElement = createDesignElementFromLayout(item);
+                    invoicePage.appendChild(newElement);
+                    initDesignElement(newElement);
+                    element = document.querySelector(`.design-element[data-field="${item.field}"]`);
+                }
+
+                if (!element) return;
+
+                const x = Number.isFinite(item.x) ? item.x : parseFloat(element.dataset.x) || 0;
+                const y = Number.isFinite(item.y) ? item.y : parseFloat(element.dataset.y) || 0;
+                const width = Number.isFinite(item.width) ? item.width : parseFloat(element.dataset.width) || element.offsetWidth;
+                const height = Number.isFinite(item.height) ? item.height : parseFloat(element.dataset.height) || element.offsetHeight;
+
+                const rect = clampRectToBounds(x, y, width, height);
+
+                element.style.left = `${rect.x}px`;
+                element.style.top = `${rect.y}px`;
+                element.style.width = `${rect.width}px`;
+                element.style.height = `${rect.height}px`;
+                element.dataset.x = rect.x;
+                element.dataset.y = rect.y;
+                element.dataset.width = rect.width;
+                element.dataset.height = rect.height;
+
+                const content = getEditableNode(element);
+                if (content) {
+                    content.style.fontFamily = item.fontFamily || '';
+                    if (item.fontSize) content.style.fontSize = `${item.fontSize}px`;
+                    if (item.color) content.style.color = item.color;
+                    if (item.align) content.style.textAlign = item.align;
+
+                    if (element.dataset.elementType === 'text' && typeof item.content === 'string') {
+                        content.textContent = item.content;
+                    } else if (typeof item.content === 'string' && element.dataset.elementType !== 'text' && element.dataset.elementType !== 'logo') {
+                        content.innerHTML = item.content;
+                    } else if (element.dataset.elementType === 'logo' && item.content && item.content.logo) {
+                        const logoImg = content.querySelector('img') || document.getElementById('companyLogo');
+                        if (logoImg) {
+                            logoImg.src = item.content.logo;
+                            logoImg.classList.remove('d-none');
+                            const placeholder = document.getElementById('logoPlaceholder');
+                            placeholder?.classList.add('d-none');
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Recipe Manager</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Auth Helpers -->
+    <script src="/static/js/auth-bootstrap.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+
+    <!-- Settings and Currency Utils -->
+    <script src="js/settings-loader.js"></script>
+    <script src="js/currency-utils.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .recipe-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .ingredient-row {
+            border-bottom: 1px solid #dee2e6;
+            padding: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .ingredient-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .cost-breakdown {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .yield-calculator {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .badge-ingredient {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .conversion-hint {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+    <script src="js/navbar.js"></script>
+
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-journal-text text-primary"></i> Recipe Manager
+                        </h1>
+                        <p class="text-muted mb-0">Create and manage manufacturing recipes with precise ingredient
+                            tracking</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" onclick="viewRecipeLibrary()">
+                            <i class="bi bi-folder2-open"></i> Recipe Library
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRecipeModal">
+                            <i class="bi bi-plus-lg"></i> New Recipe
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Recipes</h6>
+                            <h3 class="mb-0" id="totalRecipes">0</h3>
+                        </div>
+                        <i class="bi bi-journal-text fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Active Products</h6>
+                            <h3 class="mb-0" id="activeProducts">0</h3>
+                        </div>
+                        <i class="bi bi-box-seam fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Avg Cost</h6>
+                            <h3 class="mb-0" id="avgCost">P 0.00</h3>
+                        </div>
+                        <i class="bi bi-calculator fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Value</h6>
+                            <h3 class="mb-0" id="totalValue">P 0.00</h3>
+                        </div>
+                        <i class="bi bi-currency-dollar fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recipe List -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Manufacturing Recipes</h5>
+                    <div>
+                        <button class="btn btn-outline-info btn-sm me-2" onclick="refreshRecipes()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="exportRecipes()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <!-- Dimensional Filters -->
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="bi bi-building me-1"></i>Filter by Cost Center
+                        </label>
+                        <select class="form-select form-select-sm" id="filterCostCenter"
+                            onchange="applyDimensionalFilters()">
+                            <option value="">All Cost Centers</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            <i class="bi bi-folder me-1"></i>Filter by Project
+                        </label>
+                        <select class="form-select form-select-sm" id="filterProject"
+                            onchange="applyDimensionalFilters()">
+                            <option value="">All Projects</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="clearDimensionalFilters()">
+                            <i class="bi bi-x-circle me-1"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Batch Size</th>
+                                <th>UOM</th>
+                                <th>Cost Center</th>
+                                <th>Project</th>
+                                <th>Ingredients</th>
+                                <th>Material Cost</th>
+                                <th>Labor Cost</th>
+                                <th>Total Cost</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recipesTable">
+                            <tr>
+                                <td colspan="11" class="text-center text-muted">Loading recipes...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Recipe Modal -->
+    <div class="modal fade" id="createRecipeModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Create New Recipe
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createRecipeForm">
+                        <!-- Product Selection -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Finished Product *</label>
+                                    <div class="btn-group w-100 mb-2" role="group">
+                                        <input type="radio" class="btn-check" name="productMode"
+                                            id="existingProductMode" value="existing" checked>
+                                        <label class="btn btn-outline-primary" for="existingProductMode">
+                                            <i class="bi bi-search"></i> Select Existing
+                                        </label>
+                                        <input type="radio" class="btn-check" name="productMode" id="newProductMode"
+                                            value="new">
+                                        <label class="btn btn-outline-success" for="newProductMode">
+                                            <i class="bi bi-plus-circle"></i> Create New
+                                        </label>
+                                    </div>
+
+                                    <!-- Existing Product Selection -->
+                                    <div id="existingProductSection">
+                                        <select class="form-select" id="recipeProduct">
+                                            <option value="">Select existing product...</option>
+                                        </select>
+                                        <small class="text-muted">Select a product from your inventory</small>
+                                    </div>
+
+                                    <!-- New Product Creation -->
+                                    <div id="newProductSection" style="display: none;">
+                                        <div class="card border-success mb-3">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Product Name *</label>
+                                                            <input type="text" class="form-control" id="newProductName"
+                                                                placeholder="e.g., Wooden Chair">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Product SKU *</label>
+                                                            <input type="text" class="form-control" id="newProductSKU"
+                                                                placeholder="e.g., WC-001">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Category</label>
+                                                            <select class="form-select" id="newProductCategory">
+                                                                <option value="manufactured">Manufactured</option>
+                                                                <option value="assembled">Assembled</option>
+                                                                <option value="finished_goods">Finished Goods</option>
+                                                                <option value="custom">Custom Order</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Initial Selling Price</label>
+                                                            <input type="number" class="form-control"
+                                                                id="newProductPrice" placeholder="0.00" min="0"
+                                                                step="0.01">
+                                                            <small class="text-muted">Can be updated later based on
+                                                                recipe cost</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-0">
+                                                    <label class="form-label">Description</label>
+                                                    <textarea class="form-control" id="newProductDescription" rows="2"
+                                                        placeholder="Brief description of the product..."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Batch Size *</label>
+                                    <input type="number" class="form-control" id="batchSize" value="1" min="1"
+                                        step="0.01" required>
+                                    <small class="text-muted">Number of units this recipe produces</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Unit of Measure</label>
+                                    <select class="form-select" id="batchUOM">
+                                        <option value="">Default</option>
+                                    </select>
+                                    <small class="text-muted">Unit for the finished product</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Branch Selection -->
+                        <div class="mb-4">
+                            <label class="form-label"><i class="bi bi-building me-2"></i>Manufacturing Branch *</label>
+                            <select class="form-select" id="manufacturingBranch" required
+                                onchange="loadBranchInventoryForIngredients()">
+                                <option value="">Select branch where manufacturing will occur...</option>
+                            </select>
+                            <small class="text-muted">Ingredients will be sourced from this branch's allocated
+                                inventory</small>
+                        </div>
+
+                        <hr>
+
+                        <!-- Dimensional Accounting -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-building me-2"></i>Cost Center
+                                </label>
+                                <select class="form-select" id="recipeCostCenter">
+                                    <option value="">Select Cost Center...</option>
+                                </select>
+                                <small class="text-muted">Assign this recipe to a cost center for accounting
+                                    purposes</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-folder me-2"></i>Project
+                                </label>
+                                <select class="form-select" id="recipeProject">
+                                    <option value="">Select Project...</option>
+                                </select>
+                                <small class="text-muted">Link this recipe to a specific project</small>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Ingredients Section -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0"><i class="bi bi-box-seam me-2"></i>Ingredients / Raw Materials</h6>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addIngredient()"
+                                    id="addIngredientBtn" disabled>
+                                    <i class="bi bi-plus"></i> Add Ingredient
+                                </button>
+                            </div>
+
+                            <div class="alert alert-info py-2">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Tip:</strong> Ingredients are loaded from the selected branch's allocated
+                                inventory.
+                                You can specify quantities in any unit (kg, liters, pieces, etc.).
+                                The system will automatically convert to base units during manufacturing.
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:30%">Ingredient</th>
+                                            <th style="width:15%">Quantity</th>
+                                            <th style="width:15%">UOM</th>
+                                            <th style="width:15%">Est. Cost</th>
+                                            <th style="width:20%">Notes</th>
+                                            <th style="width:5%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ingredientsTable">
+                                        <tr class="text-muted">
+                                            <td colspan="6" class="text-center">Click "Add Ingredient" to start building
+                                                the recipe</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="cost-breakdown">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Total Material Cost:</strong>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <span class="h5 mb-0 text-primary" id="totalMaterialCost">P 0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Labor & Additional Costs -->
+                        <div class="mb-4">
+                            <h6 class="mb-3"><i class="bi bi-people me-2"></i>Labor & Additional Costs</h6>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Labor Hours</label>
+                                        <input type="number" class="form-control" id="laborHours" value="0" min="0"
+                                            step="0.25" onchange="calculateCosts()">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Labor Rate (per hour)</label>
+                                        <input type="number" class="form-control" id="laborRate" value="0" min="0"
+                                            step="0.01" onchange="calculateCosts()">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Total Labor Cost</label>
+                                        <input type="number" class="form-control" id="laborCost" value="0" min="0"
+                                            step="0.01" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Overhead Cost</label>
+                                        <input type="number" class="form-control" id="overheadCost" value="0" min="0"
+                                            step="0.01" onchange="calculateCosts()">
+                                        <small class="text-muted">Utilities, rent, equipment depreciation, etc.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Other Costs</label>
+                                        <input type="number" class="form-control" id="otherCosts" value="0" min="0"
+                                            step="0.01" onchange="calculateCosts()">
+                                        <small class="text-muted">Packaging, shipping, quality control, etc.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Cost Summary -->
+                        <div class="yield-calculator">
+                            <h6 class="mb-3"><i class="bi bi-calculator me-2"></i>Cost Summary</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <small class="text-muted d-block">Material Cost</small>
+                                        <strong id="summaryMaterial">P 0.00</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <small class="text-muted d-block">Labor Cost</small>
+                                        <strong id="summaryLabor">P 0.00</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <small class="text-muted d-block">Additional Costs</small>
+                                        <strong id="summaryAdditional">P 0.00</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center border-start">
+                                        <small class="text-muted d-block">Total Cost</small>
+                                        <strong class="h5 text-success" id="summaryTotal">P 0.00</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">Cost per Unit</small>
+                                    <strong id="costPerUnit">P 0.00</strong>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <small class="text-muted d-block">Suggested Selling Price (50% markup)</small>
+                                    <strong class="text-primary" id="suggestedPrice">P 0.00</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">Recipe Notes</label>
+                            <textarea class="form-control" id="recipeNotes" rows="3"
+                                placeholder="Add any special instructions, preparation notes, or important details..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveRecipe()">
+                        <i class="bi bi-save"></i> Save Recipe
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Recipe Modal -->
+    <div class="modal fade" id="viewRecipeModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewRecipeTitle">Recipe Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewRecipeBody">
+                    <!-- Recipe details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" onclick="useRecipeForJobCard()">
+                        <i class="bi bi-tools"></i> Use in Job Card
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="produceFromRecipe()">
+                        <i class="bi bi-gear"></i> Produce Batch
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- API Configuration -->
+    <script src="js/api-config.js"></script>
+
+    <script>
+        // Global variables
+        let allProducts = [];
+        let allUnits = [];
+        let allBranches = [];
+        let branchInventory = [];
+        let currentRecipe = null;
+        let settingsLoader = null;
+
+        // Currency settings
+        let currentCurrency = 'BWP';
+        let currencySymbol = 'P';
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            initRecipeModule();
+            setupProductModeToggle();
+        });
+
+        function setupProductModeToggle() {
+            const existingMode = document.getElementById('existingProductMode');
+            const newMode = document.getElementById('newProductMode');
+            const existingSection = document.getElementById('existingProductSection');
+            const newSection = document.getElementById('newProductSection');
+            const newProductName = document.getElementById('newProductName');
+            const newProductSKU = document.getElementById('newProductSKU');
+
+            existingMode.addEventListener('change', function () {
+                if (this.checked) {
+                    existingSection.style.display = 'block';
+                    newSection.style.display = 'none';
+                    // Clear new product fields
+                    newProductName.value = '';
+                    newProductSKU.value = '';
+                    document.getElementById('newProductDescription').value = '';
+                    document.getElementById('newProductPrice').value = '';
+                }
+            });
+
+            newMode.addEventListener('change', function () {
+                if (this.checked) {
+                    existingSection.style.display = 'none';
+                    newSection.style.display = 'block';
+                    // Clear existing product selection
+                    document.getElementById('recipeProduct').value = '';
+                    // Focus on product name field
+                    setTimeout(() => newProductName.focus(), 100);
+                }
+            });
+
+            // Auto-generate SKU from product name
+            newProductName.addEventListener('blur', function () {
+                if (this.value && !newProductSKU.value) {
+                    // Generate SKU: uppercase, replace spaces with dash, limit to 20 chars
+                    const autoSKU = this.value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9\s]/g, '')
+                        .replace(/\s+/g, '-')
+                        .substring(0, 20);
+                    newProductSKU.value = autoSKU;
+                }
+            });
+        }
+
+        async function initRecipeModule() {
+            try {
+                await loadApplicationSettings();
+                await Promise.all([
+                    loadProducts(),
+                    loadUnits(),
+                    loadBranches(),
+                    loadDimensionalData(),
+                    loadRecipes()
+                ]);
+                updateStatistics();
+            } catch (error) {
+                console.error('Error initializing recipe module:', error);
+                showAlert('Failed to initialize recipe module', 'danger');
+            }
+        }
+
+        async function loadApplicationSettings() {
+            try {
+                const response = await fetch(API_CONFIG.ENDPOINTS.SETTINGS);
+                if (response.ok) {
+                    const settings = await response.json();
+                    if (settings.success && settings.data) {
+                        currentCurrency = settings.data.currency || 'BWP';
+                        currencySymbol = getCurrencySymbol(currentCurrency);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        function getCurrencySymbol(currency) {
+            const symbols = {
+                'BWP': 'P', 'USD': '$', 'EUR': '€', 'GBP': '£', 'ZAR': 'R'
+            };
+            return symbols[currency] || currency;
+        }
+
+        function formatCurrency(amount) {
+            return `${currencySymbol} ${parseFloat(amount || 0).toFixed(2)}`;
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(API_CONFIG.ENDPOINTS.INVENTORY_PRODUCTS);
+                if (response.ok) {
+                    const data = await response.json();
+                    // API returns array directly, not {products: [...]}
+                    allProducts = Array.isArray(data) ? data : (data.products || []);
+                    populateProductDropdowns();
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        async function loadUnits() {
+            try {
+                const response = await fetch('/api/v1/unit-of-measure');
+                if (response.ok) {
+                    const data = await response.json();
+                    allUnits = data.units || [];
+                    populateUnitDropdowns();
+                }
+            } catch (error) {
+                console.error('Error loading units:', error);
+            }
+        }
+
+        async function loadBranches() {
+            try {
+                const response = await fetch('/api/v1/branches');
+                if (response.ok) {
+                    const data = await response.json();
+                    // API returns array directly, not {branches: [...]}
+                    allBranches = Array.isArray(data) ? data : (data.branches || []);
+                    populateBranchDropdown();
+                }
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
+
+        function populateBranchDropdown() {
+            const select = document.getElementById('manufacturingBranch');
+            select.innerHTML = '<option value="">Select branch where manufacturing will occur...</option>';
+
+            allBranches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.id;
+                option.textContent = `${branch.name}${branch.code ? ' (' + branch.code + ')' : ''}`;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadDimensionalData() {
+            try {
+                console.log('🔄 Loading dimensional data...');
+
+                const response = await fetch('/api/v1/accounting/dimensions');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                window.dimensionalData = {
+                    costCenters: data.cost_centers || [],
+                    projects: data.projects || []
+                };
+
+                // Populate the cost center and project dropdowns
+                populateCostCenterOptions();
+                populateProjectOptions();
+
+                console.log(`✅ Loaded ${window.dimensionalData.costCenters.length} cost centers and ${window.dimensionalData.projects.length} projects`);
+            } catch (error) {
+                console.error('Error loading dimensional data:', error);
+                showAlert('Failed to load dimensional data. Using defaults.', 'warning');
+                // Set empty defaults if API fails
+                window.dimensionalData = {
+                    costCenters: [],
+                    projects: []
+                };
+            }
+        }
+
+        function populateCostCenterOptions() {
+            const select = document.getElementById('recipeCostCenter');
+            const filterSelect = document.getElementById('filterCostCenter');
+
+            if (select) {
+                select.innerHTML = '<option value="">Select Cost Center...</option>';
+
+                window.dimensionalData.costCenters.forEach(cc => {
+                    const option = document.createElement('option');
+                    option.value = cc.id;
+                    option.textContent = `${cc.code} - ${cc.name}`;
+                    option.dataset.type = cc.type;
+                    select.appendChild(option);
+                });
+            }
+
+            if (filterSelect) {
+                filterSelect.innerHTML = '<option value="">All Cost Centers</option>';
+
+                window.dimensionalData.costCenters.forEach(cc => {
+                    const option = document.createElement('option');
+                    option.value = cc.id;
+                    option.textContent = `${cc.code} - ${cc.name}`;
+                    filterSelect.appendChild(option);
+                });
+            }
+        }
+
+        function populateProjectOptions() {
+            const select = document.getElementById('recipeProject');
+            const filterSelect = document.getElementById('filterProject');
+
+            if (select) {
+                select.innerHTML = '<option value="">Select Project...</option>';
+
+                window.dimensionalData.projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.textContent = `${project.code} - ${project.name}`;
+                    option.dataset.status = project.status;
+                    select.appendChild(option);
+                });
+            }
+
+            if (filterSelect) {
+                filterSelect.innerHTML = '<option value="">All Projects</option>';
+
+                window.dimensionalData.projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.textContent = `${project.code} - ${project.name}`;
+                    filterSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Helper functions for dimensional data display
+        function getCostCenterName(costCenterId) {
+            if (!window.dimensionalData || !window.dimensionalData.costCenters) return 'Unknown';
+            const costCenter = window.dimensionalData.costCenters.find(cc => cc.id === costCenterId);
+            return costCenter ? costCenter.name : 'Unknown';
+        }
+
+        function getProjectName(projectId) {
+            if (!window.dimensionalData || !window.dimensionalData.projects) return 'Unknown';
+            const project = window.dimensionalData.projects.find(p => p.id === projectId);
+            return project ? project.name : 'Unknown';
+        }
+
+        async function loadBranchInventoryForIngredients() {
+            const branchId = document.getElementById('manufacturingBranch').value;
+            const addBtn = document.getElementById('addIngredientBtn');
+
+            if (!branchId) {
+                branchInventory = [];
+                addBtn.disabled = true;
+                addBtn.title = 'Please select a manufacturing branch first';
+                return;
+            }
+
+            try {
+                showAlert('Loading branch inventory...', 'info');
+                const response = await fetch(`/api/v1/inventory-allocation/branch/${branchId}/inventory`);
+                if (response.ok) {
+                    branchInventory = await response.json();
+                    addBtn.disabled = false;
+                    addBtn.title = '';
+                    showAlert(`Loaded ${branchInventory.length} items from branch inventory`, 'success');
+                } else {
+                    branchInventory = [];
+                    addBtn.disabled = true;
+                    showAlert('Failed to load branch inventory', 'danger');
+                }
+            } catch (error) {
+                console.error('Error loading branch inventory:', error);
+                branchInventory = [];
+                addBtn.disabled = true;
+                showAlert('Failed to load branch inventory', 'danger');
+            }
+        }
+
+        async function loadRecipes() {
+            try {
+                const response = await fetch('/api/v1/manufacturing/products');
+                if (response.ok) {
+                    const data = await response.json();
+                    // API returns array directly, not {products: [...]}
+                    const productsWithBOM = Array.isArray(data) ? data : (data.products || []);
+
+                    // Load BOM for each product
+                    const recipes = [];
+                    for (const product of productsWithBOM) {
+                        const bomResponse = await fetch(`/api/v1/manufacturing/products/${product.id}/bom`);
+                        if (bomResponse.ok) {
+                            const bomData = await bomResponse.json();
+                            if (bomData.bom && bomData.bom.length > 0) {
+                                recipes.push({
+                                    ...product,
+                                    bom: bomData.bom
+                                });
+                            }
+                        }
+                    }
+                    originalRecipes = recipes; // Store for filtering
+                    renderRecipes(recipes);
+                    updateDimensionalStats(recipes);
+                }
+            } catch (error) {
+                console.error('Error loading recipes:', error);
+            }
+        }
+
+        function populateProductDropdowns() {
+            const select = document.getElementById('recipeProduct');
+            select.innerHTML = '<option value="">Select existing product...</option>';
+
+            // Show all products, but group manufactured products first
+            const manufacturedProducts = allProducts.filter(p =>
+                p.product_type === 'manufactured' || p.category === 'manufactured'
+            );
+            const otherProducts = allProducts.filter(p =>
+                p.product_type !== 'manufactured' && p.category !== 'manufactured'
+            );
+
+            if (manufacturedProducts.length > 0) {
+                const optgroup1 = document.createElement('optgroup');
+                optgroup1.label = 'Manufactured Products';
+                manufacturedProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = `${product.name} (${product.sku})`;
+                    optgroup1.appendChild(option);
+                });
+                select.appendChild(optgroup1);
+            }
+
+            if (otherProducts.length > 0) {
+                const optgroup2 = document.createElement('optgroup');
+                optgroup2.label = 'Other Products';
+                otherProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = `${product.name} (${product.sku})`;
+                    optgroup2.appendChild(option);
+                });
+                select.appendChild(optgroup2);
+            }
+        }
+
+        function populateUnitDropdowns() {
+            const selects = ['batchUOM'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    select.innerHTML = '<option value="">Default</option>';
+                    allUnits.forEach(unit => {
+                        const option = document.createElement('option');
+                        option.value = unit.id;
+                        option.textContent = `${unit.name} (${unit.abbreviation})`;
+                        select.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        function addIngredient() {
+            const branchId = document.getElementById('manufacturingBranch').value;
+            if (!branchId) {
+                showAlert('Please select a manufacturing branch first', 'warning');
+                return;
+            }
+
+            if (!branchInventory || branchInventory.length === 0) {
+                showAlert('No inventory available at the selected branch', 'warning');
+                return;
+            }
+
+            const tbody = document.getElementById('ingredientsTable');
+
+            // Remove placeholder message
+            const placeholder = tbody.querySelector('.text-muted');
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            const tr = document.createElement('tr');
+            tr.className = 'ingredient-row';
+            tr.innerHTML = `
+                <td>
+                    <select class="form-select form-select-sm ingredient-select" required>
+                        <option value="">Select ingredient from branch inventory...</option>
+                        ${branchInventory.map(item => {
+                const availQty = item.available_quantity || 0;
+                const stockStatus = availQty > 10 ? '✅' : availQty > 0 ? '⚠️' : '❌';
+                return `<option value="${item.product_id}" data-cost="${item.unit_cost || 0}" data-available="${availQty}">
+                                ${stockStatus} ${item.product_name} (${item.product_sku}) - Available: ${availQty}
+                            </option>`;
+            }).join('')}
+                    </select>
+                    <small class="text-muted stock-hint"></small>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm quantity-input"
+                           min="0" step="0.001" placeholder="0" required onchange="calculateCosts()">
+                </td>
+                <td>
+                    <select class="form-select form-select-sm uom-select">
+                        <option value="">Base unit</option>
+                        ${allUnits.map(u => `<option value="${u.id}">${u.abbreviation}</option>`).join('')}
+                    </select>
+                    <small class="conversion-hint"></small>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm cost-input"
+                           min="0" step="0.01" placeholder="0.00" readonly title="Cost from branch inventory">
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm notes-input"
+                           placeholder="Optional notes">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeIngredient(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+
+            // Add event listener for ingredient selection to populate cost and show availability
+            const ingredientSelect = tr.querySelector('.ingredient-select');
+            ingredientSelect.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const cost = selectedOption.getAttribute('data-cost') || 0;
+                const available = selectedOption.getAttribute('data-available') || 0;
+
+                // Set cost from branch inventory
+                tr.querySelector('.cost-input').value = parseFloat(cost).toFixed(2);
+
+                // Show stock availability hint
+                const stockHint = tr.querySelector('.stock-hint');
+                if (available > 0) {
+                    stockHint.textContent = `${available} units available at branch`;
+                    stockHint.className = 'text-muted stock-hint';
+                } else {
+                    stockHint.textContent = 'Out of stock at this branch!';
+                    stockHint.className = 'text-danger stock-hint';
+                }
+
+                calculateCosts();
+            });
+
+            // Add event listener for UOM change to show conversion hint
+            const uomSelect = tr.querySelector('.uom-select');
+            uomSelect.addEventListener('change', function () {
+                updateConversionHint(tr);
+            });
+        }
+
+        function updateConversionHint(row) {
+            const uomSelect = row.querySelector('.uom-select');
+            const hint = row.querySelector('.conversion-hint');
+
+            if (uomSelect.value) {
+                const unit = allUnits.find(u => u.id === uomSelect.value);
+                if (unit && !unit.is_base_unit) {
+                    hint.textContent = `1 ${unit.abbreviation} = ${unit.conversion_factor} base units`;
+                } else {
+                    hint.textContent = '';
+                }
+            } else {
+                hint.textContent = '';
+            }
+        }
+
+        function removeIngredient(button) {
+            const row = button.closest('tr');
+            row.remove();
+
+            // Add placeholder if no ingredients left
+            const tbody = document.getElementById('ingredientsTable');
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="text-muted">
+                        <td colspan="6" class="text-center">Click "Add Ingredient" to start building the recipe</td>
+                    </tr>
+                `;
+            }
+
+            calculateCosts();
+        }
+
+        function calculateCosts() {
+            // Calculate material costs
+            let totalMaterial = 0;
+            document.querySelectorAll('.ingredient-row').forEach(row => {
+                const cost = parseFloat(row.querySelector('.cost-input').value || 0);
+                const quantity = parseFloat(row.querySelector('.quantity-input').value || 0);
+                totalMaterial += cost * quantity;
+            });
+
+            // Calculate labor cost
+            const hours = parseFloat(document.getElementById('laborHours').value || 0);
+            const rate = parseFloat(document.getElementById('laborRate').value || 0);
+            const laborCost = hours * rate;
+            document.getElementById('laborCost').value = laborCost.toFixed(2);
+
+            // Get additional costs
+            const overhead = parseFloat(document.getElementById('overheadCost').value || 0);
+            const other = parseFloat(document.getElementById('otherCosts').value || 0);
+            const additionalCosts = overhead + other;
+
+            // Calculate totals
+            const totalCost = totalMaterial + laborCost + additionalCosts;
+            const batchSize = parseFloat(document.getElementById('batchSize').value || 1);
+            const costPerUnit = totalCost / batchSize;
+            const suggestedPrice = costPerUnit * 1.5; // 50% markup
+
+            // Update UI
+            document.getElementById('totalMaterialCost').textContent = formatCurrency(totalMaterial);
+            document.getElementById('summaryMaterial').textContent = formatCurrency(totalMaterial);
+            document.getElementById('summaryLabor').textContent = formatCurrency(laborCost);
+            document.getElementById('summaryAdditional').textContent = formatCurrency(additionalCosts);
+            document.getElementById('summaryTotal').textContent = formatCurrency(totalCost);
+            document.getElementById('costPerUnit').textContent = formatCurrency(costPerUnit);
+            document.getElementById('suggestedPrice').textContent = formatCurrency(suggestedPrice);
+        }
+
+        async function saveRecipe() {
+            // Check which mode is active
+            const isNewProductMode = document.getElementById('newProductMode').checked;
+            let productId = null;
+
+            // Validate and get/create product
+            if (isNewProductMode) {
+                // Creating new product
+                const newName = document.getElementById('newProductName').value.trim();
+                const newSKU = document.getElementById('newProductSKU').value.trim();
+
+                if (!newName || !newSKU) {
+                    showAlert('Please enter product name and SKU', 'warning');
+                    return;
+                }
+
+                // Create the new product first
+                showAlert('Creating new product...', 'info');
+
+                const newProductData = {
+                    productName: newName,
+                    productCode: newSKU,
+                    productDescription: document.getElementById('newProductDescription').value.trim(),
+                    productType: 'manufactured',
+                    category: document.getElementById('newProductCategory').value,
+                    unitOfMeasureId: document.getElementById('batchUOM').value || null,
+                    unitPrice: parseFloat(document.getElementById('newProductPrice').value || 0),
+                    costCenterId: document.getElementById('recipeCostCenter').value || null,
+                    projectId: document.getElementById('recipeProject').value || null
+                };
+
+                try {
+                    const createResponse = await fetch('/api/v1/manufacturing/products', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newProductData)
+                    });
+
+                    if (!createResponse.ok) {
+                        const error = await createResponse.json();
+                        showAlert(error.detail || 'Failed to create product', 'danger');
+                        return;
+                    }
+
+                    const createdProduct = await createResponse.json();
+                    productId = createdProduct.id;
+                    showAlert(`Product "${newName}" created successfully!`, 'success');
+
+                    // Reload products list for future use
+                    await loadProducts();
+
+                } catch (error) {
+                    console.error('Error creating product:', error);
+                    showAlert('Failed to create product', 'danger');
+                    return;
+                }
+            } else {
+                // Using existing product
+                productId = document.getElementById('recipeProduct').value;
+                if (!productId) {
+                    showAlert('Please select a product', 'warning');
+                    return;
+                }
+            }
+
+            // Collect ingredients
+            const ingredients = [];
+            document.querySelectorAll('.ingredient-row').forEach(row => {
+                const ingredientId = row.querySelector('.ingredient-select').value;
+                const quantity = parseFloat(row.querySelector('.quantity-input').value || 0);
+                const uomId = row.querySelector('.uom-select').value || null;
+                const cost = parseFloat(row.querySelector('.cost-input').value || 0);
+                const notes = row.querySelector('.notes-input').value;
+
+                if (ingredientId && quantity > 0) {
+                    ingredients.push({
+                        component_id: ingredientId,
+                        quantity: quantity,
+                        unit_of_measure_id: uomId,
+                        unit_cost: cost,
+                        notes: notes
+                    });
+                }
+            });
+
+            if (ingredients.length === 0) {
+                showAlert('Please add at least one ingredient', 'warning');
+                return;
+            }
+
+            // Save the recipe (BOM)
+            try {
+                showAlert('Saving recipe...', 'info');
+
+                const response = await fetch(`/api/v1/manufacturing/products/${productId}/bom`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: ingredients })
+                });
+
+                if (response.ok) {
+                    showAlert('Recipe saved successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createRecipeModal')).hide();
+
+                    // Reset form
+                    resetRecipeForm();
+
+                    await loadRecipes();
+                    updateStatistics();
+                } else {
+                    const error = await response.json();
+                    showAlert(error.detail || 'Failed to save recipe', 'danger');
+                }
+            } catch (error) {
+                console.error('Error saving recipe:', error);
+                showAlert('Failed to save recipe', 'danger');
+            }
+        }
+
+        function resetRecipeForm() {
+            // Reset product selection
+            document.getElementById('existingProductMode').checked = true;
+            document.getElementById('existingProductSection').style.display = 'block';
+            document.getElementById('newProductSection').style.display = 'none';
+            document.getElementById('recipeProduct').value = '';
+
+            // Reset branch selection
+            document.getElementById('manufacturingBranch').value = '';
+            branchInventory = [];
+            document.getElementById('addIngredientBtn').disabled = true;
+
+            // Clear new product fields
+            document.getElementById('newProductName').value = '';
+            document.getElementById('newProductSKU').value = '';
+            document.getElementById('newProductDescription').value = '';
+            document.getElementById('newProductPrice').value = '';
+            document.getElementById('newProductCategory').value = 'manufactured';
+
+            // Reset batch settings
+            document.getElementById('batchSize').value = '1';
+            document.getElementById('batchUOM').value = '';
+
+            // Clear ingredients
+            const tbody = document.getElementById('ingredientsTable');
+            tbody.innerHTML = `
+                <tr class="text-muted">
+                    <td colspan="6" class="text-center">Click "Add Ingredient" to start building the recipe</td>
+                </tr>
+            `;
+
+            // Reset costs
+            document.getElementById('laborHours').value = '0';
+            document.getElementById('laborRate').value = '0';
+            document.getElementById('laborCost').value = '0';
+            document.getElementById('overheadCost').value = '0';
+            document.getElementById('otherCosts').value = '0';
+
+            calculateCosts();
+        }
+
+        function renderRecipes(recipes) {
+            const tbody = document.getElementById('recipesTable');
+
+            if (!recipes || recipes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No recipes found. Create your first recipe!</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = recipes.map(recipe => {
+                const materialCost = recipe.bom.reduce((sum, item) => sum + (item.total_cost || 0), 0);
+                const ingredientCount = recipe.bom.length;
+                const unit = allUnits.find(u => u.id === recipe.unit_of_measure_id);
+
+                return `
+                    <tr>
+                        <td>
+                            <strong>${recipe.name}</strong>
+                            ${recipe.product_type === 'manufactured' ? '<span class="badge badge-ingredient bg-info ms-2">Manufactured</span>' : ''}
+                        </td>
+                        <td>${recipe.sku}</td>
+                        <td>1</td>
+                        <td>${unit ? unit.abbreviation : 'Unit'}</td>
+                        <td>
+                            ${recipe.cost_center_id ?
+                        `<span class="badge bg-primary">${getCostCenterName(recipe.cost_center_id)}</span>` :
+                        '<span class="text-muted">—</span>'
+                    }
+                        </td>
+                        <td>
+                            ${recipe.project_id ?
+                        `<span class="badge bg-success">${getProjectName(recipe.project_id)}</span>` :
+                        '<span class="text-muted">—</span>'
+                    }
+                        </td>
+                        <td><span class="badge bg-secondary">${ingredientCount} items</span></td>
+                        <td>${formatCurrency(materialCost)}</td>
+                        <td>${formatCurrency(0)}</td>
+                        <td><strong>${formatCurrency(materialCost)}</strong></td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewRecipe('${recipe.id}')" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="produceFromRecipe('${recipe.id}')" title="Produce">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function viewRecipe(productId) {
+            // Load recipe details and show in modal
+            try {
+                const response = await fetch(`/api/v1/manufacturing/products/${productId}/bom`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const product = allProducts.find(p => p.id === productId);
+                    displayRecipeDetails(product, data.bom);
+                    new bootstrap.Modal(document.getElementById('viewRecipeModal')).show();
+                }
+            } catch (error) {
+                console.error('Error loading recipe:', error);
+                showAlert('Failed to load recipe', 'danger');
+            }
+        }
+
+        function displayRecipeDetails(product, bom) {
+            const modal = document.getElementById('viewRecipeModal');
+            modal.querySelector('#viewRecipeTitle').textContent = `Recipe: ${product.name}`;
+
+            const materialCost = bom.reduce((sum, item) => sum + (item.total_cost || 0), 0);
+
+            const body = document.getElementById('viewRecipeBody');
+            body.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Product Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Name:</strong></td><td>${product.name}</td></tr>
+                            <tr><td><strong>SKU:</strong></td><td>${product.sku}</td></tr>
+                            <tr><td><strong>Type:</strong></td><td>${product.product_type}</td></tr>
+                            <tr><td><strong>Selling Price:</strong></td><td>${formatCurrency(product.selling_price)}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Cost Breakdown</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Material Cost:</strong></td><td>${formatCurrency(materialCost)}</td></tr>
+                            <tr><td><strong>Labor Cost:</strong></td><td>${formatCurrency(0)}</td></tr>
+                            <tr><td><strong>Total Cost:</strong></td><td><strong>${formatCurrency(materialCost)}</strong></td></tr>
+                            <tr><td><strong>Margin:</strong></td><td class="text-success">${((product.selling_price - materialCost) / product.selling_price * 100).toFixed(1)}%</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6>Ingredients (Bill of Materials)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Ingredient</th>
+                                <th>SKU</th>
+                                <th class="text-end">Quantity</th>
+                                <th>UOM</th>
+                                <th class="text-end">Unit Cost</th>
+                                <th class="text-end">Total Cost</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bom.map(item => `
+                                <tr>
+                                    <td>${item.component_name}</td>
+                                    <td>${item.component_sku}</td>
+                                    <td class="text-end">${item.quantity}</td>
+                                    <td>${item.unit_of_measure ? item.unit_of_measure.abbreviation : 'Unit'}</td>
+                                    <td class="text-end">${formatCurrency(item.unit_cost)}</td>
+                                    <td class="text-end"><strong>${formatCurrency(item.total_cost)}</strong></td>
+                                    <td>${item.notes || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <td colspan="5" class="text-end"><strong>Total Material Cost:</strong></td>
+                                <td class="text-end"><strong>${formatCurrency(materialCost)}</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+
+            currentRecipe = { product, bom };
+        }
+
+        function updateStatistics() {
+            // This would be populated with actual data
+            document.getElementById('totalRecipes').textContent = '0';
+            document.getElementById('activeProducts').textContent = allProducts.length;
+            document.getElementById('avgCost').textContent = formatCurrency(0);
+            document.getElementById('totalValue').textContent = formatCurrency(0);
+        }
+
+        function refreshRecipes() {
+            loadRecipes();
+            showAlert('Recipes refreshed', 'info');
+        }
+
+        function exportRecipes() {
+            showAlert('Export functionality coming soon', 'info');
+        }
+
+        function viewRecipeLibrary() {
+            // Create and show recipe library modal
+            const modalHtml = `
+                <div class="modal fade" id="recipeLibraryModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-folder2-open"></i> Recipe Library
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- Search and Filters -->
+                                <div class="row mb-4">
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                            <input type="text" class="form-control" id="librarySearch"
+                                                placeholder="Search recipes..." onkeyup="filterRecipeLibrary()">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="libraryCategoryFilter" onchange="filterRecipeLibrary()">
+                                            <option value="">All Categories</option>
+                                            <option value="finished">Finished Goods</option>
+                                            <option value="component">Components</option>
+                                            <option value="assembly">Assemblies</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="librarySortBy" onchange="sortRecipeLibrary()">
+                                            <option value="name">Sort by Name</option>
+                                            <option value="cost_asc">Cost (Low to High)</option>
+                                            <option value="cost_desc">Cost (High to Low)</option>
+                                            <option value="ingredients">Ingredient Count</option>
+                                            <option value="recent">Recently Modified</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-outline-secondary w-100" onclick="refreshRecipeLibrary()">
+                                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Stats Summary -->
+                                <div class="row mb-4">
+                                    <div class="col-md-3">
+                                        <div class="card border-primary">
+                                            <div class="card-body text-center">
+                                                <h6 class="text-muted mb-2">Total Recipes</h6>
+                                                <h3 class="mb-0 text-primary" id="libTotalRecipes">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-success">
+                                            <div class="card-body text-center">
+                                                <h6 class="text-muted mb-2">Active</h6>
+                                                <h3 class="mb-0 text-success" id="libActiveRecipes">0</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-info">
+                                            <div class="card-body text-center">
+                                                <h6 class="text-muted mb-2">Avg. Cost</h6>
+                                                <h3 class="mb-0 text-info" id="libAvgCost">P 0.00</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-warning">
+                                            <div class="card-body text-center">
+                                                <h6 class="text-muted mb-2">Total Value</h6>
+                                                <h3 class="mb-0 text-warning" id="libTotalValue">P 0.00</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Recipe Cards Grid -->
+                                <div id="recipeLibraryGrid" class="row g-3">
+                                    <div class="col-12 text-center py-5">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-3 text-muted">Loading recipe library...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="exportRecipeLibrary()">
+                                    <i class="bi bi-download"></i> Export to Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing modal if any
+            const existingModal = document.getElementById('recipeLibraryModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Add modal to page
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('recipeLibraryModal'));
+            modal.show();
+
+            // Load recipes
+            loadRecipeLibraryData();
+        }
+
+        let libraryRecipes = [];
+        let filteredLibraryRecipes = [];
+
+        async function loadRecipeLibraryData() {
+            try {
+                // Fetch all products with BOMs
+                const response = await fetch('/api/v1/manufacturing/products', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load recipes');
+                }
+
+                const products = await response.json();
+
+                // Fetch BOM for each product
+                libraryRecipes = [];
+                for (const product of products) {
+                    try {
+                        const bomResponse = await fetch(`/api/v1/manufacturing/products/${product.id}/bom`, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                            }
+                        });
+
+                        if (bomResponse.ok) {
+                            const bomData = await bomResponse.json();
+                            if (bomData.bom && bomData.bom.length > 0) {
+                                libraryRecipes.push({
+                                    product: product,
+                                    bom: bomData.bom,
+                                    totalCost: bomData.bom.reduce((sum, item) => sum + (item.total_cost || 0), 0),
+                                    ingredientCount: bomData.bom.length
+                                });
+                            }
+                        }
+                    } catch (err) {
+                        console.error(`Error loading BOM for ${product.name}:`, err);
+                    }
+                }
+
+                filteredLibraryRecipes = [...libraryRecipes];
+                updateLibraryStats();
+                renderRecipeLibraryGrid();
+
+            } catch (error) {
+                console.error('Error loading recipe library:', error);
+                document.getElementById('recipeLibraryGrid').innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                        <p class="mt-3 text-danger">Error loading recipes. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateLibraryStats() {
+            const total = filteredLibraryRecipes.length;
+            const active = filteredLibraryRecipes.filter(r => r.product.is_active !== false).length;
+            const avgCost = total > 0 ? filteredLibraryRecipes.reduce((sum, r) => sum + r.totalCost, 0) / total : 0;
+            const totalValue = filteredLibraryRecipes.reduce((sum, r) => sum + r.totalCost, 0);
+
+            document.getElementById('libTotalRecipes').textContent = total;
+            document.getElementById('libActiveRecipes').textContent = active;
+            document.getElementById('libAvgCost').textContent = formatCurrency(avgCost);
+            document.getElementById('libTotalValue').textContent = formatCurrency(totalValue);
+        }
+
+        function renderRecipeLibraryGrid() {
+            const grid = document.getElementById('recipeLibraryGrid');
+
+            if (filteredLibraryRecipes.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-inbox text-muted fs-1"></i>
+                        <p class="mt-3 text-muted">No recipes found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filteredLibraryRecipes.forEach(recipe => {
+                const product = recipe.product;
+                const materialCost = recipe.totalCost;
+                const itemCount = recipe.ingredientCount;
+
+                html += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card recipe-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="card-title mb-0">${product.name}</h5>
+                                    <span class="badge ${product.is_active !== false ? 'bg-success' : 'bg-secondary'}">
+                                        ${product.is_active !== false ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+
+                                ${product.description ? `<p class="text-muted small">${product.description}</p>` : ''}
+
+                                <div class="cost-breakdown mt-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Material Cost:</span>
+                                        <strong>${formatCurrency(materialCost)}</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Ingredients:</span>
+                                        <span class="badge badge-ingredient bg-info">${itemCount} items</span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-tag"></i> SKU: ${product.sku || 'N/A'}<br>
+                                        ${product.unit_of_measure ? `<i class="bi bi-rulers"></i> UoM: ${product.unit_of_measure}` : ''}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewRecipeDetails('${product.id}')">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" onclick="useRecipeForProduction('${product.id}')">
+                                        <i class="bi bi-play"></i> Produce
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="printRecipe('${product.id}')">
+                                        <i class="bi bi-printer"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        function filterRecipeLibrary() {
+            const searchTerm = document.getElementById('librarySearch').value.toLowerCase();
+            const categoryFilter = document.getElementById('libraryCategoryFilter').value;
+
+            filteredLibraryRecipes = libraryRecipes.filter(recipe => {
+                const matchesSearch = recipe.product.name.toLowerCase().includes(searchTerm) ||
+                    (recipe.product.sku && recipe.product.sku.toLowerCase().includes(searchTerm)) ||
+                    (recipe.product.description && recipe.product.description.toLowerCase().includes(searchTerm));
+
+                const matchesCategory = !categoryFilter ||
+                    (recipe.product.category && recipe.product.category.toLowerCase().includes(categoryFilter));
+
+                return matchesSearch && matchesCategory;
+            });
+
+            sortRecipeLibrary();
+            updateLibraryStats();
+            renderRecipeLibraryGrid();
+        }
+
+        function sortRecipeLibrary() {
+            const sortBy = document.getElementById('librarySortBy').value;
+
+            switch (sortBy) {
+                case 'name':
+                    filteredLibraryRecipes.sort((a, b) => a.product.name.localeCompare(b.product.name));
+                    break;
+                case 'cost_asc':
+                    filteredLibraryRecipes.sort((a, b) => a.totalCost - b.totalCost);
+                    break;
+                case 'cost_desc':
+                    filteredLibraryRecipes.sort((a, b) => b.totalCost - a.totalCost);
+                    break;
+                case 'ingredients':
+                    filteredLibraryRecipes.sort((a, b) => b.ingredientCount - a.ingredientCount);
+                    break;
+                case 'recent':
+                    filteredLibraryRecipes.sort((a, b) => {
+                        const dateA = new Date(a.product.updated_at || a.product.created_at || 0);
+                        const dateB = new Date(b.product.updated_at || b.product.created_at || 0);
+                        return dateB - dateA;
+                    });
+                    break;
+            }
+
+            renderRecipeLibraryGrid();
+        }
+
+        function refreshRecipeLibrary() {
+            document.getElementById('recipeLibraryGrid').innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Refreshing recipe library...</p>
+                </div>
+            `;
+            loadRecipeLibraryData();
+        }
+
+        function viewRecipeDetails(productId) {
+            // Close library modal
+            const libraryModal = bootstrap.Modal.getInstance(document.getElementById('recipeLibraryModal'));
+            if (libraryModal) {
+                libraryModal.hide();
+            }
+
+            // Load and show recipe details
+            loadRecipe(productId);
+        }
+
+        function useRecipeForProduction(productId) {
+            // Close library modal and navigate to production
+            const libraryModal = bootstrap.Modal.getInstance(document.getElementById('recipeLibraryModal'));
+            if (libraryModal) {
+                libraryModal.hide();
+            }
+            produceFromRecipe(productId);
+        }
+
+        function printRecipe(productId) {
+            const recipe = libraryRecipes.find(r => r.product.id === productId);
+            if (!recipe) return;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Recipe: ${recipe.product.name}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #0d6efd; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f8f9fa; font-weight: bold; }
+                        .header { margin-bottom: 20px; }
+                        .footer { margin-top: 30px; padding-top: 10px; border-top: 2px solid #ddd; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Recipe: ${recipe.product.name}</h1>
+                        <p><strong>SKU:</strong> ${recipe.product.sku || 'N/A'}</p>
+                        ${recipe.product.description ? `<p><strong>Description:</strong> ${recipe.product.description}</p>` : ''}
+                        <p><strong>Total Material Cost:</strong> ${formatCurrency(recipe.totalCost)}</p>
+                    </div>
+
+                    <h2>Bill of Materials</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Component</th>
+                                <th>SKU</th>
+                                <th>Quantity</th>
+                                <th>Unit Cost</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${recipe.bom.map((item, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${item.component_name || 'Unknown'}</td>
+                                    <td>${item.component_sku || 'N/A'}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>${formatCurrency(item.unit_cost || 0)}</td>
+                                    <td>${formatCurrency(item.total_cost || 0)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="5" style="text-align: right;">Total:</th>
+                                <th>${formatCurrency(recipe.totalCost)}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="footer">
+                        <p>Printed on: ${new Date().toLocaleString()}</p>
+                        <p>CNPERP ERP - Recipe Manager</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => printWindow.print(), 250);
+        }
+
+        function exportRecipeLibrary() {
+            if (filteredLibraryRecipes.length === 0) {
+                showAlert('No recipes to export', 'warning');
+                return;
+            }
+
+            // Prepare CSV data
+            let csv = 'Recipe Name,SKU,Description,Ingredient Count,Material Cost,Status\n';
+
+            filteredLibraryRecipes.forEach(recipe => {
+                const product = recipe.product;
+                csv += `"${product.name}","${product.sku || ''}","${(product.description || '').replace(/"/g, '""')}",${recipe.ingredientCount},${recipe.totalCost.toFixed(2)},"${product.is_active !== false ? 'Active' : 'Inactive'}"\n`;
+            });
+
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `recipe_library_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            showAlert('Recipe library exported successfully', 'success');
+        }
+
+        function useRecipeForJobCard() {
+            if (!currentRecipe) return;
+            // Navigate to job cards page with recipe pre-filled
+            window.location.href = `/static/job-cards.html?recipe=${currentRecipe.product.id}`;
+        }
+
+        async function produceFromRecipe(productId) {
+            if (!productId && currentRecipe) {
+                productId = currentRecipe.product.id;
+            }
+
+            // Navigate to manufacturing page
+            window.location.href = `/static/manufacturing.html?product=${productId}`;
+        }
+
+        // Dimensional filtering functions
+        let originalRecipes = []; // Store original unfiltered recipes
+
+        function applyDimensionalFilters() {
+            const costCenterFilter = document.getElementById('filterCostCenter').value;
+            const projectFilter = document.getElementById('filterProject').value;
+
+            let filteredRecipes = [...originalRecipes];
+
+            // Apply cost center filter
+            if (costCenterFilter) {
+                filteredRecipes = filteredRecipes.filter(recipe =>
+                    recipe.cost_center_id === costCenterFilter
+                );
+            }
+
+            // Apply project filter
+            if (projectFilter) {
+                filteredRecipes = filteredRecipes.filter(recipe =>
+                    recipe.project_id === projectFilter
+                );
+            }
+
+            renderRecipes(filteredRecipes);
+            updateDimensionalStats(filteredRecipes);
+        }
+
+        function clearDimensionalFilters() {
+            document.getElementById('filterCostCenter').value = '';
+            document.getElementById('filterProject').value = '';
+            renderRecipes(originalRecipes);
+            updateDimensionalStats(originalRecipes);
+        }
+
+        function updateDimensionalStats(recipes) {
+            // Update stats based on filtered recipes
+            const totalRecipes = recipes.length;
+            const totalCost = recipes.reduce((sum, recipe) => {
+                const materialCost = recipe.bom.reduce((bomSum, item) => bomSum + (item.total_cost || 0), 0);
+                return sum + materialCost;
+            }, 0);
+
+            // Count unique products (active products)
+            const activeProducts = recipes.length; // Each recipe represents an active product
+
+            // Update all stats
+            document.getElementById('totalRecipes').textContent = totalRecipes;
+            document.getElementById('activeProducts').textContent = activeProducts;
+            document.getElementById('totalValue').textContent = formatCurrency(totalCost);
+
+            if (totalRecipes > 0) {
+                document.getElementById('avgCost').textContent = formatCurrency(totalCost / totalRecipes);
+            } else {
+                document.getElementById('avgCost').textContent = formatCurrency(0);
+            }
+
+            // Log dimensional breakdown for analytics
+            if (window.dimensionalData) {
+                const costCenterStats = {};
+                const projectStats = {};
+
+                recipes.forEach(recipe => {
+                    const materialCost = recipe.bom.reduce((bomSum, item) => bomSum + (item.total_cost || 0), 0);
+
+                    // Cost center stats
+                    const ccId = recipe.cost_center_id || 'unassigned';
+                    const ccName = ccId === 'unassigned' ? 'Unassigned' : getCostCenterName(ccId);
+                    if (!costCenterStats[ccName]) {
+                        costCenterStats[ccName] = { count: 0, value: 0 };
+                    }
+                    costCenterStats[ccName].count++;
+                    costCenterStats[ccName].value += materialCost;
+
+                    // Project stats
+                    const projId = recipe.project_id || 'unassigned';
+                    const projName = projId === 'unassigned' ? 'Unassigned' : getProjectName(projId);
+                    if (!projectStats[projName]) {
+                        projectStats[projName] = { count: 0, value: 0 };
+                    }
+                    projectStats[projName].count++;
+                    projectStats[projName].value += materialCost;
+                });
+
+                console.log('📊 Recipe Cost Center Breakdown:', costCenterStats);
+                console.log('📊 Recipe Project Breakdown:', projectStats);
+            }
+        }
+
+        function showAlert(message, type) {
+            // Simple alert implementation
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
+        }
+    </script>
+</body>
+
+</html>

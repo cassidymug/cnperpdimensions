@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Banking Reports - Cash Flow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background: #f8f9fa;
+    }
+
+    .section-card {
+      border-left: 4px solid #0d6efd;
+    }
+
+    .cash-positive {
+      color: #198754;
+      font-weight: 600;
+    }
+
+    .cash-negative {
+      color: #dc3545;
+      font-weight: 600;
+    }
+
+    .activity-card:hover {
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .08);
+      transition: .15s;
+    }
+
+    .table-hover tbody tr:hover {
+      background: #fafcff;
+    }
+
+    .drill-link {
+      cursor: pointer;
+      color: #0d6efd;
+      text-decoration: underline;
+    }
+
+    .badge-transaction {
+      background: #0d6efd;
+    }
+
+    .badge-transfer {
+      background: #6f42c1;
+    }
+
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      .card {
+        box-shadow: none;
+        border: 1px solid #000;
+      }
+    }
+
+    .small-table td,
+    .small-table th {
+      padding: .35rem .5rem;
+      font-size: .8rem;
+    }
+  </style>
+
+
+</head>
+
+<body>
+  <!-- Navigation Bar Container -->
+  <div id="navbar-container"></div>
+
+  <!-- Spacer to prevent content from being hidden under fixed navbar -->
+  <div style="height: 70px;"></div>
+
+  <div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h3 class="mb-0"><i class="bi bi-bank2 me-2"></i>Banking Cash Flow</h3>
+        <small class="text-muted">Period cash movement by activity (Operating, Investing, Financing)</small>
+      </div>
+      <div class="no-print d-flex gap-2">
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            <i class="bi bi-bank"></i> Banking Modules
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/static/bank-accounts.html">
+                <i class="bi bi-bank"></i> Bank Accounts
+              </a></li>
+            <li><a class="dropdown-item" href="/static/bank-transactions.html">
+                <i class="bi bi-arrow-left-right"></i> Transactions
+              </a></li>
+            <li><a class="dropdown-item" href="/static/bank-reconciliations.html">
+                <i class="bi bi-check2-square"></i> Reconciliations
+              </a></li>
+            <li><a class="dropdown-item" href="/static/bank-transfers.html">
+                <i class="bi bi-arrow-repeat"></i> Transfers
+              </a></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item active" href="/static/banking-reports.html">
+                <i class="bi bi-graph-up"></i> Banking Reports
+              </a></li>
+          </ul>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary" onclick="exportPDF()" title="Client PDF"><i
+              class="bi bi-filetype-pdf me-1"></i>PDF</button>
+          <button class="btn btn-outline-secondary" onclick="downloadServerPDF()" title="Server PDF"><i
+              class="bi bi-cloud-download me-1"></i>PDF</button>
+          <button class="btn btn-outline-secondary" onclick="window.print()" title="Print"><i
+              class="bi bi-printer"></i></button>
+        </div>
+        <button class="btn btn-outline-primary" onclick="exportCSV()" title="Export CSV"><i
+            class="bi bi-filetype-csv me-1"></i>CSV</button>
+        <button class="btn btn-outline-success" onclick="exportXLSX()" title="Client Excel"><i
+            class="bi bi-file-earmark-spreadsheet me-1"></i>XLSX</button>
+        <button class="btn btn-outline-success" onclick="downloadServerXLSX()" title="Server Excel"><i
+            class="bi bi-cloud-arrow-down me-1"></i>XLSX</button>
+      </div>
+    </div>
+    <div class="card mb-3 p-3 no-print">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label">Start Date</label>
+          <input type="date" id="startDate" class="form-control" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">End Date</label>
+          <input type="date" id="endDate" class="form-control" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Branch</label>
+          <select id="branchFilter" class="form-select">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-primary w-100" onclick="loadCashFlow()"><i
+              class="bi bi-arrow-repeat me-1"></i>Load</button>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="summaryRow" class="row mb-4 d-none"></div>
+
+    <div id="activitySections" class="row g-4"></div>
+
+    <div id="detailsModal" class="modal fade" tabindex="-1">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="detailsTitle"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="table-responsive">
+              <table class="table table-sm small-table table-striped" id="detailsTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th class="text-end">Amount</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- jsPDF & autoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    integrity="sha512-/Fpw7mZkk2unfG0KBPXn1HULICwhf66A1VpzwuNFuIBqmoeZaZX6mE6xPD58Ll35H0TADaBrZEcDgIw2T2dtNA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"
+    integrity="sha512-hJ1tH+xr3aMcMBXNIN1qNbfXDLMQmH6F4lZo80rJv2bpYAj1di3mwxU8hDOMeJUnY0akehQuELdTDTEHAcWQpA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const API_BASE = '/api/v1/banking';
+    let detailsModal;
+
+    function setDefaults() {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(1);
+      document.getElementById('startDate').value = start.toISOString().split('T')[0];
+      document.getElementById('endDate').value = end.toISOString().split('T')[0];
+    }
+
+    async function loadBranches() {
+      try {
+        const r = await fetch('/api/v1/branches/public');
+        if (!r.ok) return; const data = await r.json();
+        const sel = document.getElementById('branchFilter');
+        data.forEach(b => { const opt = document.createElement('option'); opt.value = b.id; opt.textContent = b.name; sel.appendChild(opt); });
+      } catch (e) { console.warn('Branches load failed', e); }
+    }
+
+    function resetFilters() { setDefaults(); document.getElementById('branchFilter').value = ''; loadCashFlow(); }
+
+    async function loadCashFlow() {
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      const branch = document.getElementById('branchFilter').value;
+      const params = new URLSearchParams();
+      if (start) params.append('start_date', start); if (end) params.append('end_date', end); if (branch) params.append('branch_id', branch);
+      const url = `${API_BASE}/cash-flow?${params.toString()}`;
+      try {
+        const resp = await fetch(url); if (!resp.ok) throw new Error(resp.status);
+        const json = await resp.json(); if (!json.success) throw new Error(json.message || 'error');
+        renderCashFlow(json.data);
+      } catch (err) { console.error('cash flow load error', err); }
+    }
+
+    function formatAmount(v) { const n = Number(v) || 0; return (n < 0 ? '-' : '') + new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(n)); }
+
+    function renderCashFlow(data) {
+      document.getElementById('summaryRow').classList.remove('d-none');
+      const wrap = document.getElementById('summaryRow');
+      wrap.innerHTML = `
+    <div class="col-md-3"><div class="card p-3 section-card"><div class="small text-muted">Opening Cash</div><div class="h5 mb-0">${formatAmount(data.opening_cash)}</div></div></div>
+    <div class="col-md-3"><div class="card p-3 section-card"><div class="small text-muted">Net Cash Movement</div><div class="h5 mb-0 ${data.net_cash_movement >= 0 ? 'cash-positive' : 'cash-negative'}">${formatAmount(data.net_cash_movement)}</div></div></div>
+    <div class="col-md-3"><div class="card p-3 section-card"><div class="small text-muted">Closing Cash</div><div class="h5 mb-0">${formatAmount(data.closing_cash)}</div></div></div>
+    <div class="col-md-3"><div class="card p-3 section-card"><div class="small text-muted">Period</div><div class="h6 mb-0">${data.period.start} → ${data.period.end}</div></div></div>`;
+
+      const activities = ['operating', 'investing', 'financing'];
+      const container = document.getElementById('activitySections');
+      container.innerHTML = '';
+      activities.forEach(act => {
+        const sec = data.sections[act]; if (!sec) return; const netClass = sec.net >= 0 ? 'cash-positive' : 'cash-negative';
+        const card = document.createElement('div'); card.className = 'col-md-4';
+        card.innerHTML = `
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-uppercase">${act}</span>
+          <button class="btn btn-sm btn-outline-secondary" onclick="showDetails('${act}')"><i class="bi bi-list"></i></button>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between"><span class="text-muted small">Inflows</span><span>${formatAmount(sec.inflows)}</span></div>
+          <div class="d-flex justify-content-between"><span class="text-muted small">Outflows</span><span>${formatAmount(sec.outflows)}</span></div>
+          <hr class="my-2"/>
+          <div class="d-flex justify-content-between fw-semibold"><span>Net</span><span class="${netClass}">${formatAmount(sec.net)}</span></div>
+        </div>
+      </div>`;
+        container.appendChild(card);
+      });
+      window._cashFlowData = data;
+    }
+
+    function showDetails(act) {
+      if (!window._cashFlowData) return; const sec = window._cashFlowData.sections[act]; if (!sec) return;
+      const tbody = document.querySelector('#detailsTable tbody'); tbody.innerHTML = '';
+      sec.details.forEach(r => {
+        const isTransfer = r.is_transfer;
+        const typeLabel = isTransfer ? (r.transfer_type || 'transfer') : (r.transaction_type || 'transaction');
+        const badgeClass = isTransfer ? 'badge-transfer' : 'badge-transaction';
+        const linkHandler = isTransfer ? `onclick=\"openTransfer('${r.id}')\"` : `onclick=\"openTransaction('${r.id}')\"`;
+        const cleanDate = r.date ? r.date.toString().split('T')[0] : '';
+        const row = `<tr>
+      <td>${cleanDate}</td>
+      <td><span class="drill-link" ${linkHandler}>${(r.description || '(no description)')}</span></td>
+      <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
+      <td class="text-end">${formatAmount(r.amount)}</td>
+    </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+      document.getElementById('detailsTitle').textContent = act.charAt(0).toUpperCase() + act.slice(1) + ' Activity Details';
+      if (!detailsModal) detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+      detailsModal.show();
+    }
+
+    async function openTransaction(id) {
+      try { const r = await fetch(`${API_BASE}/transactions/${id}`); if (!r.ok) throw 0; const j = await r.json(); showRecordModal('Transaction', j.data); }
+      catch (e) { console.error('tx load', e); }
+    }
+    async function openTransfer(id) {
+      try { const r = await fetch(`${API_BASE}/transfers/${id}`); if (!r.ok) throw 0; const j = await r.json(); showRecordModal('Transfer', j.data); }
+      catch (e) { console.error('transfer load', e); }
+    }
+
+    function showRecordModal(kind, data) {
+      const modalBody = document.querySelector('#detailsModal .modal-body');
+      let info = document.getElementById('recordDetailBox');
+      if (!info) {
+        info = document.createElement('div'); info.id = 'recordDetailBox'; info.className = 'mt-3'; modalBody.appendChild(info);
+      }
+      const rows = Object.entries(data || {}).map(([k, v]) => `<tr><td class='text-muted small'>${k}</td><td class='small'>${v === null ? '' : v}</td></tr>`).join('');
+      info.innerHTML = `<div class='card border-info'><div class='card-header py-1 small fw-semibold'>${kind} Detail</div><div class='card-body p-2'><div class='table-responsive'><table class='table table-sm mb-0 small'>${rows}</table></div></div></div>`;
+    }
+
+    function exportCSV() {
+      if (!window._cashFlowData) return; const rows = [["Activity", "Date", "Description", "Type", "Amount"]];
+      Object.entries(window._cashFlowData.sections).forEach(([act, sec]) => {
+        sec.details.forEach(d => rows.push([act, d.date || '', (d.description || '').replace(/,/g, ' '), d.transaction_type || d.transfer_type || '', d.amount]));
+      });
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = buildFileName('cash_flow', '.csv'); a.click();
+    }
+
+    function buildFileName(base, ext) {
+      const start = document.getElementById('startDate').value || 'start';
+      const end = document.getElementById('endDate').value || 'end';
+      return `${base}_${start}_${end}${ext}`;
+    }
+
+    function exportPDF() {
+      if (!window._cashFlowData) return;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+      const data = window._cashFlowData;
+      const marginX = 40; let cursorY = 50;
+      doc.setFontSize(16); doc.text('Banking Cash Flow Report', marginX, cursorY); cursorY += 18;
+      doc.setFontSize(10); doc.setTextColor(100);
+      doc.text(`Period: ${data.period.start} to ${data.period.end}`, marginX, cursorY); cursorY += 12;
+      doc.text(`Generated: ${new Date().toISOString()}`, marginX, cursorY); cursorY += 20;
+      doc.setTextColor(0);
+
+      // Summary table
+      const summaryRows = [
+        ['Opening Cash', formatAmount(data.opening_cash)],
+        ['Net Cash Movement', formatAmount(data.net_cash_movement)],
+        ['Closing Cash', formatAmount(data.closing_cash)]
+      ];
+      doc.autoTable({
+        startY: cursorY,
+        head: [['Metric', 'Amount']],
+        body: summaryRows,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [13, 110, 253] },
+        theme: 'grid',
+        margin: { left: marginX, right: marginX }
+      });
+      cursorY = doc.lastAutoTable.finalY + 20;
+
+      const activitiesOrder = ['operating', 'investing', 'financing'];
+      activitiesOrder.forEach((act, i) => {
+        const sec = data.sections[act]; if (!sec) return;
+        if (cursorY > 690) { doc.addPage(); cursorY = 50; }
+        doc.setFontSize(12); doc.text(act.toUpperCase() + ` Activity (Net: ${formatAmount(sec.net)})`, marginX, cursorY); cursorY += 10;
+        const body = sec.details.map(d => [
+          (d.date ? d.date.toString().substring(0, 10) : ''),
+          (d.description || '').substring(0, 60),
+          d.transaction_type || d.transfer_type || '',
+          formatAmount(d.amount)
+        ]);
+        doc.autoTable({
+          startY: cursorY,
+          head: [['Date', 'Description', 'Type', 'Amount']],
+          body: body,
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [108, 117, 125] },
+          theme: 'striped',
+          margin: { left: marginX, right: marginX },
+          didDrawPage: (dataArg) => { /* optional header/footer */ }
+        });
+        cursorY = doc.lastAutoTable.finalY + 18;
+      });
+
+      doc.save(buildFileName('cash_flow', '.pdf'));
+    }
+
+    function exportXLSX() {
+      if (!window._cashFlowData) return; const wb = XLSX.utils.book_new();
+      const data = window._cashFlowData;
+      // Summary sheet
+      const summary = [
+        ['Period Start', data.period.start],
+        ['Period End', data.period.end],
+        ['Opening Cash', data.opening_cash],
+        ['Net Cash Movement', data.net_cash_movement],
+        ['Closing Cash', data.closing_cash]
+      ];
+      const wsSummary = XLSX.utils.aoa_to_sheet(summary);
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+      // Activity sheets
+      Object.entries(data.sections).forEach(([act, sec]) => {
+        const rows = [['Date', 'Description', 'Type', 'Amount']];
+        sec.details.forEach(d => rows.push([
+          d.date ? d.date.toString().substring(0, 10) : '',
+          d.description || '',
+          d.transaction_type || d.transfer_type || '',
+          d.amount
+        ]));
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, act.substring(0, 31));
+      });
+      XLSX.writeFile(wb, buildFileName('cash_flow', '.xlsx'));
+    }
+
+    function downloadServerPDF() {
+      const start = document.getElementById('startDate').value; const end = document.getElementById('endDate').value; const branch = document.getElementById('branchFilter').value;
+      const params = new URLSearchParams(); if (start) params.append('start_date', start); if (end) params.append('end_date', end); if (branch) params.append('branch_id', branch);
+      window.open(`/api/v1/banking/cash-flow/pdf?${params.toString()}`, '_blank');
+    }
+    function downloadServerXLSX() {
+      const start = document.getElementById('startDate').value; const end = document.getElementById('endDate').value; const branch = document.getElementById('branchFilter').value;
+      const params = new URLSearchParams(); if (start) params.append('start_date', start); if (end) params.append('end_date', end); if (branch) params.append('branch_id', branch);
+      window.open(`/api/v1/banking/cash-flow/xlsx?${params.toString()}`, '_blank');
+    }
+    // Init
+    window.addEventListener('DOMContentLoaded', () => { setDefaults(); loadBranches(); loadCashFlow(); });
+  </script>
+  <script src="js/navbar.js?v=20250106001"></script>
+</body>
+
+</html>

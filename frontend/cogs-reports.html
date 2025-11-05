@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COGS Reports - CNPERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .report-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .trend-up {
+            color: #28a745;
+        }
+
+        .trend-down {
+            color: #dc3545;
+        }
+
+        .trend-stable {
+            color: #6c757d;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+
+        .variance-analysis {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .profitability-card {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .cost-efficiency-card {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            border: none;
+        }
+
+        .advanced-filter {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border: none;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 fw-bold">
+                            <i class="bi bi-graph-up text-primary me-3"></i>
+                            COGS Analytics & Reports
+                        </h1>
+                        <p class="lead text-muted">Comprehensive cost analysis and business intelligence</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-info" onclick="refreshData()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                        <button class="btn export-btn" onclick="generateComprehensiveReport()">
+                            <i class="bi bi-file-earmark-text me-2"></i>Generate Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Performance Indicators -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-currency-dollar fs-1 mb-2"></i>
+                        <h5>Total COGS</h5>
+                        <h3 id="totalCogs">₦0.00</h3>
+                        <small class="opacity-75">Current Period</small>
+                        <div class="mt-2">
+                            <span class="trend-up">
+                                <i class="bi bi-arrow-up"></i> 12.5%
+                            </span>
+                            <small class="opacity-75 ms-1">vs last period</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card variance-analysis">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle fs-1 mb-2"></i>
+                        <h5>Cost Variance</h5>
+                        <h3 id="costVariance">₦0.00</h3>
+                        <small class="opacity-75">Budget vs Actual</small>
+                        <div class="mt-2">
+                            <span class="text-warning">
+                                <i class="bi bi-exclamation-circle"></i> 8.3%
+                            </span>
+                            <small class="opacity-75 ms-1">over budget</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card profitability-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-percent fs-1 mb-2"></i>
+                        <h5>Gross Margin</h5>
+                        <h3 id="grossMargin">0%</h3>
+                        <small class="opacity-75">Revenue - COGS</small>
+                        <div class="mt-2">
+                            <span class="trend-down text-light">
+                                <i class="bi bi-arrow-down"></i> -2.1%
+                            </span>
+                            <small class="opacity-75 ms-1">vs target</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card cost-efficiency-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-speedometer2 fs-1 mb-2"></i>
+                        <h5>Cost Efficiency</h5>
+                        <h3 id="costEfficiency">0%</h3>
+                        <small class="opacity-75">Optimization Score</small>
+                        <div class="mt-2">
+                            <span class="trend-up text-light">
+                                <i class="bi bi-arrow-up"></i> 5.7%
+                            </span>
+                            <small class="opacity-75 ms-1">improvement</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Filters -->
+        <div class="card advanced-filter mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">
+                    <i class="bi bi-funnel me-2"></i>Report Filters & Parameters
+                    <button class="btn btn-sm btn-outline-primary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </h5>
+            </div>
+            <div class="collapse show" id="filtersCollapse">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" id="dateRange">
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month" selected>This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Cost Center</label>
+                            <select class="form-select" id="costCenterFilter">
+                                <option value="">All Centers</option>
+                                <option value="production">Production</option>
+                                <option value="warehouse">Warehouse</option>
+                                <option value="retail">Retail</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Product Category</label>
+                            <select class="form-select" id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="manufactured">Manufactured</option>
+                                <option value="retail">Retail</option>
+                                <option value="service">Service</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Analysis Type</label>
+                            <select class="form-select" id="analysisType">
+                                <option value="summary" selected>Summary</option>
+                                <option value="detailed">Detailed</option>
+                                <option value="variance">Variance</option>
+                                <option value="trend">Trend Analysis</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Comparison</label>
+                            <select class="form-select" id="comparisonType">
+                                <option value="none">No Comparison</option>
+                                <option value="previous">Previous Period</option>
+                                <option value="budget">Budget</option>
+                                <option value="yoy">Year over Year</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="applyFilters()">
+                                <i class="bi bi-search"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card report-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>Cost Trends & Variance Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="costTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card report-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pie-chart me-2"></i>Cost Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="costDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profitability Analysis -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card report-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bar-chart me-2"></i>Product Profitability
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="profitabilityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card report-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-speedometer2 me-2"></i>Cost Efficiency Metrics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="kpi-card p-3 mb-3">
+                                    <h4 class="text-primary">87%</h4>
+                                    <small class="text-muted">Material Efficiency</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="kpi-card p-3 mb-3">
+                                    <h4 class="text-success">92%</h4>
+                                    <small class="text-muted">Labor Efficiency</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="kpi-card p-3 mb-3">
+                                    <h4 class="text-warning">78%</h4>
+                                    <small class="text-muted">Overhead Efficiency</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <strong>Insight:</strong> Material costs show 13% inefficiency. Consider supplier optimization.
+                        </div>
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Achievement:</strong> Labor efficiency improved by 8% this quarter.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Cost Analysis Table -->
+        <div class="card report-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table me-2"></i>Detailed Cost Analysis
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="exportToPDF()">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="scheduleReport()">
+                            <i class="bi bi-calendar-event"></i> Schedule
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Units Sold</th>
+                                <th>Standard Cost</th>
+                                <th>Actual Cost</th>
+                                <th>Variance</th>
+                                <th>Variance %</th>
+                                <th>Efficiency</th>
+                                <th>Profitability</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailedAnalysisBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Enhanced COGS Reports Application
+        class COGSReportsApp {
+            constructor() {
+                this.data = [];
+                this.charts = {};
+                this.apiBaseUrl = 'http://localhost:8000/api/v1';
+                this.init();
+            }
+
+            async init() {
+                try {
+                    console.log('🚀 Initializing COGS Reports App...');
+                    
+                    // Initialize navbar
+                    this.initializeNavbar();
+                    
+                    // Load data and initialize charts
+                    await this.loadReportData();
+                    this.initializeCharts();
+                    this.populateDetailedTable();
+                    this.updateKPIs();
+                    
+                    console.log('✅ COGS Reports App initialized successfully');
+                } catch (error) {
+                    console.error('❌ Failed to initialize app:', error);
+                }
+            }
+
+            initializeNavbar() {
+                if (typeof createNavbar === 'function') {
+                    createNavbar('cogs-reports');
+                } else {
+                    console.error('createNavbar function not found');
+                }
+            }
+
+            async loadReportData() {
+                try {
+                    // Generate comprehensive mock data
+                    this.data = this.generateMockReportData();
+                } catch (error) {
+                    console.error('Error loading report data:', error);
+                }
+            }
+
+            generateMockReportData() {
+                const products = [
+                    { name: 'Product A', category: 'Electronics', units: 150, standardCost: 250, actualCost: 275 },
+                    { name: 'Product B', category: 'Clothing', units: 200, standardCost: 180, actualCost: 165 },
+                    { name: 'Product C', category: 'Home & Garden', units: 75, standardCost: 320, actualCost: 340 },
+                    { name: 'Product D', category: 'Electronics', units: 100, standardCost: 400, actualCost: 385 },
+                    { name: 'Product E', category: 'Sports', units: 125, standardCost: 220, actualCost: 235 },
+                    { name: 'Product F', category: 'Books', units: 300, standardCost: 45, actualCost: 42 },
+                    { name: 'Product G', category: 'Electronics', units: 80, standardCost: 650, actualCost: 680 }
+                ];
+
+                return products.map((product, index) => ({
+                    ...product,
+                    id: index + 1,
+                    variance: product.actualCost - product.standardCost,
+                    variancePercent: ((product.actualCost - product.standardCost) / product.standardCost * 100).toFixed(1),
+                    efficiency: Math.max(60, Math.min(100, 100 - Math.abs((product.actualCost - product.standardCost) / product.standardCost * 100))).toFixed(0),
+                    profitability: (Math.random() * 40 + 60).toFixed(1), // Mock profitability 60-100%
+                    materialCost: product.actualCost * 0.6,
+                    laborCost: product.actualCost * 0.25,
+                    overheadCost: product.actualCost * 0.15
+                }));
+            }
+
+            initializeCharts() {
+                this.initializeCostTrendsChart();
+                this.initializeCostDistributionChart();
+                this.initializeProfitabilityChart();
+            }
+
+            initializeCostTrendsChart() {
+                const ctx = document.getElementById('costTrendsChart').getContext('2d');
+                
+                // Generate time series data
+                const labels = [];
+                const standardData = [];
+                const actualData = [];
+                const budgetData = [];
+                
+                for (let i = 11; i >= 0; i--) {
+                    const date = new Date();
+                    date.setMonth(date.getMonth() - i);
+                    labels.push(date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }));
+                    
+                    const baseStandard = 10000 + Math.sin(i * 0.3) * 2000;
+                    const baseActual = baseStandard * (0.95 + Math.random() * 0.15);
+                    const baseBudget = baseStandard * (0.98 + Math.random() * 0.08);
+                    
+                    standardData.push(baseStandard);
+                    actualData.push(baseActual);
+                    budgetData.push(baseBudget);
+                }
+                
+                this.charts.costTrends = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Standard Cost',
+                            data: standardData,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        }, {
+                            label: 'Actual Cost',
+                            data: actualData,
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            tension: 0.4,
+                            fill: false
+                        }, {
+                            label: 'Budget',
+                            data: budgetData,
+                            borderColor: '#ffc107',
+                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                            tension: 0.4,
+                            fill: false,
+                            borderDash: [5, 5]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ₦' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₦' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            initializeCostDistributionChart() {
+                const ctx = document.getElementById('costDistributionChart').getContext('2d');
+                
+                const totalMaterial = this.data.reduce((sum, item) => sum + item.materialCost, 0);
+                const totalLabor = this.data.reduce((sum, item) => sum + item.laborCost, 0);
+                const totalOverhead = this.data.reduce((sum, item) => sum + item.overheadCost, 0);
+                
+                this.charts.costDistribution = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Material Costs', 'Labor Costs', 'Overhead Costs'],
+                        datasets: [{
+                            data: [totalMaterial, totalLabor, totalOverhead],
+                            backgroundColor: [
+                                '#0d6efd',
+                                '#198754',
+                                '#ffc107'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const percentage = ((context.parsed / (totalMaterial + totalLabor + totalOverhead)) * 100).toFixed(1);
+                                        return context.label + ': ₦' + context.parsed.toLocaleString() + ' (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            initializeProfitabilityChart() {
+                const ctx = document.getElementById('profitabilityChart').getContext('2d');
+                
+                const labels = this.data.map(item => item.name);
+                const profitabilityData = this.data.map(item => parseFloat(item.profitability));
+                const efficiencyData = this.data.map(item => parseFloat(item.efficiency));
+                
+                this.charts.profitability = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Profitability (%)',
+                            data: profitabilityData,
+                            backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                            borderColor: '#198754',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Cost Efficiency (%)',
+                            data: efficiencyData,
+                            backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                            borderColor: '#0d6efd',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateKPIs() {
+                const totalCogs = this.data.reduce((sum, item) => sum + (item.actualCost * item.units), 0);
+                const totalVariance = this.data.reduce((sum, item) => sum + (item.variance * item.units), 0);
+                const avgProfitability = this.data.reduce((sum, item) => sum + parseFloat(item.profitability), 0) / this.data.length;
+                const avgEfficiency = this.data.reduce((sum, item) => sum + parseFloat(item.efficiency), 0) / this.data.length;
+                
+                document.getElementById('totalCogs').textContent = this.formatCurrency(totalCogs);
+                document.getElementById('costVariance').textContent = this.formatCurrency(Math.abs(totalVariance));
+                document.getElementById('grossMargin').textContent = avgProfitability.toFixed(1) + '%';
+                document.getElementById('costEfficiency').textContent = avgEfficiency.toFixed(0) + '%';
+            }
+
+            populateDetailedTable() {
+                const tbody = document.getElementById('detailedAnalysisBody');
+                tbody.innerHTML = '';
+                
+                this.data.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    const varianceClass = item.variance > 0 ? 'text-danger' : item.variance < 0 ? 'text-success' : 'text-muted';
+                    const varianceIcon = item.variance > 0 ? 'bi-arrow-up' : item.variance < 0 ? 'bi-arrow-down' : 'bi-dash';
+                    const efficiencyClass = item.efficiency >= 90 ? 'text-success' : item.efficiency >= 70 ? 'text-warning' : 'text-danger';
+                    const profitabilityClass = item.profitability >= 80 ? 'text-success' : item.profitability >= 60 ? 'text-warning' : 'text-danger';
+                    
+                    row.innerHTML = `
+                        <td><strong>${item.name}</strong></td>
+                        <td><span class="badge bg-secondary">${item.category}</span></td>
+                        <td>${item.units.toLocaleString()}</td>
+                        <td>₦${item.standardCost.toLocaleString()}</td>
+                        <td>₦${item.actualCost.toLocaleString()}</td>
+                        <td class="${varianceClass}">
+                            <i class="bi ${varianceIcon}"></i>
+                            ₦${Math.abs(item.variance).toLocaleString()}
+                        </td>
+                        <td class="${varianceClass}">${item.variancePercent}%</td>
+                        <td class="${efficiencyClass}">
+                            <strong>${item.efficiency}%</strong>
+                        </td>
+                        <td class="${profitabilityClass}">
+                            <strong>${item.profitability}%</strong>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="reportsApp.drillDown(${item.id})" title="Drill Down">
+                                    <i class="bi bi-zoom-in"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="reportsApp.viewDetails(${item.id})" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Utility methods
+            formatCurrency(amount) {
+                return new Intl.NumberFormat('en-NG', {
+                    style: 'currency',
+                    currency: 'NGN',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(amount);
+            }
+
+            // Public methods
+            refreshData() {
+                console.log('Refreshing report data...');
+                this.loadReportData().then(() => {
+                    this.updateKPIs();
+                    this.populateDetailedTable();
+                    // Refresh charts
+                    Object.values(this.charts).forEach(chart => {
+                        chart.destroy();
+                    });
+                    this.initializeCharts();
+                });
+            }
+
+            applyFilters() {
+                console.log('Applying filters...');
+                // Filter logic would go here
+                this.populateDetailedTable();
+            }
+
+            generateComprehensiveReport() {
+                console.log('Generating comprehensive report...');
+                alert('Comprehensive report generation will be implemented in phase 2');
+            }
+
+            exportToExcel() {
+                console.log('Exporting to Excel...');
+                alert('Excel export will be implemented in phase 2');
+            }
+
+            exportToPDF() {
+                console.log('Exporting to PDF...');
+                alert('PDF export will be implemented in phase 2');
+            }
+
+            scheduleReport() {
+                console.log('Scheduling report...');
+                alert('Report scheduling will be implemented in phase 2');
+            }
+
+            drillDown(id) {
+                console.log('Drilling down into item:', id);
+                alert('Drill down functionality will be implemented in phase 2');
+            }
+
+            viewDetails(id) {
+                console.log('Viewing details for item:', id);
+                alert('Detailed view will be implemented in phase 2');
+            }
+        }
+
+        // Initialize the application
+        let reportsApp;
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 DOM loaded, initializing COGS Reports App...');
+            reportsApp = new COGSReportsApp();
+        });
+
+        // Global function wrappers
+        function refreshData() { reportsApp.refreshData(); }
+        function applyFilters() { reportsApp.applyFilters(); }
+        function generateComprehensiveReport() { reportsApp.generateComprehensiveReport(); }
+        function exportToExcel() { reportsApp.exportToExcel(); }
+        function exportToPDF() { reportsApp.exportToPDF(); }
+        function scheduleReport() { reportsApp.scheduleReport(); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backup Management - CNPERP ERP System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+</head>
+<body>
+    <!-- Navigation -->
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-1">
+                            <i class="bi bi-cloud-arrow-up me-2"></i>
+                            Backup Management
+                        </h1>
+                        <p class="text-muted mb-0">Manage system backups, restores, and schedules</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary me-2" onclick="showCreateBackupModal()">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Create Backup
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="showScheduleModal()">
+                            <i class="bi bi-clock me-1"></i>
+                            Schedule Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-cloud-check text-success" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2">Total Backups</h5>
+                        <h3 class="text-success" id="totalBackups">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-check-circle text-primary" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2">Completed</h5>
+                        <h3 class="text-primary" id="completedBackups">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2">Failed</h5>
+                        <h3 class="text-warning" id="failedBackups">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-hdd text-info" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2">Total Size</h5>
+                        <h3 class="text-info" id="totalSize">0 MB</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="backupTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="backups-tab" data-bs-toggle="tab" data-bs-target="#backups" type="button" role="tab">
+                    <i class="bi bi-cloud me-1"></i>
+                    All Backups
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="schedules-tab" data-bs-toggle="tab" data-bs-target="#schedules" type="button" role="tab">
+                    <i class="bi bi-clock me-1"></i>
+                    Scheduled Backups
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="restore-tab" data-bs-toggle="tab" data-bs-target="#restore" type="button" role="tab">
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    Restore
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">
+                    <i class="bi bi-gear me-1"></i>
+                    Backup Settings
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="backupTabContent">
+            <!-- All Backups Tab -->
+            <div class="tab-pane fade show active" id="backups" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Backup History</h5>
+                                <div>
+                                    <select class="form-select form-select-sm d-inline-block w-auto me-2" id="filterType">
+                                        <option value="">All Types</option>
+                                        <option value="absolute">Absolute</option>
+                                        <option value="incremental">Incremental</option>
+                                        <option value="restore">Restore</option>
+                                    </select>
+                                    <select class="form-select form-select-sm d-inline-block w-auto" id="filterStatus">
+                                        <option value="">All Status</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="failed">Failed</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="backupsList" class="row">
+                                    <!-- Backups will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scheduled Backups Tab -->
+            <div class="tab-pane fade" id="schedules" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Scheduled Backups</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="schedulesList">
+                                    <!-- Scheduled backups will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restore Tab -->
+            <div class="tab-pane fade" id="restore" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Restore from Backup</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Warning:</strong> Restoring a backup will overwrite current data. Make sure you have a recent backup before proceeding.
+                                </div>
+                                <div id="restoreBackupsList">
+                                    <!-- Restore options will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-pane fade" id="settings" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Backup Configuration</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="backupSettingsForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Default Backup Type</label>
+                                        <select class="form-select" id="defaultBackupType">
+                                            <option value="absolute">Absolute Backup</option>
+                                            <option value="incremental">Incremental Backup</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Include Files by Default</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="includeFilesDefault" checked>
+                                            <label class="form-check-label" for="includeFilesDefault">
+                                                Include application files in backups
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Backup Retention (days)</label>
+                                        <input type="number" class="form-control" id="backupRetention" value="30" min="1" max="365">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">System Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <strong>Database:</strong> PostgreSQL
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Backup Tool:</strong> pg_dump
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Compression:</strong> Enabled
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Encryption:</strong> SHA256 Hash Verification
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Backup Modal -->
+    <div class="modal fade" id="createBackupModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-cloud-arrow-up me-2"></i>
+                        Create New Backup
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createBackupForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Backup Type *</label>
+                                    <select class="form-select" id="backupType" required>
+                                        <option value="absolute">Absolute Backup (Full System)</option>
+                                        <option value="incremental">Incremental Backup (Changes Only)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" id="backupDescription" rows="3" placeholder="Optional description of this backup"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Backup Options</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="includeFiles" checked>
+                                        <label class="form-check-label" for="includeFiles">
+                                            Include application files
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="includeDatabase" checked>
+                                        <label class="form-check-label" for="includeDatabase">
+                                            Include database
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Backup Location (Optional)</label>
+                                    <input type="text" class="form-control" id="backupLocation" placeholder="Enter custom backup path or leave empty for default">
+                                    <div class="form-text">Default: <span id="defaultBackupPath">Loading...</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createBackup()">
+                        <i class="bi bi-cloud-arrow-up me-1"></i>
+                        Create Backup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Backup Modal -->
+    <div class="modal fade" id="viewBackupModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-eye me-2"></i>
+                        Backup Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewBackupModalBody">
+                    <!-- Backup details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restore Backup Modal -->
+    <div class="modal fade" id="restoreBackupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-arrow-clockwise me-2"></i>
+                        Restore Backup
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Restoring a backup will overwrite current data. Make sure you have a recent backup before proceeding.
+                    </div>
+                    <form id="restoreBackupForm">
+                        <input type="hidden" id="restoreBackupId">
+                        <div class="mb-3">
+                            <label class="form-label">Restore Options</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="restoreDatabase" checked>
+                                <label class="form-check-label" for="restoreDatabase">
+                                    Restore database
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="restoreFiles">
+                                <label class="form-check-label" for="restoreFiles">
+                                    Restore application files
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmRestore" required>
+                                <label class="form-check-label" for="confirmRestore">
+                                    I understand that this will overwrite current data
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmRestore()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Restore Backup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let backups = [];
+
+        // Load backup configuration
+        async function loadBackupConfig() {
+            try {
+                const response = await fetch('/api/v1/backup/config');
+                if (response.ok) {
+                    const config = await response.json();
+                    document.getElementById('defaultBackupPath').textContent = config.default_backup_dir;
+                }
+            } catch (error) {
+                console.error('Error loading backup config:', error);
+                document.getElementById('defaultBackupPath').textContent = 'backups';
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBackupData();
+            loadBackupSummary();
+            loadBackupConfig();
+        });
+
+        // Load backup data
+        async function loadBackupData() {
+            try {
+                const response = await fetch('/api/v1/backup/');
+                if (response.ok) {
+                    backups = await response.json();
+                    renderBackups();
+                }
+            } catch (error) {
+                console.error('Error loading backups:', error);
+            }
+        }
+
+        // Load backup summary
+        async function loadBackupSummary() {
+            try {
+                const response = await fetch('/api/v1/backup/status/summary');
+                if (response.ok) {
+                    const summary = await response.json();
+                    document.getElementById('totalBackups').textContent = summary.total_backups;
+                    document.getElementById('completedBackups').textContent = summary.completed_backups;
+                    document.getElementById('failedBackups').textContent = summary.failed_backups;
+                    document.getElementById('totalSize').textContent = summary.total_size_mb + ' MB';
+                }
+            } catch (error) {
+                console.error('Error loading backup summary:', error);
+            }
+        }
+
+        // Render backups
+        function renderBackups() {
+            const container = document.getElementById('backupsList');
+            
+            if (backups.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-cloud-slash text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">No backups found</h5>
+                        <p class="text-muted">Create your first backup to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = backups.map(backup => `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">${backup.description || 'No description'}</h6>
+                            <p class="text-muted small">
+                                Type: ${backup.backup_type}<br>
+                                Status: <span class="badge ${getStatusBadgeClass(backup.status)}">${backup.status}</span><br>
+                                Created: ${new Date(backup.created_at).toLocaleString()}<br>
+                                ${backup.file_size ? `Size: ${formatFileSize(backup.file_size)}` : ''}
+                            </p>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-info" onclick="viewBackup('${backup.id}')" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="downloadBackup('${backup.id}')" title="Download" ${backup.status !== 'completed' ? 'disabled' : ''}>
+                                    <i class="bi bi-download"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="restoreBackup('${backup.id}')" title="Restore" ${backup.status !== 'completed' ? 'disabled' : ''}>
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteBackup('${backup.id}')" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get status badge class
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'completed': return 'bg-success';
+                case 'in_progress': return 'bg-warning';
+                case 'failed': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Show create backup modal
+        function showCreateBackupModal() {
+            const modal = new bootstrap.Modal(document.getElementById('createBackupModal'));
+            modal.show();
+        }
+
+        // Show schedule modal
+        function showScheduleModal() {
+            alert('Schedule backup functionality will be implemented');
+        }
+
+        // Create backup
+        async function createBackup() {
+            const backupData = {
+                backup_type: document.getElementById('backupType').value,
+                description: document.getElementById('backupDescription').value,
+                include_files: document.getElementById('includeFiles').checked,
+                backup_location: document.getElementById('backupLocation').value.trim() || null
+            };
+
+            try {
+                const response = await fetch('/api/v1/backup/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(backupData)
+                });
+
+                if (response.ok) {
+                    showNotification('Backup creation started successfully', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createBackupModal')).hide();
+                    loadBackupData();
+                    loadBackupSummary();
+                } else {
+                    const errorData = await response.json();
+                    showNotification(`Error creating backup: ${errorData.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating backup:', error);
+                alert('Error creating backup');
+            }
+        }
+
+        // Download backup
+        async function downloadBackup(backupId) {
+            try {
+                // Create a temporary link element to trigger download
+                const link = document.createElement('a');
+                link.href = `/api/v1/backup/${backupId}/download`;
+                link.download = '';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Show success message
+                showNotification('Backup download started', 'success');
+            } catch (error) {
+                console.error('Error downloading backup:', error);
+                showNotification('Error downloading backup', 'error');
+            }
+        }
+
+        // Restore backup
+        async function restoreBackup(backupId) {
+            if (confirm('Are you sure you want to restore this backup? This will overwrite current data.')) {
+                try {
+                    const restoreData = {
+                        restore_database: true,
+                        restore_files: true,
+                        confirm_restore: true
+                    };
+
+                    const response = await fetch(`/api/v1/backup/${backupId}/restore`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(restoreData)
+                    });
+
+                    if (response.ok) {
+                        showNotification('Restore process started successfully', 'success');
+                        // Reload data after a short delay
+                        setTimeout(() => {
+                            loadBackupData();
+                            loadBackupSummary();
+                        }, 2000);
+                    } else {
+                        const errorData = await response.json();
+                        showNotification(`Error starting restore: ${errorData.detail || 'Unknown error'}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error restoring backup:', error);
+                    showNotification('Error restoring backup', 'error');
+                }
+            }
+        }
+
+        // View backup details
+        async function viewBackup(backupId) {
+            try {
+                const response = await fetch(`/api/v1/backup/${backupId}`);
+                if (response.ok) {
+                    const backup = await response.json();
+                    showBackupDetailsModal(backup);
+                } else {
+                    showNotification('Error loading backup details', 'error');
+                }
+            } catch (error) {
+                console.error('Error viewing backup:', error);
+                showNotification('Error viewing backup', 'error');
+            }
+        }
+
+        // Show backup details modal
+        function showBackupDetailsModal(backup) {
+            const modalHtml = `
+                <div class="modal fade" id="backupDetailsModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Backup Details
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Basic Information</h6>
+                                        <table class="table table-sm">
+                                            <tr><td><strong>ID:</strong></td><td>${backup.backup_number || 'BACKUP-' + backup.id.substring(0,8)}</td></tr>
+                                            <tr><td><strong>Type:</strong></td><td>${backup.backup_type}</td></tr>
+                                            <tr><td><strong>Status:</strong></td><td><span class="badge bg-${getStatusBadgeColor(backup.status)}">${backup.status}</span></td></tr>
+                                            <tr><td><strong>Created:</strong></td><td>${new Date(backup.created_at).toLocaleString()}</td></tr>
+                                            <tr><td><strong>Created By:</strong></td><td>${backup.created_by}</td></tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>File Information</h6>
+                                        <table class="table table-sm">
+                                            <tr><td><strong>File Size:</strong></td><td>${backup.file_size ? formatFileSize(backup.file_size) : 'N/A'}</td></tr>
+                                            <tr><td><strong>File Hash:</strong></td><td><code class="small">${backup.file_hash || 'N/A'}</code></td></tr>
+                                            <tr><td><strong>File Path:</strong></td><td><code class="small">${backup.file_path || 'N/A'}</code></td></tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                ${backup.description ? `<div class="mt-3"><h6>Description</h6><p>${backup.description}</p></div>` : ''}
+                                ${backup.error_message ? `<div class="mt-3"><h6>Error Message</h6><div class="alert alert-danger">${backup.error_message}</div></div>` : ''}
+                                ${backup.metadata ? `<div class="mt-3"><h6>Metadata</h6><pre class="bg-light p-2 rounded"><code>${JSON.stringify(backup.metadata, null, 2)}</code></pre></div>` : ''}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                ${backup.status === 'completed' ? `
+                                    <button type="button" class="btn btn-primary" onclick="downloadBackup('${backup.id}')">
+                                        <i class="bi bi-download me-1"></i>Download
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="restoreBackup('${backup.id}')">
+                                        <i class="bi bi-arrow-clockwise me-1"></i>Restore
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('backupDetailsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add new modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('backupDetailsModal'));
+            modal.show();
+            
+            // Clean up modal after it's hidden
+            document.getElementById('backupDetailsModal').addEventListener('hidden.bs.modal', function() {
+                this.remove();
+            });
+        }
+
+        // Helper function to get status badge color
+        function getStatusBadgeColor(status) {
+            switch (status) {
+                case 'completed': return 'success';
+                case 'in_progress': return 'primary';
+                case 'failed': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        // Helper function to format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+            const notificationHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', notificationHtml);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                const notification = document.querySelector('.alert.position-fixed');
+                if (notification) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Delete backup
+        async function deleteBackup(backupId) {
+            if (confirm('Are you sure you want to delete this backup? This action cannot be undone.')) {
+                try {
+                    const response = await fetch(`/api/v1/backup/${backupId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        showNotification('Backup deleted successfully', 'success');
+                        loadBackupData();
+                        loadBackupSummary();
+                    } else {
+                        const errorData = await response.json();
+                        showNotification(`Error deleting backup: ${errorData.detail || 'Unknown error'}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error deleting backup:', error);
+                    showNotification('Error deleting backup', 'error');
+                }
+            }
+        }
+
+        function logout() {
+            window.location.href = '/static/login.html';
+        }
+    </script>
+
+    <!-- Core Scripts -->
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <script src="/static/js/navbar.js?v=20250106001"></script>
+    
+    
+</body>
+</html>

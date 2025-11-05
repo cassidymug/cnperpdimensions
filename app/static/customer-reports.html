@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Customer Reports</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    body{background:#f8f9fa;}
+    .metric-card{border-left:4px solid #0d6efd;}
+    .table-sm td,.table-sm th{padding:.4rem .5rem;font-size:.75rem;}
+    .sticky-actions{position:sticky;top:0;z-index:20;background:#fff;padding:.5rem 0;}
+    @media print {.no-print{display:none!important;} body{background:#fff;} .card{box-shadow:none;border:1px solid #000;} }
+  </style>
+    
+    
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    
+    
+    
+    
+    
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-0"><i class="bi bi-people me-2"></i>Customer Reports</h3>
+      <small class="text-muted">Customer performance, balances, aging & revenue concentration</small>
+    </div>
+    <div class="no-print btn-group">
+      <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i></button>
+      <button class="btn btn-outline-danger" onclick="exportPDF()"><i class="bi bi-filetype-pdf me-1"></i>PDF</button>
+      <button class="btn btn-outline-success" onclick="exportXLSX()"><i class="bi bi-file-earmark-spreadsheet me-1"></i>XLSX</button>
+      <button class="btn btn-outline-primary" onclick="loadData()"><i class="bi bi-arrow-repeat"></i></button>
+    </div>
+  </div>
+
+  <div class="card mb-3 p-3 no-print">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label">Start Date</label>
+        <input type="date" id="startDate" class="form-control form-control-sm" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">End Date</label>
+        <input type="date" id="endDate" class="form-control form-control-sm" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Top N Customers</label>
+        <input type="number" id="topN" class="form-control form-control-sm" value="10" min="1" />
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Include Inactive</label>
+        <select id="includeInactive" class="form-select form-select-sm">
+          <option value="false" selected>No</option>
+          <option value="true">Yes</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">&nbsp;</label>
+        <button class="btn btn-primary w-100 btn-sm" onclick="loadData()"><i class="bi bi-search me-1"></i>Run</button>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">&nbsp;</label>
+        <button class="btn btn-outline-secondary w-100 btn-sm" onclick="resetFilters()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="metricsRow" class="row g-3 mb-3"></div>
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Top Customers (Revenue)</span>
+      <small class="text-muted" id="periodLabel"></small>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped mb-0" id="topCustomersTable">
+        <thead class="table-light"><tr><th>#</th><th>Name</th><th>Transactions</th><th class="text-end">Revenue</th><th class="text-end">Avg Sale</th><th class="text-end">Balance</th><th class="text-end">% of Total</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header fw-semibold">Aging Summary</div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0" id="agingTable">
+            <thead class="table-light"><tr><th>Bucket</th><th class="text-end">Amount</th><th class="text-end">% of AR</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header fw-semibold">Payment Performance</div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0" id="paymentPerfTable">
+            <thead class="table-light"><tr><th>Metric</th><th class="text-end">Value</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-5">
+    <div class="card-header fw-semibold">Raw Customer Detail (Truncated)</div>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0" id="rawCustomersTable">
+        <thead class="table-light"><tr><th>Name</th><th>Email</th><th>Type</th><th class="text-end">Balance</th><th class="text-end">Credit Limit</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+ 
+<script>
+const API_BASE = '/api/v1/reports/customer-metrics';
+let lastData = null;
+
+function setDefaults(){
+  const end=new Date(); const start=new Date(); start.setMonth(end.getMonth()-1);
+  document.getElementById('startDate').value = start.toISOString().split('T')[0];
+  document.getElementById('endDate').value = end.toISOString().split('T')[0];
+}
+function resetFilters(){ setDefaults(); document.getElementById('topN').value=10; document.getElementById('includeInactive').value='false'; loadData(); }
+
+async function loadData(){
+  const params=new URLSearchParams();
+  const s=document.getElementById('startDate').value; const e=document.getElementById('endDate').value; const n=document.getElementById('topN').value; const inc=document.getElementById('includeInactive').value;
+  if(s) params.append('start_date',s); if(e) params.append('end_date',e); if(n) params.append('top_n',n); if(inc==='true') params.append('include_inactive','true');
+  const url = API_BASE + '?' + params.toString();
+  try{
+    const r = await fetch(url); if(!r.ok) throw new Error(r.status);
+    const j = await r.json(); if(!j.success) throw new Error(j.error||'error');
+    lastData = j.data; render(j.data); }
+  catch(e){ console.error('load error', e); }
+}
+
+function formatMoney(v){ return new Intl.NumberFormat(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v)||0); }
+
+function render(data){
+  document.getElementById('periodLabel').textContent = data.period.start + ' → ' + data.period.end;
+  // Metrics cards
+  const metrics=[
+    {k:'total_customers', label:'Active Customers'},
+    {k:'inactive_customers', label:'Inactive'},
+    {k:'total_revenue', label:'Revenue'},
+    {k:'avg_revenue_per_customer', label:'Avg Revenue/Customer'},
+    {k:'receivables', label:'Receivables'},
+    {k:'avg_days_to_pay', label:'Avg Days to Pay'}
+  ];
+  const wrap=document.getElementById('metricsRow'); wrap.innerHTML='';
+  metrics.forEach(m=>{
+    const val = data.metrics[m.k];
+    const card=document.createElement('div'); card.className='col-md-2';
+    card.innerHTML=`<div class='card p-2 metric-card h-100'><div class='small text-muted mb-1'>${m.label}</div><div class='h6 mb-0'>${typeof val==='number'?formatMoney(val):val||0}</div></div>`;
+    wrap.appendChild(card);
+  });
+  // Top customers
+  const tb=document.querySelector('#topCustomersTable tbody'); tb.innerHTML='';
+  data.top_customers.forEach((c,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td><td>${c.name}</td><td>${c.transactions}</td><td class='text-end'>${formatMoney(c.revenue)}</td><td class='text-end'>${formatMoney(c.avg_sale)}</td><td class='text-end'>${formatMoney(c.balance)}</td><td class='text-end'>${(c.percent_total*100).toFixed(2)}%</td>`;
+    tb.appendChild(tr);
+  });
+  // Aging
+  const atb=document.querySelector('#agingTable tbody'); atb.innerHTML='';
+  data.aging.buckets.forEach(b=>{
+    atb.insertAdjacentHTML('beforeend',`<tr><td>${b.bucket}</td><td class='text-end'>${formatMoney(b.amount)}</td><td class='text-end'>${(b.percent*100).toFixed(1)}%</td></tr>`);
+  });
+  // Payment performance
+  const ptb=document.querySelector('#paymentPerfTable tbody'); ptb.innerHTML='';
+  Object.entries(data.payment_performance).forEach(([k,v])=>{
+    ptb.insertAdjacentHTML('beforeend',`<tr><td>${k.replace(/_/g,' ')}</td><td class='text-end'>${typeof v==='number'?formatMoney(v):v}</td></tr>`);
+  });
+  // Raw customers (truncated)
+  const rctb=document.querySelector('#rawCustomersTable tbody'); rctb.innerHTML='';
+  data.raw_customers.slice(0,50).forEach(rc=>{
+    rctb.insertAdjacentHTML('beforeend',`<tr><td>${rc.name}</td><td>${rc.email||''}</td><td>${rc.customer_type||''}</td><td class='text-end'>${formatMoney(rc.account_balance)}</td><td class='text-end'>${formatMoney(rc.credit_limit)}</td><td>${rc.active?'Active':'Inactive'}</td></tr>`);
+  });
+}
+
+function exportPDF(){ if(!lastData) return; const { jsPDF } = window.jspdf; const doc=new jsPDF({orientation:'p',unit:'pt',format:'a4'}); let y=40; const mX=36; doc.setFontSize(16); doc.text('Customer Report', mX,y); y+=14; doc.setFontSize(9); doc.text(`Period ${lastData.period.start} to ${lastData.period.end}`, mX,y); y+=14; doc.text(`Generated ${new Date().toISOString()}`, mX,y); y+=14; // Metrics
+  const metricRows=Object.entries(lastData.metrics).map(([k,v])=>[k,v]);
+  doc.autoTable({startY:y, head:[['Metric','Value']], body:metricRows.map(r=>[r[0], typeof r[1]==='number'?formatMoney(r[1]):r[1]]), styles:{fontSize:8}, headStyles:{fillColor:[13,110,253]}, theme:'grid', margin:{left:mX,right:mX}}); y=doc.lastAutoTable.finalY+16;
+  // Top customers
+  doc.setFontSize(11); doc.text('Top Customers', mX,y); y+=6; const topRows=lastData.top_customers.map(c=>[c.name,c.transactions,formatMoney(c.revenue),formatMoney(c.avg_sale),(c.percent_total*100).toFixed(2)+'%']);
+  doc.autoTable({startY:y, head:[['Name','Txns','Revenue','Avg Sale','% Total']], body:topRows, styles:{fontSize:7}, headStyles:{fillColor:[108,117,125]}, theme:'striped', margin:{left:mX,right:mX}}); y=doc.lastAutoTable.finalY+14;
+  // Aging
+  doc.text('Aging Summary', mX,y); y+=6; doc.autoTable({startY:y, head:[['Bucket','Amount','% AR']], body:lastData.aging.buckets.map(b=>[b.bucket,formatMoney(b.amount),(b.percent*100).toFixed(1)+'%']), styles:{fontSize:7}, theme:'grid', margin:{left:mX,right:mX}}); y=doc.lastAutoTable.finalY+14;
+  // Payment performance
+  doc.text('Payment Performance', mX,y); y+=6; doc.autoTable({startY:y, head:[['Metric','Value']], body:Object.entries(lastData.payment_performance).map(([k,v])=>[k.replace(/_/g,' '), typeof v==='number'?formatMoney(v):v]), styles:{fontSize:7}, theme:'grid', margin:{left:mX,right:mX}});
+  doc.save(buildFileName('customer_report','.pdf')); }
+
+function exportXLSX(){ if(!lastData) return; const wb=XLSX.utils.book_new();
+  const metricsSheet = XLSX.utils.aoa_to_sheet([['Metric','Value'], ...Object.entries(lastData.metrics).map(([k,v])=>[k, v])]);
+  XLSX.utils.book_append_sheet(wb, metricsSheet, 'Metrics');
+  const topSheet = XLSX.utils.aoa_to_sheet([['Name','Transactions','Revenue','Avg Sale','Balance','% Total'], ...lastData.top_customers.map(c=>[c.name,c.transactions,c.revenue,c.avg_sale,c.balance,(c.percent_total*100)])]);
+  XLSX.utils.book_append_sheet(wb, topSheet, 'Top');
+  const agingSheet = XLSX.utils.aoa_to_sheet([['Bucket','Amount','Percent'], ...lastData.aging.buckets.map(b=>[b.bucket,b.amount,(b.percent*100)])]);
+  XLSX.utils.book_append_sheet(wb, agingSheet, 'Aging');
+  const paySheet = XLSX.utils.aoa_to_sheet([['Metric','Value'], ...Object.entries(lastData.payment_performance).map(([k,v])=>[k,v])]);
+  XLSX.utils.book_append_sheet(wb, paySheet, 'Payments');
+  const rawSheet = XLSX.utils.aoa_to_sheet([['Name','Email','Type','Balance','Credit Limit','Active'], ...lastData.raw_customers.map(r=>[r.name,r.email,r.customer_type,r.account_balance,r.credit_limit,r.active])]);
+  XLSX.utils.book_append_sheet(wb, rawSheet, 'Raw');
+  XLSX.writeFile(wb, buildFileName('customer_report','.xlsx')); }
+
+function buildFileName(base, ext){ const s=document.getElementById('startDate').value||'start'; const e=document.getElementById('endDate').value||'end'; return `${base}_${s}_${e}${ext}`; }
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  if (typeof initializeNavbar === 'function') {
+    initializeNavbar('sales');
+  } else if (typeof createNavbar === 'function') {
+    const navbarContainer = document.getElementById('navbar-container');
+    if (navbarContainer) {
+      navbarContainer.innerHTML = createNavbar('sales');
+    }
+  }
+  setDefaults();
+  loadData();
+});
+</script>
+<script src="js/navbar.js?v=20250106001"></script>
+</body>
+</html>

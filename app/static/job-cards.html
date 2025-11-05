@@ -1,0 +1,2305 @@
+<!DOCTYPE html>
+<html lang="en" class="light-mode">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Job Cards</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Auth Helpers -->
+    <script src="/static/js/auth-bootstrap.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    
+    <!-- Settings and Currency Utils -->
+    <script src="js/settings-loader.js?v=20250927071747"></script>
+    <script src="js/currency-utils.js?v=20250927071747"></script>
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --dark-color: #212529;
+            --light-color: #f8f9fa;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        .dark-mode {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3) !important;
+        }
+
+        .job-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .job-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .filter-section {
+            background-color: var(--bg-primary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+
+        .table {
+            color: var(--text-primary);
+        }
+
+        .table th {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+
+        .table td {
+            border-color: var(--border-color);
+        }
+
+        .labor-section {
+            background: rgba(25, 135, 84, 0.1);
+            border-left: 4px solid var(--success-color);
+            border-radius: 0.375rem;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .materials-section {
+            background: rgba(13, 110, 253, 0.1);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0.375rem;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .job-type-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+    <!-- Navbar Scripts -->
+    <script src="js/navbar.js?v=20250106001"></script>
+    
+    <!-- Spacer to prevent content from being hidden under fixed navbar -->
+    <div style="height: 70px;"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-tools text-primary"></i> Job Cards
+                        </h1>
+                        <p class="text-muted mb-0">
+                            Manage repair jobs, manufacturing, and custom services
+                            <span id="branchContextLabel" class="badge bg-light text-primary border ms-2 d-none"></span>
+                        </p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" onclick="exportJobCards()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addJobCardModal">
+                            <i class="bi bi-plus"></i> New Job Card
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Active Jobs</h6>
+                            <h3 class="mb-0" id="activeJobs">-</h3>
+                        </div>
+                        <i class="bi bi-tools fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Revenue</h6>
+                            <h3 class="mb-0" id="totalRevenue">-</h3>
+                        </div>
+                        <i class="bi bi-currency-dollar fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Pending</h6>
+                            <h3 class="mb-0" id="pendingJobs">-</h3>
+                        </div>
+                        <i class="bi bi-clock fs-1"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Completed</h6>
+                            <h3 class="mb-0" id="completedJobs">-</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Customer</label>
+                    <select class="form-select" id="customerFilter">
+                        <option value="">All Customers</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="invoiced">Invoiced</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Job Type</label>
+                    <select class="form-select" id="jobTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="repair">Repair</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="upgrade">Upgrade</option>
+                        <option value="custom">Custom Service</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="fromDateFilter">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="toDateFilter">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Search jobs...">
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-10"></div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                        <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Cards Table -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Job Cards</h5>
+                    <div>
+                        <button class="btn btn-outline-info btn-sm me-2" onclick="fetchJobCards()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="exportJobCards()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th>Job #</th>
+                                <th>Date Created</th>
+                                <th>Customer</th>
+                                <th>Job Type</th>
+                                <th>Description</th>
+                                <th>Materials Cost</th>
+                                <th>Labor Cost</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobCardsTable">
+                            <!-- Job cards will be dynamically generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View/Edit Job Card Modal -->
+    <div class="modal fade" id="viewJobCardModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-eye"></i> Job Card Details - <span id="viewJobNumber"></span>
+                    </h5>
+                    <div class="ms-auto me-3">
+                        <span class="badge" id="viewJobStatus"></span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Job Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Customer:</strong> <span id="viewCustomer"></span><br>
+                            <strong>Job Type:</strong> <span id="viewJobType"></span><br>
+                            <strong>Priority:</strong> <span id="viewPriority"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Start Date:</strong> <span id="viewStartDate"></span><br>
+                            <strong>Due Date:</strong> <span id="viewDueDate"></span><br>
+                            <strong>Technician:</strong> <span id="viewTechnician"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Description:</strong>
+                        <p id="viewDescription" class="border p-2 rounded"></p>
+                    </div>
+
+                    <!-- Materials Used -->
+                    <div class="materials-section mb-4">
+                        <h6><i class="bi bi-box-seam me-2"></i>Materials & Parts Used</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Material</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Cost</th>
+                                        <th>Total</th>
+                                        <th>Date Added</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="viewMaterialsList">
+                                    <!-- Materials will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addMoreMaterials()">
+                            <i class="bi bi-plus"></i> Add More Materials
+                        </button>
+                    </div>
+
+                    <!-- Labor Entries -->
+                    <div class="labor-section mb-4">
+                        <h6><i class="bi bi-person-gear me-2"></i>Labor & Services</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Hours</th>
+                                        <th>Rate/Hour</th>
+                                        <th>Total</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="viewLaborList">
+                                    <!-- Labor entries will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addMoreLabor()">
+                            <i class="bi bi-plus"></i> Add More Labor
+                        </button>
+                    </div>
+
+                    <!-- Job Progress Notes -->
+                    <div class="mb-3">
+                        <h6>Progress Notes</h6>
+                        <div id="progressNotes" class="border p-2 rounded" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Progress notes will be loaded here -->
+                        </div>
+                        <div class="mt-2">
+                            <textarea class="form-control" id="newProgressNote" rows="2" placeholder="Add progress note..."></textarea>
+                            <button type="button" class="btn btn-outline-info btn-sm mt-1" onclick="addProgressNote()">
+                                <i class="bi bi-plus"></i> Add Note
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cost Summary -->
+                    <div class="row">
+                        <div class="col-md-8"></div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Materials:</span>
+                                        <span id="viewTotalMaterials">P 0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Labor:</span>
+                                        <span id="viewTotalLabor">P 0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Subtotal:</span>
+                                        <span id="viewSubtotal">P 0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>VAT (14%):</span>
+                                        <span id="viewVAT">P 0.00</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Total:</span>
+                                        <span id="viewTotal">P 0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteCurrentJob()" id="deleteJobBtn" title="Delete this job card permanently">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-arrow-repeat"></i> Update Status
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" onclick="updateJobStatus('pending')">🟡 Pending</a></li>
+                            <li><a class="dropdown-item" onclick="updateJobStatus('in_progress')">🔵 In Progress</a></li>
+                            <li><a class="dropdown-item" onclick="updateJobStatus('completed')">🟢 Completed</a></li>
+                            <li><a class="dropdown-item" onclick="updateJobStatus('on_hold')">🟠 On Hold</a></li>
+                        </ul>
+                    </div>
+                    <button type="button" class="btn btn-success" onclick="generateInvoice()" id="generateInvoiceBtn">
+                        <i class="bi bi-receipt"></i> Generate Invoice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Materials Modal -->
+    <div class="modal fade" id="addMaterialsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Add Materials to Job
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="additionalMaterials">
+                        <div class="row mb-2 additional-material-item">
+                            <div class="col-md-5">
+                                <select class="form-select" name="additionalMaterial[]" required>
+                                    <option value="">Select Material/Part</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control" name="additionalQty[]" placeholder="Qty" step="0.01" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control" name="additionalCost[]" placeholder="Cost" step="0.01" readonly>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" name="additionalTotal[]" placeholder="Total" readonly>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeAdditionalMaterial(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addAdditionalMaterialRow()">
+                        <i class="bi bi-plus"></i> Add Row
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAdditionalMaterials()">
+                        <i class="bi bi-check"></i> Add Materials
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Labor Modal -->
+    <div class="modal fade" id="addLaborModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Add Labor to Job
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="additionalLabor">
+                        <div class="row mb-2 additional-labor-item">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="additionalLaborDesc[]" placeholder="Labor description" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control" name="additionalLaborHours[]" placeholder="Hours" step="0.25" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control" name="additionalLaborRate[]" placeholder="Rate" step="0.01" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" name="additionalLaborTotal[]" placeholder="Total" readonly>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeAdditionalLabor(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="addAdditionalLaborRow()">
+                        <i class="bi bi-plus"></i> Add Row
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="saveAdditionalLabor()">
+                        <i class="bi bi-check"></i> Add Labor
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Job Card Modal -->
+    <div class="modal fade" id="addJobCardModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Create New Job Card
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addJobCardForm">
+                        <!-- Job Details -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Customer *</label>
+                                    <select class="form-select" id="jobCustomer" required>
+                                        <option value="">Select Customer</option>
+                                        <!-- Options will be populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Job Type *</label>
+                                    <select class="form-select" id="jobType" required onchange="toggleBomSection()">
+                                        <option value="">Select Job Type</option>
+                                        <option value="repair">🔧 Repair</option>
+                                        <option value="manufacturing">🏭 Manufacturing</option>
+                                        <option value="maintenance">⚙️ Maintenance</option>
+                                        <option value="upgrade">⬆️ Upgrade</option>
+                                        <option value="custom">🛠️ Custom Service</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BOM/Recipe Selection (shown for manufacturing jobs) -->
+                        <div class="row" id="bomSelectionRow" style="display: none;">
+                            <div class="col-md-12">
+                                <div class="alert alert-info py-2 mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Manufacturing Job:</strong> Select a recipe/BOM to auto-populate materials, or add materials manually below.
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-journal-text me-1"></i>Recipe / Bill of Materials
+                                        <small class="text-muted">(Optional)</small>
+                                    </label>
+                                    <select class="form-select" id="jobBom" onchange="loadBomMaterials()">
+                                        <option value="">-- Select Recipe/BOM or add materials manually --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Production Quantity</label>
+                                    <input type="number" class="form-control" id="productionQty" value="1" min="1" step="1" placeholder="1">
+                                    <small class="text-muted">Units to produce</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Branch *</label>
+                                    <select class="form-select" id="jobBranch" required>
+                                        <option value="">Select Branch</option>
+                                        <!-- Options will be populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Priority</label>
+                                    <select class="form-select" id="jobPriority">
+                                        <option value="normal">Normal</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Start Date *</label>
+                                    <input type="date" class="form-control" id="startDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Due Date</label>
+                                    <input type="date" class="form-control" id="dueDate">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Job Description *</label>
+                                    <textarea class="form-control" id="jobDescription" rows="3" placeholder="Describe the work to be performed..." required></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Materials Section -->
+                        <div class="materials-section">
+                            <h6 class="mb-3">
+                                <i class="bi bi-box-seam me-2"></i>Materials & Parts
+                                <small class="text-muted">(From Inventory)</small>
+                            </h6>
+                            <div id="materialsSection">
+                                <div class="row mb-2 material-item">
+                                    <div class="col-md-4">
+                                        <select class="form-select" name="material[]">
+                                            <option value="">Select Material/Part</option>
+                                            <!-- Options will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control" name="materialQty[]" placeholder="Qty" step="0.01">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control" name="materialCost[]" placeholder="Unit Cost" step="0.01" readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control" name="materialTotal[]" placeholder="Total" readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMaterialItem(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addMaterialItem()">
+                                <i class="bi bi-plus"></i> Add Material
+                            </button>
+                        </div>
+
+                        <!-- Labor Section -->
+                        <div class="labor-section">
+                            <h6 class="mb-3">
+                                <i class="bi bi-person-gear me-2"></i>Labor & Services
+                            </h6>
+                            <div id="laborSection">
+                                <div class="row mb-2 labor-item">
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control" name="laborDescription[]" placeholder="Labor description (e.g., Engine repair, Assembly work)">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control" name="laborHours[]" placeholder="Hours" step="0.25">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="number" class="form-control" name="laborRate[]" placeholder="Rate/Hour" step="0.01">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" class="form-control" name="laborTotal[]" placeholder="Total" readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLaborItem(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="addLaborItem()">
+                                <i class="bi bi-plus"></i> Add Labor
+                            </button>
+                        </div>
+                        
+                        <!-- Additional Options -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">VAT Rate (%)</label>
+                                    <input type="number" class="form-control" id="jobVatRate" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Assigned Technician</label>
+                                    <select class="form-select" id="assignedTechnician">
+                                        <option value="">Select Technician</option>
+                                        <!-- Options will be populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Totals -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">Notes</label>
+                                    <textarea class="form-control" id="jobNotes" rows="2" placeholder="Additional notes or special instructions..."></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Materials:</span>
+                                            <span id="totalMaterials">P 0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Labor:</span>
+                                            <span id="totalLabor">P 0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Subtotal:</span>
+                                            <span id="jobSubtotal">P 0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>VAT (14%):</span>
+                                            <span id="jobVAT">P 0.00</span>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between fw-bold">
+                                            <span>Total:</span>
+                                            <span id="jobTotal">P 0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="saveAsDraft()">Save as Draft</button>
+                    <button type="button" class="btn btn-primary" onclick="createJobCard()">Create Job Card</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Navbar -->
+    
+    <!-- API Configuration -->
+    <script src="js/api-config.js"></script>
+    
+    <script>
+        (function () {
+            'use strict';
+
+            const state = {
+                jobCards: [],
+                customers: [],
+                materials: [],
+                allMaterials: [],
+                technicians: [],
+                branches: [],
+                currentJobId: null,
+                currentUser: null,
+                currentBranchId: null,
+                currentBranchCode: null,
+                hasGlobalBranchAccess: false,
+                settings: {
+                    currency: 'BWP',
+                    symbol: 'P',
+                    vatRate: 14,
+                    locale: 'en',
+                    country: 'BW',
+                    timezone: 'Africa/Gaborone'
+                }
+            };
+
+            const JOB_CARDS_ENDPOINT = API_CONFIG.ENDPOINTS.JOB_CARDS;
+            const CUSTOMERS_ENDPOINT = API_CONFIG.ENDPOINTS.SALES_CUSTOMERS;
+            const MATERIALS_ENDPOINT = API_CONFIG.ENDPOINTS.INVENTORY_PRODUCTS;
+            const TECHNICIANS_ENDPOINT = API_CONFIG.buildUrl('/job-cards/technicians');
+            const BRANCHES_ENDPOINT = `${API_CONFIG.ENDPOINTS.BRANCHES}/public`;
+            const BRANCH_STOCK_ENDPOINT = API_CONFIG.buildUrl('/branch-stock');
+            const PRIVILEGED_BRANCH_ROLES = new Set(['super_admin', 'admin', 'accountant']);
+            let searchTimer = null;
+
+            function resolveStoredBranchPreference() {
+                try {
+                    return localStorage.getItem('selected_branch_id') || null;
+                } catch (error) {
+                    console.warn('Unable to read stored branch preference', error);
+                    return null;
+                }
+            }
+
+            function resolveCurrentUser() {
+                try {
+                    if (window.auth && typeof auth.getUser === 'function') {
+                        return auth.getUser();
+                    }
+                    if (window.authBootstrap && typeof window.authBootstrap.getUser === 'function') {
+                        return window.authBootstrap.getUser();
+                    }
+                    const raw = localStorage.getItem('user');
+                    return raw ? JSON.parse(raw) : null;
+                } catch (error) {
+                    console.warn('Failed to resolve current user context', error);
+                    return null;
+                }
+            }
+
+            function initializeUserContext() {
+                const user = resolveCurrentUser();
+                state.currentUser = user;
+                const preferredBranch = resolveStoredBranchPreference();
+                state.currentBranchId = user?.branch_id || preferredBranch || null;
+                state.currentBranchCode = user?.branch_code || null;
+                const role = (user?.role || '').toLowerCase();
+                state.hasGlobalBranchAccess = PRIVILEGED_BRANCH_ROLES.has(role);
+            }
+
+            function getBranchById(branchId) {
+                if (!branchId) return null;
+                return state.branches.find((branch) => branch.id === branchId) || null;
+            }
+
+            function updateBranchContextLabel() {
+                const label = document.getElementById('branchContextLabel');
+                if (!label) return;
+
+                const activeBranch = getBranchById(state.currentBranchId);
+                const code = activeBranch?.code || state.currentBranchCode;
+
+                if (!state.currentBranchId && !state.hasGlobalBranchAccess) {
+                    label.textContent = 'Branch required';
+                    label.classList.remove('d-none');
+                    return;
+                }
+
+                if (state.currentBranchId && code) {
+                    label.textContent = `Branch: ${code}`;
+                    label.classList.remove('d-none');
+                    return;
+                }
+
+                if (state.hasGlobalBranchAccess) {
+                    label.textContent = 'Branch: All';
+                    label.classList.remove('d-none');
+                } else {
+                    label.classList.add('d-none');
+                }
+            }
+
+            function filterMaterialsForBranch(materials) {
+                if (!Array.isArray(materials)) return [];
+                if (!state.currentBranchId) return materials;
+                return materials.filter((item) => !item.branch_id || item.branch_id === state.currentBranchId);
+            }
+
+            function refreshMaterialOptionsForBranch() {
+                state.materials = filterMaterialsForBranch(state.allMaterials);
+                populateMaterialOptions();
+                dropInvalidMaterialSelections();
+            }
+
+            function dropInvalidMaterialSelections() {
+                const validIds = new Set(state.materials.map((item) => item.id));
+                document.querySelectorAll('select[name="material[]"], select[name="additionalMaterial[]"]').forEach((select) => {
+                    if (select.value && !validIds.has(select.value)) {
+                        select.value = '';
+                        const materialRow = select.closest('.material-item');
+                        if (materialRow) {
+                            const quantityInput = materialRow.querySelector('input[name="materialQty[]"]');
+                            const costInput = materialRow.querySelector('input[name="materialCost[]"]');
+                            const totalInput = materialRow.querySelector('input[name="materialTotal[]"]');
+                            if (quantityInput) quantityInput.value = '';
+                            if (costInput) costInput.value = '';
+                            if (totalInput) totalInput.value = '';
+                        }
+                        const additionalRow = select.closest('.additional-material-item');
+                        if (additionalRow) {
+                            const quantityInput = additionalRow.querySelector('input[name="additionalQty[]"]');
+                            const costInput = additionalRow.querySelector('input[name="additionalCost[]"]');
+                            const totalInput = additionalRow.querySelector('input[name="additionalTotal[]"]');
+                            if (quantityInput) quantityInput.value = '';
+                            if (costInput) costInput.value = '';
+                            if (totalInput) totalInput.value = '';
+                        }
+                    }
+                });
+                calculateJobTotal();
+            }
+
+            document.addEventListener('DOMContentLoaded', init);
+
+            async function init() {
+                try {
+                    initializeUserContext();
+                    updateBranchContextLabel();
+                    await loadApplicationSettings();
+                    await Promise.all([
+                        fetchCustomers(),
+                        fetchMaterials(),
+                        fetchBranches()
+                    ]);
+                    initializeVatInput();
+                    setDefaultDates();
+                    attachDynamicListeners();
+                    await fetchJobCards();
+                    calculateJobTotal();
+                } catch (error) {
+                    console.error('Failed initializing job cards UI', error);
+                    alert('Unable to load job card data. Please check the server logs.');
+                }
+            }
+
+            async function loadApplicationSettings() {
+                try {
+                    const response = await fetch(API_CONFIG.ENDPOINTS.SETTINGS);
+                    const data = await response.json();
+                    if (data?.success && data.data) {
+                        const settings = data.data;
+                        const currencySettings = settings.currency || {};
+                        const generalSettings = settings.general || {};
+                        const vatSettings = settings.vat || {};
+
+                        state.settings.currency = currencySettings.currency || state.settings.currency;
+                        state.settings.symbol =
+                            currencySettings.currency_symbol || currencySettings.symbol || state.settings.symbol;
+                        state.settings.vatRate =
+                            parseFloat(
+                                currencySettings.vat_rate ?? vatSettings.vat_rate ?? generalSettings.vat_rate ?? state.settings.vatRate
+                            ) || state.settings.vatRate;
+                        state.settings.locale =
+                            currencySettings.locale || generalSettings.locale || state.settings.locale;
+                        state.settings.country =
+                            currencySettings.country || generalSettings.country || state.settings.country;
+                        state.settings.timezone =
+                            currencySettings.timezone || generalSettings.timezone || state.settings.timezone;
+                        updateVatLabels();
+                    }
+                } catch (error) {
+                    console.warn('Unable to load application settings', error);
+                }
+            }
+
+            function updateVatLabels() {
+                const pattern = /VAT \(\d+\.?\d*%\):/;
+                const label = `VAT (${state.settings.vatRate}%):`;
+                document.querySelectorAll('span').forEach((node) => {
+                    if (pattern.test(node.textContent)) {
+                        node.textContent = label;
+                    }
+                });
+            }
+
+            function setDefaultDates() {
+                const now = new Date();
+                const start = now.toISOString().split('T')[0];
+                const due = new Date(now);
+                due.setDate(due.getDate() + 7);
+                const dueDate = due.toISOString().split('T')[0];
+                const startInput = document.getElementById('startDate');
+                const dueInput = document.getElementById('dueDate');
+                if (startInput) startInput.value = start;
+                if (dueInput) dueInput.value = dueDate;
+            }
+
+            function attachDynamicListeners() {
+                document.getElementById('materialsSection')?.addEventListener('change', (event) => {
+                    if (event.target.matches('select[name="material[]"]')) {
+                        syncMaterialRow(event.target.closest('.material-item'));
+                    }
+                });
+
+                document.getElementById('materialsSection')?.addEventListener('input', (event) => {
+                    if (event.target.matches('input[name="materialQty[]"], input[name="materialCost[]"]')) {
+                        syncMaterialRow(event.target.closest('.material-item'));
+                    }
+                });
+
+                document.getElementById('laborSection')?.addEventListener('input', (event) => {
+                    if (event.target.matches('input[name="laborHours[]"], input[name="laborRate[]"]')) {
+                        calculateJobTotal();
+                    }
+                });
+
+                document.addEventListener('input', (event) => {
+                    if (event.target.matches('input[name="additionalQty[]"], input[name="additionalLaborHours[]"], input[name="additionalLaborRate[]"]')) {
+                        calculateAdditionalCosts(event.target);
+                    }
+                });
+
+                document.addEventListener('change', (event) => {
+                    if (event.target.matches('select[name="additionalMaterial[]"]')) {
+                        calculateAdditionalCosts(event.target);
+                    }
+                });
+
+                const filterIds = ['customerFilter', 'statusFilter', 'jobTypeFilter', 'fromDateFilter', 'toDateFilter'];
+                filterIds.forEach((id) => {
+                    const control = document.getElementById(id);
+                    control?.addEventListener('change', fetchJobCards);
+                });
+
+                const searchInput = document.getElementById('searchFilter');
+                if (searchInput) {
+                    searchInput.addEventListener('input', () => {
+                        clearTimeout(searchTimer);
+                        searchTimer = setTimeout(fetchJobCards, 350);
+                    });
+                }
+
+                const vatInput = document.getElementById('jobVatRate');
+                vatInput?.addEventListener('input', calculateJobTotal);
+
+                const branchSelect = document.getElementById('jobBranch');
+                if (branchSelect) {
+                    branchSelect.addEventListener('change', (event) => {
+                        const branchId = event.target.value || null;
+                        state.currentBranchId = branchId;
+                        const branch = getBranchById(branchId);
+                        state.currentBranchCode = branch?.code || branch?.name || state.currentBranchCode;
+                        updateBranchContextLabel();
+                        fetchTechnicians(branchId);
+                        const technicianSelect = document.getElementById('assignedTechnician');
+                        if (technicianSelect) {
+                            technicianSelect.value = '';
+                        }
+                        refreshMaterialOptionsForBranch();
+                        fetchJobCards();
+                    });
+                }
+            }
+
+            async function fetchJobCards() {
+                const params = buildJobFilters();
+                const url = params.toString() ? `${JOB_CARDS_ENDPOINT}?${params.toString()}` : JOB_CARDS_ENDPOINT;
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    state.jobCards = Array.isArray(data?.job_cards) ? data.job_cards : [];
+                    if (state.currentBranchId) {
+                        state.jobCards = state.jobCards.filter((job) => !job.branch_id || job.branch_id === state.currentBranchId);
+                    }
+                    renderJobCards();
+                    updateStatistics();
+                } catch (error) {
+                    console.error('Failed to fetch job cards', error);
+                    state.jobCards = [];
+                    renderJobCards();
+                    updateStatistics();
+                }
+            }
+
+            function buildJobFilters() {
+                const params = new URLSearchParams();
+                const customer = document.getElementById('customerFilter')?.value;
+                const status = document.getElementById('statusFilter')?.value;
+                const jobType = document.getElementById('jobTypeFilter')?.value;
+                const fromDate = document.getElementById('fromDateFilter')?.value;
+                const toDate = document.getElementById('toDateFilter')?.value;
+                const search = document.getElementById('searchFilter')?.value;
+
+                if (customer) params.append('customer_id', customer);
+                if (status) params.append('status', status);
+                if (jobType) params.append('job_type', jobType);
+                if (fromDate) params.append('from_date', fromDate);
+                if (toDate) params.append('to_date', toDate);
+                if (search) params.append('search', search);
+                if (state.currentBranchId) params.append('branch_id', state.currentBranchId);
+                return params;
+            }
+
+            async function fetchCustomers() {
+                try {
+                    const response = await fetch(CUSTOMERS_ENDPOINT);
+                    state.customers = await response.json();
+                    populateCustomerOptions();
+                } catch (error) {
+                    console.error('Failed to load customers', error);
+                }
+            }
+
+            async function fetchMaterials() {
+                try {
+                    let normalized = [];
+                    if (state.currentBranchId) {
+                        try {
+                            const branchResponse = await fetch(`${BRANCH_STOCK_ENDPOINT}/${encodeURIComponent(state.currentBranchId)}/stock-levels`);
+                            if (!branchResponse.ok) {
+                                throw new Error(`Branch stock request failed (${branchResponse.status})`);
+                            }
+                            const branchData = await branchResponse.json();
+                            if (Array.isArray(branchData)) {
+                                normalized = branchData.map((item) => ({
+                                    id: item.product_id,
+                                    name: item.product_name,
+                                    sku: item.sku,
+                                    cost_price: parseFloat(item.cost_price ?? 0) || 0,
+                                    selling_price: parseFloat(item.selling_price ?? 0) || 0,
+                                    quantity: parseFloat(item.current_stock ?? 0) || 0,
+                                    branch_id: state.currentBranchId
+                                }));
+                            }
+                        } catch (branchError) {
+                            console.warn('Branch stock lookup failed, falling back to global inventory', branchError);
+                        }
+                    }
+
+                    if (!normalized.length) {
+                        const params = state.currentBranchId ? `?branch_id=${encodeURIComponent(state.currentBranchId)}` : '';
+                        const response = await fetch(`${MATERIALS_ENDPOINT}${params}`);
+                        if (!response.ok) {
+                            throw new Error(`Inventory request failed (${response.status})`);
+                        }
+                        const data = await response.json();
+                        normalized = Array.isArray(data)
+                            ? data.map((item) => ({
+                                  id: item.id,
+                                  name: item.name,
+                                  sku: item.sku,
+                                  cost_price: parseFloat(item.cost_price ?? 0) || 0,
+                                  selling_price: parseFloat(item.selling_price ?? 0) || 0,
+                                  quantity: parseFloat(item.quantity ?? 0) || 0,
+                                  branch_id: item.branch_id || null
+                              }))
+                            : [];
+
+                        if (!normalized.length && state.currentBranchId) {
+                            const fallbackResponse = await fetch(MATERIALS_ENDPOINT);
+                            if (!fallbackResponse.ok) {
+                                throw new Error(`Inventory fallback failed (${fallbackResponse.status})`);
+                            }
+                            const fallbackData = await fallbackResponse.json();
+                            normalized = Array.isArray(fallbackData)
+                                ? fallbackData.map((item) => ({
+                                      id: item.id,
+                                      name: item.name,
+                                      sku: item.sku,
+                                      cost_price: parseFloat(item.cost_price ?? 0) || 0,
+                                      selling_price: parseFloat(item.selling_price ?? 0) || 0,
+                                      quantity: parseFloat(item.quantity ?? 0) || 0,
+                                      branch_id: item.branch_id || null
+                                  }))
+                                : [];
+                        }
+                        if (!normalized.length && state.hasGlobalBranchAccess) {
+                            const fallbackResponse = await fetch(MATERIALS_ENDPOINT);
+                            if (!fallbackResponse.ok) {
+                                throw new Error(`Inventory fallback failed (${fallbackResponse.status})`);
+                            }
+                            const fallbackData = await fallbackResponse.json();
+                            normalized = Array.isArray(fallbackData)
+                                ? fallbackData.map((item) => ({
+                                      id: item.id,
+                                      name: item.name,
+                                      sku: item.sku,
+                                      cost_price: parseFloat(item.cost_price ?? 0) || 0,
+                                      selling_price: parseFloat(item.selling_price ?? 0) || 0,
+                                      quantity: parseFloat(item.quantity ?? 0) || 0,
+                                      branch_id: item.branch_id || null
+                                  }))
+                                : [];
+                        }
+                    }
+
+                    state.allMaterials = normalized;
+                    refreshMaterialOptionsForBranch();
+                } catch (error) {
+                    console.error('Failed to load inventory products', error);
+                    state.allMaterials = [];
+                    refreshMaterialOptionsForBranch();
+                }
+            }
+
+            async function fetchTechnicians(branchId) {
+                try {
+                    const params = new URLSearchParams();
+                    params.set('role', 'technician');
+                    const effectiveBranchId = branchId || state.currentBranchId;
+                    if (effectiveBranchId) {
+                        params.set('branch_id', effectiveBranchId);
+                    }
+                    const url = params.toString() ? `${TECHNICIANS_ENDPOINT}?${params.toString()}` : TECHNICIANS_ENDPOINT;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    state.technicians = Array.isArray(data?.technicians) ? data.technicians : Array.isArray(data) ? data : [];
+                    populateTechnicianOptions();
+                } catch (error) {
+                    console.error('Failed to load technicians', error);
+                    state.technicians = [];
+                    populateTechnicianOptions();
+                }
+            }
+
+            async function fetchBranches() {
+                try {
+                    const response = await fetch(BRANCHES_ENDPOINT);
+                    const data = await response.json();
+                    state.branches = Array.isArray(data)
+                        ? data
+                        : Array.isArray(data?.branches)
+                        ? data.branches
+                        : [];
+                    if (!state.currentBranchId && state.branches.length) {
+                        state.currentBranchId = state.branches[0].id;
+                        state.currentBranchCode = state.branches[0].code || state.branches[0].name || null;
+                    } else if (state.currentBranchId) {
+                        const activeBranch = getBranchById(state.currentBranchId);
+                        if (activeBranch) {
+                            state.currentBranchCode = activeBranch.code || activeBranch.name || state.currentBranchCode;
+                        }
+                    }
+                    populateBranchOptions();
+                    updateBranchContextLabel();
+                } catch (error) {
+                    console.error('Failed to load branches', error);
+                }
+            }
+
+            function populateCustomerOptions() {
+                const selects = document.querySelectorAll('#jobCustomer, #customerFilter');
+                selects.forEach((select) => {
+                    while (select.children.length > 1) {
+                        select.removeChild(select.lastChild);
+                    }
+                    state.customers.forEach((customer) => {
+                        const option = document.createElement('option');
+                        option.value = customer.id;
+                        option.textContent = customer.name;
+                        select.appendChild(option);
+                    });
+                });
+            }
+
+            function populateBranchOptions() {
+                const branchSelect = document.getElementById('jobBranch');
+                if (!branchSelect) return;
+                const placeholderOption = branchSelect.querySelector('option[value=""]');
+                while (branchSelect.children.length > 1) {
+                    branchSelect.removeChild(branchSelect.lastChild);
+                }
+                const accessibleBranches = state.hasGlobalBranchAccess
+                    ? state.branches
+                    : state.branches.filter((branch) => !state.currentBranchId || branch.id === state.currentBranchId);
+                accessibleBranches.forEach((branch) => {
+                    const option = document.createElement('option');
+                    option.value = branch.id;
+                    option.textContent = `${branch.name} (${branch.code})`;
+                    branchSelect.appendChild(option);
+                });
+                let desiredBranchId = state.currentBranchId;
+                if (desiredBranchId && !accessibleBranches.some((branch) => branch.id === desiredBranchId)) {
+                    desiredBranchId = accessibleBranches[0]?.id || '';
+                }
+                if (!desiredBranchId && accessibleBranches.length === 1) {
+                    desiredBranchId = accessibleBranches[0].id;
+                }
+                branchSelect.value = desiredBranchId || '';
+                state.currentBranchId = branchSelect.value || null;
+                const activeBranch = getBranchById(state.currentBranchId);
+                if (activeBranch) {
+                    state.currentBranchCode = activeBranch.code || activeBranch.name || state.currentBranchCode;
+                }
+                if (!state.hasGlobalBranchAccess) {
+                    branchSelect.disabled = true;
+                    if (placeholderOption) {
+                        placeholderOption.textContent = 'Branch locked to your profile';
+                    }
+                } else {
+                    branchSelect.disabled = false;
+                    if (placeholderOption) {
+                        placeholderOption.textContent = 'Select Branch';
+                    }
+                }
+                updateBranchContextLabel();
+                refreshMaterialOptionsForBranch();
+                fetchTechnicians(state.currentBranchId);
+            }
+
+            function populateMaterialOptions() {
+                const selects = document.querySelectorAll('select[name="material[]"], select[name="additionalMaterial[]"]');
+                selects.forEach((select) => populateMaterialOptionsForSelect(select));
+            }
+
+            function populateMaterialOptionsForSelect(select) {
+                if (!select) return;
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+                state.materials.forEach((product) => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = `${product.name} - ${formatCurrency(product.selling_price)} (Stock: ${product.quantity})`;
+                    option.dataset.costPrice = product.cost_price.toString();
+                    option.dataset.salePrice = product.selling_price.toString();
+                    option.dataset.stock = product.quantity.toString();
+                    select.appendChild(option);
+                });
+            }
+
+            function populateTechnicianOptions() {
+                const select = document.getElementById('assignedTechnician');
+                if (!select) return;
+                while (select.children.length > 1) {
+                    select.removeChild(select.lastChild);
+                }
+                state.technicians.forEach((technician) => {
+                    const option = document.createElement('option');
+                    option.value = technician.id;
+                    const name = technician.name || `${technician.first_name || ''} ${technician.last_name || ''}`.trim();
+                    const branch = technician.branch_name ? ` – ${technician.branch_name}` : '';
+                    option.textContent = `${name}${branch}`;
+                    if (technician.branch_id) {
+                        option.dataset.branchId = technician.branch_id;
+                    }
+                    select.appendChild(option);
+                });
+            }
+
+            function renderJobCards() {
+                const tbody = document.getElementById('jobCardsTable');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                if (!state.jobCards.length) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="12" class="text-center text-muted py-4">No job cards found for the selected filters.</td>';
+                    tbody.appendChild(row);
+                    return;
+                }
+
+                state.jobCards.forEach((job) => {
+                    const statusClass = {
+                        draft: 'secondary',
+                        scheduled: 'info',
+                        in_progress: 'primary',
+                        completed: 'success',
+                        invoiced: 'warning',
+                        closed: 'success',
+                        cancelled: 'danger'
+                    }[job.status] || 'secondary';
+
+                    const statusLabel = job.status ? job.status.replace(/_/g, ' ') : 'unknown';
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="checkbox" class="form-check-input"></td>
+                        <td><strong>${job.job_number || job.id}</strong></td>
+                        <td>${formatDate(job.start_date)}</td>
+                        <td>${job.customer_name || 'N/A'}</td>
+                        <td><span class="badge job-type-badge bg-info">${job.job_type || '-'}</span></td>
+                        <td>${job.description || ''}</td>
+                        <td>${formatCurrency(job.total_material_price)}</td>
+                        <td>${formatCurrency(job.total_labor_price)}</td>
+                        <td><strong>${formatCurrency(job.total_amount)}</strong></td>
+                        <td><span class="badge status-badge bg-${statusClass}">${statusLabel.toUpperCase()}</span></td>
+                        <td>${formatDate(job.due_date)}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-outline-primary btn-sm" data-job="${job.id}" title="View" data-action="view-job">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" data-job="${job.id}" title="Generate Invoice" data-action="generate-invoice" ${job.invoice_generated ? 'disabled' : ''}>
+                                    <i class="bi bi-receipt"></i>
+                                </button>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-outline-warning btn-sm dropdown-toggle" data-bs-toggle="dropdown" title="Update Status">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" data-job="${job.id}" data-status="draft" href="#">Draft</a></li>
+                                        <li><a class="dropdown-item" data-job="${job.id}" data-status="scheduled" href="#">Scheduled</a></li>
+                                        <li><a class="dropdown-item" data-job="${job.id}" data-status="in_progress" href="#">In Progress</a></li>
+                                        <li><a class="dropdown-item" data-job="${job.id}" data-status="completed" href="#">Completed</a></li>
+                                        <li><a class="dropdown-item" data-job="${job.id}" data-status="invoiced" href="#">Invoiced</a></li>
+                                        <li><a class="dropdown-item" data-job="${job.id}" data-status="closed" href="#">Closed</a></li>
+                                        <li><a class="dropdown-item text-danger" data-job="${job.id}" data-status="cancelled" href="#">Cancelled</a></li>
+                                    </ul>
+                                </div>
+                                <button class="btn btn-outline-danger btn-sm" data-job="${job.id}" title="Delete Job Card" data-action="delete-job">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>`;
+
+                    row.querySelector('[data-action="view-job"]').addEventListener('click', () => viewJobCard(job.id));
+                    row.querySelector('[data-action="generate-invoice"]').addEventListener('click', () => generateInvoice(job.id));
+                    row.querySelector('[data-action="delete-job"]').addEventListener('click', () => deleteJobCard(job.id, job.invoice_generated));
+                    row.querySelectorAll('.dropdown-menu a').forEach((link) => {
+                        link.addEventListener('click', (event) => {
+                            event.preventDefault();
+                            updateJobStatus(link.dataset.job, link.dataset.status);
+                        });
+                    });
+
+                    tbody.appendChild(row);
+                });
+            }
+
+            function updateStatistics() {
+                const active = state.jobCards.filter((job) => job.status === 'in_progress').length;
+                const pending = state.jobCards.filter((job) => job.status === 'scheduled' || job.status === 'draft').length;
+                const completed = state.jobCards.filter((job) => job.status === 'completed' || job.status === 'closed').length;
+                const totalRevenue = state.jobCards.reduce((sum, job) => sum + parseFloat(job.total_amount || 0), 0);
+
+                document.getElementById('activeJobs').textContent = active;
+                document.getElementById('pendingJobs').textContent = pending;
+                document.getElementById('completedJobs').textContent = completed;
+                document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            }
+
+            function syncMaterialRow(row) {
+                if (!row) return;
+                const select = row.querySelector('select[name="material[]"]');
+                const quantityInput = row.querySelector('input[name="materialQty[]"]');
+                const unitInput = row.querySelector('input[name="materialCost[]"]');
+                const totalInput = row.querySelector('input[name="materialTotal[]"]');
+                const option = select?.selectedOptions?.[0];
+
+                if (option && option.dataset.salePrice) {
+                    unitInput.value = Number(option.dataset.salePrice || 0).toFixed(2);
+                    if (!quantityInput.value || parseFloat(quantityInput.value) <= 0) {
+                        quantityInput.value = '1';
+                    }
+                }
+
+                const qty = parseFloat(quantityInput.value || '0');
+                const unit = parseFloat(unitInput.value || '0');
+                const total = qty * unit;
+                totalInput.value = formatCurrency(total);
+                calculateJobTotal();
+            }
+
+            function calculateJobTotal() {
+                let materialsTotal = 0;
+                let laborTotal = 0;
+
+                document.querySelectorAll('.material-item').forEach((item) => {
+                    const qty = parseFloat(item.querySelector('input[name="materialQty[]"]').value || '0');
+                    const unit = parseFloat(item.querySelector('input[name="materialCost[]"]').value || '0');
+                    materialsTotal += qty * unit;
+                });
+
+                document.querySelectorAll('.labor-item').forEach((item) => {
+                    const hours = parseFloat(item.querySelector('input[name="laborHours[]"]').value || '0');
+                    const rate = parseFloat(item.querySelector('input[name="laborRate[]"]').value || '0');
+                    const line = hours * rate;
+                    item.querySelector('input[name="laborTotal[]"]').value = formatCurrency(line);
+                    laborTotal += line;
+                });
+
+                const subtotal = materialsTotal + laborTotal;
+                const vat = subtotal * (state.settings.vatRate / 100);
+                const total = subtotal + vat;
+
+                document.getElementById('totalMaterials').textContent = formatCurrency(materialsTotal);
+                document.getElementById('totalLabor').textContent = formatCurrency(laborTotal);
+                document.getElementById('jobSubtotal').textContent = formatCurrency(subtotal);
+                document.getElementById('jobVAT').textContent = formatCurrency(vat);
+                document.getElementById('jobTotal').textContent = formatCurrency(total);
+            }
+
+            function calculateAdditionalCosts(element) {
+                const row = element.closest('.additional-material-item, .additional-labor-item');
+                if (!row) return;
+
+                if (row.classList.contains('additional-material-item')) {
+                    const select = row.querySelector('select[name="additionalMaterial[]"]');
+                    const option = select?.selectedOptions?.[0];
+                    const qtyInput = row.querySelector('input[name="additionalQty[]"]');
+                    if (option) {
+                        if (!qtyInput.value || parseFloat(qtyInput.value) <= 0) {
+                            qtyInput.value = '1';
+                        }
+                        const quantity = parseFloat(qtyInput.value || '1');
+                        const unit = parseFloat(option.dataset.salePrice || option.dataset.costPrice || '0');
+                        row.querySelector('input[name="additionalCost[]"]').value = unit.toFixed(2);
+                        row.querySelector('input[name="additionalTotal[]"]').value = formatCurrency(unit * quantity);
+                    }
+                } else {
+                    const hours = parseFloat(row.querySelector('input[name="additionalLaborHours[]"]').value || '0');
+                    const rate = parseFloat(row.querySelector('input[name="additionalLaborRate[]"]').value || '0');
+                    row.querySelector('input[name="additionalLaborTotal[]"]').value = formatCurrency(hours * rate);
+                }
+            }
+
+            async function submitJobCard(options = {}) {
+                const payload = buildJobPayload();
+                if (!payload.customer_id) {
+                    alert('Please select a customer for this job card.');
+                    return;
+                }
+                if (!payload.branch_id) {
+                    alert('Please select a branch for this job card.');
+                    return;
+                }
+                if (!payload.job_type) {
+                    alert('Please choose a job type.');
+                    return;
+                }
+                if (!payload.start_date) {
+                    alert('Please choose a job start date.');
+                    return;
+                }
+                if (options.saveAsDraft) {
+                    payload.status = 'draft';
+                } else if (!payload.status) {
+                    payload.status = 'scheduled';
+                }
+
+                try {
+                    const response = await fetch(JOB_CARDS_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await parseResponse(response);
+                    hideModal('addJobCardModal');
+                    resetJobCardForm();
+                    await fetchJobCards();
+                    updateStatistics();
+                    alert('Job card created successfully.');
+                    return data;
+                } catch (error) {
+                    console.error('Failed to create job card', error);
+                    alert(`Could not create job card: ${error.message}`);
+                    throw error;
+                }
+            }
+
+            function buildJobPayload() {
+                const materials = [];
+                document.querySelectorAll('#materialsSection .material-item').forEach((row) => {
+                    const select = row.querySelector('select[name="material[]"]');
+                    const option = select?.selectedOptions?.[0];
+                    const productId = select?.value;
+                    const quantity = parseFloat(row.querySelector('input[name="materialQty[]"]').value || '0');
+                    const unitPrice = parseFloat(row.querySelector('input[name="materialCost[]"]').value || '0');
+                    if (!productId || !quantity) return;
+                    const product = state.materials.find((item) => item.id === productId) || {};
+                    materials.push({
+                        product_id: productId,
+                        quantity,
+                        unit_price: unitPrice,
+                        unit_cost: product.cost_price || parseFloat(option?.dataset.costPrice || '0'),
+                        notes: row.querySelector('textarea[name="materialNotes[]"]')?.value || null
+                    });
+                });
+
+                const labor = [];
+                document.querySelectorAll('#laborSection .labor-item').forEach((row) => {
+                    const description = row.querySelector('input[name="laborDescription[]"]').value.trim();
+                    const hours = parseFloat(row.querySelector('input[name="laborHours[]"]').value || '0');
+                    const rate = parseFloat(row.querySelector('input[name="laborRate[]"]').value || '0');
+                    if (!description || !hours || !rate) return;
+                    labor.push({
+                        description,
+                        hours,
+                        rate,
+                        technician_id: document.getElementById('assignedTechnician')?.value || null
+                    });
+                });
+
+                const payload = {
+                    customer_id: document.getElementById('jobCustomer')?.value,
+                    branch_id: document.getElementById('jobBranch')?.value || state.currentBranchId,
+                    job_type: document.getElementById('jobType')?.value,
+                    start_date: document.getElementById('startDate')?.value,
+                    due_date: document.getElementById('dueDate')?.value || null,
+                    priority: document.getElementById('jobPriority')?.value || 'normal',
+                    description: document.getElementById('jobDescription')?.value || null,
+                    notes: document.getElementById('jobNotes')?.value || null,
+                    technician_id: document.getElementById('assignedTechnician')?.value || null,
+                    vat_rate: parseFloat(document.getElementById('jobVatRate')?.value || state.settings.vatRate),
+                    currency: state.settings.currency,
+                    materials,
+                    labor
+                };
+                
+                // Add BOM/production info for manufacturing jobs
+                const bomProductId = document.getElementById('jobBom')?.value;
+                if (bomProductId && payload.job_type === 'manufacturing') {
+                    payload.bom_product_id = bomProductId;
+                    payload.production_quantity = parseInt(document.getElementById('productionQty')?.value || 1);
+                }
+                
+                return payload;
+            }
+
+            function toggleBomSection() {
+                const jobType = document.getElementById('jobType')?.value;
+                const bomRow = document.getElementById('bomSelectionRow');
+                if (jobType === 'manufacturing') {
+                    bomRow.style.display = 'flex';
+                    loadAvailableBoms();
+                } else {
+                    bomRow.style.display = 'none';
+                    document.getElementById('jobBom').value = '';
+                }
+            }
+
+            async function loadAvailableBoms() {
+                try {
+                    // Fetch all products that have BOMs defined
+                    const response = await fetch('/api/v1/manufacturing/products');
+                    if (!response.ok) throw new Error('Failed to fetch products');
+                    const products = await response.json();
+                    
+                    // Filter products that have BOM items
+                    const bomsWithData = [];
+                    for (const product of products) {
+                        try {
+                            const bomResponse = await fetch(`/api/v1/manufacturing/products/${product.id}/bom`);
+                            if (bomResponse.ok) {
+                                const bomData = await bomResponse.json();
+                                if (bomData.bom && bomData.bom.length > 0) {
+                                    bomsWithData.push({
+                                        product_id: product.id,
+                                        product_name: product.name,
+                                        product_sku: product.sku,
+                                        bom_items: bomData.bom
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            // Skip products without BOMs
+                        }
+                    }
+                    
+                    state.boms = bomsWithData;
+                    populateBomDropdown();
+                } catch (error) {
+                    console.error('Error loading BOMs:', error);
+                }
+            }
+
+            function populateBomDropdown() {
+                const select = document.getElementById('jobBom');
+                if (!select) return;
+                
+                select.innerHTML = '<option value="">-- Select Recipe/BOM or add materials manually --</option>';
+                
+                state.boms.forEach(bom => {
+                    const option = document.createElement('option');
+                    option.value = bom.product_id;
+                    option.textContent = `${bom.product_name} (${bom.product_sku}) - ${bom.bom_items.length} components`;
+                    option.dataset.bomData = JSON.stringify(bom);
+                    select.appendChild(option);
+                });
+            }
+
+            async function loadBomMaterials() {
+                const select = document.getElementById('jobBom');
+                const selectedOption = select?.selectedOptions?.[0];
+                if (!selectedOption || !selectedOption.value) return;
+                
+                const bomData = JSON.parse(selectedOption.dataset.bomData || '{}');
+                const productionQty = parseFloat(document.getElementById('productionQty')?.value || 1);
+                
+                // Clear existing materials
+                const materialsSection = document.getElementById('materialsSection');
+                materialsSection.innerHTML = '';
+                
+                // Add BOM items as materials
+                for (const item of bomData.bom_items || []) {
+                    const requiredQty = item.quantity * productionQty;
+                    addMaterialRow(item.component_id, requiredQty, item.component_name);
+                }
+                
+                // Show success message
+                showToast('Materials loaded from recipe!', 'success');
+            }
+
+            function addMaterialRow(materialId = '', quantity = '', materialName = '') {
+                const container = document.getElementById('materialsSection');
+                const row = document.createElement('div');
+                row.className = 'row mb-2 material-item';
+                
+                row.innerHTML = `
+                    <div class="col-md-4">
+                        <select class="form-select" name="material[]" onchange="updateMaterialCost(this)">
+                            <option value="">Select Material/Part</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" name="materialQty[]" placeholder="Qty" step="0.01" value="${quantity}" oninput="calculateMaterialTotal(this)">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" name="materialCost[]" placeholder="Unit Cost" step="0.01" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" name="materialTotal[]" placeholder="Total" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMaterialItem(this)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(row);
+                
+                // Populate material dropdown
+                const select = row.querySelector('select[name="material[]"]');
+                populateMaterialOptionsForSelect(select);
+                
+                // Set selected material if provided
+                if (materialId) {
+                    select.value = materialId;
+                    updateMaterialCost(select);
+                }
+            }
+
+            function showToast(message, type = 'info') {
+                // Simple toast notification
+                const toast = document.createElement('div');
+                toast.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3`;
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `<i class="bi bi-check-circle me-2"></i>${message}`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            function resetJobCardForm() {
+                document.getElementById('addJobCardForm')?.reset();
+                document.getElementById('bomSelectionRow').style.display = 'none';
+                setDefaultDates();
+                const materialRows = document.querySelectorAll('#materialsSection .material-item');
+                materialRows.forEach((row, index) => {
+                    if (index === 0) return;
+                    row.remove();
+                });
+                const laborRows = document.querySelectorAll('#laborSection .labor-item');
+                laborRows.forEach((row, index) => {
+                    if (index === 0) return;
+                    row.remove();
+                });
+                calculateJobTotal();
+            }
+
+            async function viewJobCard(jobId) {
+                try {
+                    const response = await fetch(`${JOB_CARDS_ENDPOINT}/${jobId}`);
+                    const data = await parseResponse(response);
+                    state.currentJobId = jobId;
+                    populateJobModal(data.job_card);
+                    showModal('viewJobCardModal');
+                } catch (error) {
+                    console.error('Failed to fetch job card details', error);
+                    alert(`Unable to load job card: ${error.message}`);
+                }
+            }
+
+            function populateJobModal(job) {
+                if (!job) return;
+                document.getElementById('viewJobNumber').textContent = job.job_number || 'JOB-' + job.id.substring(0, 8);
+                document.getElementById('viewCustomer').textContent = job.customer_name || 'N/A';
+                document.getElementById('viewJobType').textContent = job.job_type || '-';
+                document.getElementById('viewPriority').textContent = job.priority || '-';
+                document.getElementById('viewStartDate').textContent = formatDate(job.start_date);
+                document.getElementById('viewDueDate').textContent = formatDate(job.due_date);
+                document.getElementById('viewTechnician').textContent = job.technician_name || '-';
+                document.getElementById('viewDescription').textContent = job.description || '';
+
+                const statusBadge = document.getElementById('viewJobStatus');
+                const statusClassMap = {
+                    draft: 'secondary',
+                    scheduled: 'info',
+                    in_progress: 'primary',
+                    completed: 'success',
+                    invoiced: 'warning',
+                    closed: 'success',
+                    cancelled: 'danger'
+                };
+                const badgeClass = statusClassMap[job.status] || 'secondary';
+                statusBadge.className = `badge bg-${badgeClass}`;
+                statusBadge.textContent = (job.status || '').replace(/_/g, ' ').toUpperCase();
+
+                populateJobModalTable('viewMaterialsList', job.materials, (material) => `
+                    <td>${material.product_name || ''}</td>
+                    <td>${material.quantity}</td>
+                    <td>${formatCurrency(material.unit_price)}</td>
+                    <td>${formatCurrency(material.total_price)}</td>
+                    <td>${material.issued_at ? formatDateTime(material.issued_at) : '-'}</td>`);
+
+                populateJobModalTable('viewLaborList', job.labor, (labor) => `
+                    <td>${labor.description}</td>
+                    <td>${labor.hours}</td>
+                    <td>${formatCurrency(labor.rate)}</td>
+                    <td>${formatCurrency(labor.total_price)}</td>
+                    <td>${labor.technician_name || '-'}</td>`);
+
+                populateNotes(job.notes_entries || []);
+
+                document.getElementById('viewTotalMaterials').textContent = formatCurrency(job.total_material_price);
+                document.getElementById('viewTotalLabor').textContent = formatCurrency(job.total_labor_price);
+                document.getElementById('viewSubtotal').textContent = formatCurrency(job.subtotal);
+                document.getElementById('viewVAT').textContent = formatCurrency(job.vat_amount);
+                document.getElementById('viewTotal').textContent = formatCurrency(job.total_amount);
+
+                const invoiceButton = document.getElementById('generateInvoiceBtn');
+                if (invoiceButton) {
+                    invoiceButton.disabled = !!job.invoice_generated;
+                }
+            }
+
+            function populateJobModalTable(tableId, rows, template) {
+                const tbody = document.getElementById(tableId);
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                rows.forEach((row) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = template(row);
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function populateNotes(notes) {
+                const container = document.getElementById('progressNotes');
+                if (!container) return;
+                container.innerHTML = '';
+                notes.forEach((note) => {
+                    const div = document.createElement('div');
+                    div.className = 'mb-2 p-2 bg-light rounded';
+                    div.innerHTML = `
+                        <small class="text-muted">${formatDateTime(note.logged_at)}</small><br>
+                        ${note.note}
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            async function updateJobStatus(jobId, status) {
+                if (!status) return;
+                try {
+                    const response = await fetch(`${JOB_CARDS_ENDPOINT}/${jobId}/status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status })
+                    });
+                    await parseResponse(response);
+                    await fetchJobCards();
+                    updateStatistics();
+                    if (state.currentJobId === jobId) {
+                        await viewJobCard(jobId);
+                    }
+                    alert('Job status updated successfully.');
+                } catch (error) {
+                    console.error('Failed to update job status', error);
+                    alert(`Could not update job status: ${error.message}`);
+                }
+            }
+
+            async function deleteJobCard(jobId, isInvoiced) {
+                // Confirm deletion
+                const jobNumber = state.jobCards.find(j => j.id === jobId)?.job_number || jobId;
+                
+                let confirmMessage = `Are you sure you want to delete job card ${jobNumber}?\n\nThis will permanently delete:\n- Job card details\n- All materials used\n- All labor entries\n- All progress notes\n\nThis action cannot be undone.`;
+                
+                if (isInvoiced) {
+                    confirmMessage = `⚠️ WARNING: This job card has been invoiced!\n\n${confirmMessage}\n\nPress OK to force delete, or Cancel to keep the job card.`;
+                }
+                
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+                
+                try {
+                    const force = isInvoiced ? '?force=true' : '';
+                    const response = await fetch(`${JOB_CARDS_ENDPOINT}/${jobId}${force}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    const data = await parseResponse(response);
+                    
+                    // Close modal if viewing this job
+                    if (state.currentJobId === jobId) {
+                        hideModal('viewJobCardModal');
+                        state.currentJobId = null;
+                    }
+                    
+                    // Refresh list
+                    await fetchJobCards();
+                    updateStatistics();
+                    
+                    alert('Job card deleted successfully.');
+                } catch (error) {
+                    console.error('Failed to delete job card', error);
+                    alert(`Could not delete job card: ${error.message}`);
+                }
+            }
+
+            async function deleteCurrentJob() {
+                if (!state.currentJobId) {
+                    alert('No job card is currently being viewed.');
+                    return;
+                }
+                const job = state.jobCards.find(j => j.id === state.currentJobId);
+                await deleteJobCard(state.currentJobId, job?.invoice_generated || false);
+            }
+
+            async function generateInvoice(jobId) {
+                try {
+                    const response = await fetch(`${JOB_CARDS_ENDPOINT}/${jobId}/invoice`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ save_draft: false, is_cash_sale: false })
+                    });
+                    const data = await parseResponse(response);
+                    alert(`Invoice ${data?.invoice?.invoice_number ?? ''} generated.`);
+                    await fetchJobCards();
+                    if (state.currentJobId === jobId) {
+                        await viewJobCard(jobId);
+                    }
+                } catch (error) {
+                    console.error('Failed to generate invoice', error);
+                    alert(`Could not generate invoice: ${error.message}`);
+                }
+            }
+
+            async function addProgressNote() {
+                const noteInput = document.getElementById('newProgressNote');
+                const text = noteInput?.value.trim();
+                if (!text) return;
+                try {
+                    const response = await fetch(`${JOB_CARDS_ENDPOINT}/${state.currentJobId}/notes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ note: text })
+                    });
+                    const data = await parseResponse(response);
+                    noteInput.value = '';
+                    const notesContainer = document.getElementById('progressNotes');
+                    if (notesContainer) {
+                        const div = document.createElement('div');
+                        div.className = 'mb-2 p-2 bg-light rounded';
+                        div.innerHTML = `
+                            <small class="text-muted">${formatDateTime(data.note.logged_at)}</small><br>
+                            ${data.note.note}
+                        `;
+                        notesContainer.prepend(div);
+                    }
+                } catch (error) {
+                    console.error('Failed to add progress note', error);
+                    alert(`Could not add note: ${error.message}`);
+                }
+            }
+
+            async function saveAdditionalMaterials() {
+                const payload = gatherAdditionalMaterials();
+                if (!payload.length) {
+                    alert('Please select at least one material with quantity.');
+                    return;
+                }
+                try {
+                    const response = await fetch(`${JOB_CARDS_ENDPOINT}/${state.currentJobId}/materials`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ materials: payload, mode: 'append' })
+                    });
+                    await parseResponse(response);
+                    hideModal('addMaterialsModal');
+                    await viewJobCard(state.currentJobId);
+                    await fetchJobCards();
+                } catch (error) {
+                    console.error('Failed to append materials', error);
+                    alert(`Could not add materials: ${error.message}`);
+                }
+            }
+
+            function gatherAdditionalMaterials() {
+                const rows = document.querySelectorAll('#additionalMaterials .additional-material-item');
+                const materials = [];
+                rows.forEach((row) => {
+                    const select = row.querySelector('select[name="additionalMaterial[]"]');
+                    const productId = select?.value;
+                    const qty = parseFloat(row.querySelector('input[name="additionalQty[]"]').value || '0');
+                    if (!productId || !qty) return;
+                    const option = select.selectedOptions[0];
+                    materials.push({
+                        product_id: productId,
+                        quantity: qty,
+                        unit_price: parseFloat(row.querySelector('input[name="additionalCost[]"]').value || option.dataset.salePrice || '0'),
+                        unit_cost: parseFloat(option.dataset.costPrice || '0')
+                    });
+                });
+                return materials;
+            }
+
+            async function saveAdditionalLabor() {
+                const payload = gatherAdditionalLabor();
+                if (!payload.length) {
+                    alert('Please provide labor description, hours, and rate.');
+                    return;
+                }
+                try {
+                    const response = await fetch(`${JOB_CARDS_ENDPOINT}/${state.currentJobId}/labor`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ labor: payload, mode: 'append' })
+                    });
+                    await parseResponse(response);
+                    hideModal('addLaborModal');
+                    await viewJobCard(state.currentJobId);
+                    await fetchJobCards();
+                } catch (error) {
+                    console.error('Failed to append labor', error);
+                    alert(`Could not add labor: ${error.message}`);
+                }
+            }
+
+            function gatherAdditionalLabor() {
+                const rows = document.querySelectorAll('#additionalLabor .additional-labor-item');
+                const labor = [];
+                rows.forEach((row) => {
+                    const description = row.querySelector('input[name="additionalLaborDesc[]"]').value.trim();
+                    const hours = parseFloat(row.querySelector('input[name="additionalLaborHours[]"]').value || '0');
+                    const rate = parseFloat(row.querySelector('input[name="additionalLaborRate[]"]').value || '0');
+                    if (!description || !hours || !rate) return;
+                    labor.push({ description, hours, rate });
+                });
+                return labor;
+            }
+
+            function addMaterialItem() {
+                const container = document.getElementById('materialsSection');
+                if (!container) return;
+                const template = container.querySelector('.material-item');
+                const clone = template.cloneNode(true);
+                clone.querySelectorAll('input').forEach((input) => {
+                    input.value = '';
+                });
+                const select = clone.querySelector('select[name="material[]"]');
+                if (select) populateMaterialOptionsForSelect(select);
+                container.appendChild(clone);
+            }
+
+            function removeMaterialItem(button) {
+                const container = document.getElementById('materialsSection');
+                if (!container) return;
+                const items = container.querySelectorAll('.material-item');
+                if (items.length <= 1) return;
+                const row = button.closest('.material-item');
+                row.remove();
+                calculateJobTotal();
+            }
+
+            function addLaborItem() {
+                const container = document.getElementById('laborSection');
+                if (!container) return;
+                const template = container.querySelector('.labor-item');
+                const clone = template.cloneNode(true);
+                clone.querySelectorAll('input').forEach((input) => {
+                    input.value = '';
+                });
+                container.appendChild(clone);
+            }
+
+            function removeLaborItem(button) {
+                const container = document.getElementById('laborSection');
+                if (!container) return;
+                const items = container.querySelectorAll('.labor-item');
+                if (items.length <= 1) return;
+                const row = button.closest('.labor-item');
+                row.remove();
+                calculateJobTotal();
+            }
+
+            function addMoreMaterials() {
+                const select = document.querySelector('#additionalMaterials select[name="additionalMaterial[]"]');
+                if (select) populateMaterialOptionsForSelect(select);
+                showModal('addMaterialsModal');
+            }
+
+            function addMoreLabor() {
+                showModal('addLaborModal');
+            }
+
+            function clearFilters() {
+                document.getElementById('customerFilter').value = '';
+                document.getElementById('statusFilter').value = '';
+                document.getElementById('jobTypeFilter').value = '';
+                document.getElementById('fromDateFilter').value = '';
+                document.getElementById('toDateFilter').value = '';
+                document.getElementById('searchFilter').value = '';
+                fetchJobCards();
+            }
+
+            function exportJobCards() {
+                alert('Export functionality will be added in a future update.');
+            }
+
+            function formatCurrency(value) {
+                const amount = Number(value || 0);
+                const locale = state.settings.country === 'BW' ? 'en-BW' : state.settings.locale || 'en-US';
+                return `${state.settings.symbol} ${amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+
+            function formatDate(value) {
+                if (!value) return '-';
+                const locale = state.settings.country === 'BW' ? 'en-BW' : state.settings.locale || 'en-US';
+                const date = new Date(value);
+                return date.toLocaleDateString(locale, { year: 'numeric', month: '2-digit', day: '2-digit' });
+            }
+
+            function formatDateTime(value) {
+                if (!value) return '-';
+                const locale = state.settings.country === 'BW' ? 'en-BW' : state.settings.locale || 'en-US';
+                const date = new Date(value);
+                return date.toLocaleString(locale, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            }
+
+            async function parseResponse(response) {
+                const raw = await response.text();
+                let data;
+                try {
+                    data = raw ? JSON.parse(raw) : {};
+                } catch (error) {
+                    data = raw;
+                }
+                if (!response.ok) {
+                    let message = typeof data === 'string' ? data : data?.detail || data?.message || data?.error;
+                    if (Array.isArray(data?.detail)) {
+                        message = data.detail
+                            .map((item) => {
+                                if (item?.loc) {
+                                    const path = item.loc.slice(1).join('.');
+                                    return `${path}: ${item.msg}`;
+                                }
+                                return item.msg || JSON.stringify(item);
+                            })
+                            .join('\n');
+                    }
+                    if (!message) {
+                        message = response.statusText || 'Request failed';
+                    }
+                    throw new Error(message);
+                }
+                if (typeof data === 'object' && data?.success === false) {
+                    throw new Error(data?.message || data?.error || 'Request failed');
+                }
+                return typeof data === 'string' ? { raw: data } : data;
+            }
+
+            function initializeVatInput() {
+                const vatInput = document.getElementById('jobVatRate');
+                if (vatInput && !vatInput.value) {
+                    vatInput.value = state.settings.vatRate;
+                }
+            }
+
+            function showModal(id) {
+                const modalEl = document.getElementById(id);
+                if (!modalEl) return;
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            }
+
+            function hideModal(id) {
+                const modalEl = document.getElementById(id);
+                if (!modalEl) return;
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal?.hide();
+            }
+
+            window.createJobCard = () => submitJobCard({ saveAsDraft: false });
+            window.saveAsDraft = () => submitJobCard({ saveAsDraft: true });
+            window.clearFilters = clearFilters;
+            window.exportJobCards = exportJobCards;
+            window.viewJobCard = viewJobCard;
+            window.updateJobStatus = updateJobStatus;
+            window.generateInvoice = generateInvoice;
+            window.addProgressNote = addProgressNote;
+            window.deleteCurrentJob = deleteCurrentJob;
+            window.addMaterialItem = addMaterialItem;
+            window.removeMaterialItem = removeMaterialItem;
+            window.addLaborItem = addLaborItem;
+            window.removeLaborItem = removeLaborItem;
+            window.addMoreMaterials = addMoreMaterials;
+            window.addMoreLabor = addMoreLabor;
+            window.toggleBomSection = toggleBomSection;
+            window.loadBomMaterials = loadBomMaterials;
+            window.addAdditionalMaterialRow = () => {
+                const container = document.getElementById('additionalMaterials');
+                if (!container) return;
+                const template = container.querySelector('.additional-material-item');
+                const clone = template.cloneNode(true);
+                clone.querySelectorAll('input').forEach((input) => {
+                    input.value = '';
+                });
+                const select = clone.querySelector('select[name="additionalMaterial[]"]');
+                populateMaterialOptionsForSelect(select);
+                container.appendChild(clone);
+            };
+            window.removeAdditionalMaterial = (button) => {
+                const container = document.getElementById('additionalMaterials');
+                const rows = container.querySelectorAll('.additional-material-item');
+                if (rows.length <= 1) return;
+                button.closest('.additional-material-item').remove();
+            };
+            window.saveAdditionalMaterials = saveAdditionalMaterials;
+            window.addAdditionalLaborRow = () => {
+                const container = document.getElementById('additionalLabor');
+                if (!container) return;
+                const template = container.querySelector('.additional-labor-item');
+                const clone = template.cloneNode(true);
+                clone.querySelectorAll('input').forEach((input) => {
+                    input.value = '';
+                });
+                container.appendChild(clone);
+            };
+            window.removeAdditionalLabor = (button) => {
+                const container = document.getElementById('additionalLabor');
+                const rows = container.querySelectorAll('.additional-labor-item');
+                if (rows.length <= 1) return;
+                button.closest('.additional-labor-item').remove();
+            };
+            window.saveAdditionalLabor = saveAdditionalLabor;
+        })();
+    </script>
+</body>
+
+</html>

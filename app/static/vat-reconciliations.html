@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - VAT Reconciliations</title>
+
+    <script src="js/auth-bootstrap.js?v=20240729"></script>
+    <script src="js/auth.js?v=20240729"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navigation Bar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid" style="padding-top: 80px; margin-top: 1rem;">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">
+                            <i class="bi bi-percent text-primary"></i> VAT Reconciliations
+                        </h1>
+                        <p class="text-muted mb-0">Manage VAT compliance and reconciliations</p>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createReconciliationModal">
+                        <i class="bi bi-plus"></i> New Reconciliation
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VAT Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-1">VAT Output</h6>
+                                <h3 class="mb-0" id="vatOutput">Loading...</h3>
+                            </div>
+                            <i class="bi bi-arrow-up-circle fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-1">VAT Input</h6>
+                                <h3 class="mb-0" id="vatInput">Loading...</h3>
+                            </div>
+                            <i class="bi bi-arrow-down-circle fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-1">Net VAT</h6>
+                                <h3 class="mb-0" id="netVat">Loading...</h3>
+                            </div>
+                            <i class="bi bi-calculator fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-1">VAT Rate</h6>
+                                <h3 class="mb-0" id="vatRate">Loading...</h3>
+                            </div>
+                            <i class="bi bi-percent fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VAT Chart -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-graph-up"></i> VAT Trend (Last 12 Months)
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="vatChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-pie-chart"></i> VAT Breakdown
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="vatBreakdownChart" width="200" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-2">
+                    <label class="form-label">Period</label>
+                    <select class="form-select" id="periodFilter">
+                        <option value="current">Current Month</option>
+                        <option value="previous">Previous Month</option>
+                        <option value="quarter">Current Quarter</option>
+                        <option value="year">Current Year</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="approved">Approved</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" id="typeFilter">
+                        <option value="">All Types</option>
+                        <option value="output">VAT Output</option>
+                        <option value="input">VAT Input</option>
+                        <option value="adjustment">Adjustment</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Search reconciliations...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                            <i class="bi bi-arrow-clockwise"></i> Clear
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="exportVatData()">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VAT Reconciliations Table -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">VAT Reconciliations</h5>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm me-2" onclick="submitReconciliations()">
+                            <i class="bi bi-check-circle"></i> Submit Selected
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="generateVatReport()">
+                            <i class="bi bi-file-earmark-text"></i> Generate Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th>Period</th>
+                                <th>Type</th>
+                                <th>VAT Output</th>
+                                <th>VAT Input</th>
+                                <th>Net VAT</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vatReconciliationsTable">
+                            <!-- VAT reconciliations will be dynamically generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Reconciliation Modal -->
+    <div class="modal fade" id="createReconciliationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Create VAT Reconciliation
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createReconciliationForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Period *</label>
+                                <select class="form-select" id="reconciliationPeriod" required>
+                                    <option value="">Select Period</option>
+                                    <option value="2024-01">January 2024</option>
+                                    <option value="2024-02">February 2024</option>
+                                    <option value="2024-03">March 2024</option>
+                                    <option value="2024-04">April 2024</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Type *</label>
+                                <select class="form-select" id="reconciliationType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="annual">Annual</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">VAT Output Amount</label>
+                                <input type="number" class="form-control" id="vatOutputAmount" step="0.01"
+                                    placeholder="0.00">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">VAT Input Amount</label>
+                                <input type="number" class="form-control" id="vatInputAmount" step="0.01"
+                                    placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="reconciliationNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createReconciliation()">
+                        <i class="bi bi-plus"></i> Create Reconciliation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Navbar Scripts -->
+    <script src="js/navbar.js?v=20250106001"></script>
+
+
+
+    <script>
+        // Global variables
+        let vatReconciliations = [];
+        let vatSummary = {};
+        let currentCurrency = 'BWP';
+        let currencySymbol = 'P';
+        let currencyCode = 'BWP';
+        let vatRate = 14.0;
+
+        // API endpoints
+        const API_BASE = '/api/v1';
+        const VAT_ENDPOINT = `${API_BASE}/vat`;
+        const SETTINGS_ENDPOINT = `${API_BASE}/settings/currency`;
+
+        // Load settings and currency
+        async function loadSettings() {
+            try {
+                const response = await fetch(SETTINGS_ENDPOINT);
+                if (response.ok) {
+                    const settings = await response.json();
+                    currentCurrency = settings.data.currency || 'BWP';
+                    currencySymbol = settings.data.currency_symbol || 'P';
+                    currencyCode = settings.data.currency || 'BWP';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Format currency amount
+        function formatCurrency(amount) {
+            return `${currencySymbol}${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        // Fetch VAT summary from database
+        async function fetchVatSummary() {
+            try {
+                const response = await fetch(`${VAT_ENDPOINT}/summary`);
+                if (response.ok) {
+                    const data = await response.json();
+                    vatSummary = data.data || {};
+                    updateVatSummary();
+                }
+            } catch (error) {
+                console.error('Error fetching VAT summary:', error);
+                // Show empty state
+                vatSummary = {
+                    vat_collected: 0,
+                    vat_paid: 0,
+                    net_vat_liability: 0,
+                    vat_rate: 14.0
+                };
+                updateVatSummary();
+            }
+        }
+
+        // Fetch VAT reconciliations from database
+        async function fetchVatReconciliations() {
+            try {
+                const response = await fetch(`${VAT_ENDPOINT}/reconciliations`);
+                if (response.ok) {
+                    const result = await response.json();
+                    // Handle both {data: []} and direct array responses
+                    vatReconciliations = Array.isArray(result) ? result : (result.data || []);
+                    console.log('Fetched VAT reconciliations:', vatReconciliations);
+                    renderVatReconciliations();
+                    updateCharts(); // Update charts after fetching new data
+                }
+            } catch (error) {
+                console.error('Error fetching VAT reconciliations:', error);
+                // Show empty state
+                vatReconciliations = [];
+                renderVatReconciliations();
+            }
+        }
+
+        // Update VAT summary statistics
+        function updateVatSummary() {
+            document.getElementById('vatOutput').textContent = formatCurrency(vatSummary.vat_collected || 0);
+            document.getElementById('vatInput').textContent = formatCurrency(vatSummary.vat_paid || 0);
+            document.getElementById('netVat').textContent = formatCurrency(vatSummary.net_vat_liability || 0);
+            document.getElementById('vatRate').textContent = `${vatSummary.vat_rate || 14.0}%`;
+        }
+
+        // Theme switching
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                if (html.classList.contains('light-mode')) {
+                    html.classList.remove('light-mode');
+                    html.classList.add('dark-mode');
+                    themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
+                } else {
+                    html.classList.remove('dark-mode');
+                    html.classList.add('light-mode');
+                    themeToggle.innerHTML = '<i class="bi bi-moon"></i>';
+                }
+            });
+        }
+
+        // Initialize charts
+        let vatChart = null;
+        let breakdownChart = null;
+
+        function initializeCharts() {
+            // VAT Trend Chart
+            const vatCtx = document.getElementById('vatChart').getContext('2d');
+            vatChart = new Chart(vatCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'VAT Output',
+                        data: [],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'VAT Input',
+                        data: [],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // VAT Breakdown Chart
+            const breakdownCtx = document.getElementById('vatBreakdownChart').getContext('2d');
+            breakdownChart = new Chart(breakdownCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['VAT Output', 'VAT Input', 'Net VAT'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#3b82f6', '#ef4444', '#10b981']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (vatChart && breakdownChart) {
+                // Update breakdown chart with current summary
+                breakdownChart.data.datasets[0].data = [
+                    vatSummary.vat_collected || 0,
+                    vatSummary.vat_paid || 0,
+                    vatSummary.net_vat_liability || 0
+                ];
+                breakdownChart.update();
+
+                // Update trend chart with reconciliation data
+                // Ensure vatReconciliations is an array
+                const reconciliations = Array.isArray(vatReconciliations) ? vatReconciliations : [];
+
+                const labels = reconciliations.map(r => {
+                    const date = new Date(r.period_start);
+                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                });
+                const vatOutputData = reconciliations.map(r => r.vat_collected || 0);
+                const vatInputData = reconciliations.map(r => r.vat_paid || 0);
+
+                vatChart.data.labels = labels;
+                vatChart.data.datasets[0].data = vatOutputData;
+                vatChart.data.datasets[1].data = vatInputData;
+                vatChart.update();
+            }
+        }
+
+        // Render VAT reconciliations
+        function renderVatReconciliations(reconciliationsToRender = vatReconciliations) {
+            const tbody = document.getElementById('vatReconciliationsTable');
+            tbody.innerHTML = '';
+
+            // Ensure we have an array
+            if (!Array.isArray(reconciliationsToRender)) {
+                console.warn('reconciliationsToRender is not an array:', reconciliationsToRender);
+                reconciliationsToRender = [];
+            }
+
+            if (reconciliationsToRender.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <h5 class="mt-3">No VAT reconciliations found</h5>
+                                <p>No VAT reconciliations match your current filters.</p>
+                                <button class="btn btn-primary" onclick="clearFilters()">
+                                    <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            reconciliationsToRender.forEach(reconciliation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="form-check-input" value="${reconciliation.id}">
+                    </td>
+                    <td>${formatPeriod(reconciliation.period_start, reconciliation.period_end)}</td>
+                    <td>
+                        <span class="badge bg-primary">Monthly</span>
+                    </td>
+                    <td class="text-end">${formatCurrency(reconciliation.vat_collected)}</td>
+                    <td class="text-end">${formatCurrency(reconciliation.vat_paid)}</td>
+                    <td class="text-end fw-bold">${formatCurrency(reconciliation.net_vat_liability)}</td>
+                    <td>
+                        <span class="badge bg-${getStatusColor(reconciliation.status)}">
+                            ${reconciliation.status}
+                        </span>
+                    </td>
+                    <td>${formatDate(reconciliation.period_end)}</td>
+                    <td>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="viewReconciliation('${reconciliation.id}')">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="editReconciliation('${reconciliation.id}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteReconciliation('${reconciliation.id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Get status color
+        function getStatusColor(status) {
+            const colors = {
+                'draft': 'secondary',
+                'submitted': 'warning',
+                'approved': 'info',
+                'paid': 'success'
+            };
+            return colors[status] || 'secondary';
+        }
+
+        // Format period
+        function formatPeriod(periodStart, periodEnd) {
+            const start = new Date(periodStart);
+            const end = new Date(periodEnd);
+            return start.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString();
+        }
+
+        // Filter reconciliations
+        function filterReconciliations() {
+            const periodFilter = document.getElementById('periodFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            let filtered = vatReconciliations.filter(reconciliation => {
+                const periodStart = new Date(reconciliation.period_start);
+                const currentDate = new Date();
+
+                let matchesPeriod = true;
+                if (periodFilter === 'current') {
+                    matchesPeriod = periodStart.getMonth() === currentDate.getMonth() &&
+                        periodStart.getFullYear() === currentDate.getFullYear();
+                } else if (periodFilter === 'previous') {
+                    const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+                    matchesPeriod = periodStart.getMonth() === prevMonth.getMonth() &&
+                        periodStart.getFullYear() === prevMonth.getFullYear();
+                } else if (periodFilter === 'quarter') {
+                    const quarter = Math.floor(currentDate.getMonth() / 3);
+                    const quarterStart = new Date(currentDate.getFullYear(), quarter * 3);
+                    matchesPeriod = periodStart >= quarterStart &&
+                        periodStart < new Date(quarterStart.getFullYear(), quarterStart.getMonth() + 3);
+                } else if (periodFilter === 'year') {
+                    matchesPeriod = periodStart.getFullYear() === currentDate.getFullYear();
+                }
+
+                const matchesStatus = !statusFilter || reconciliation.status === statusFilter;
+                const matchesType = !typeFilter || true; // All reconciliations are monthly for now
+                const matchesSearch = !searchFilter ||
+                    reconciliation.description?.toLowerCase().includes(searchFilter) ||
+                    reconciliation.status.toLowerCase().includes(searchFilter);
+
+                return matchesPeriod && matchesStatus && matchesType && matchesSearch;
+            });
+
+            renderVatReconciliations(filtered);
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('periodFilter').value = 'current';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            filterReconciliations();
+        }
+
+        // Create reconciliation
+        async function createReconciliation() {
+            const form = document.getElementById('createReconciliationForm');
+            if (form.checkValidity()) {
+                const vatOutput = parseFloat(document.getElementById('vatOutputAmount').value) || 0;
+                const vatInput = parseFloat(document.getElementById('vatInputAmount').value) || 0;
+                const netVat = vatOutput - vatInput;
+                const period = document.getElementById('reconciliationPeriod').value;
+                const notes = document.getElementById('reconciliationNotes').value;
+
+                // Parse period to get start and end dates
+                const [year, month] = period.split('-');
+                const periodStart = new Date(year, month - 1, 1);
+                const periodEnd = new Date(year, month, 0);
+
+                const reconciliationData = {
+                    period_start: periodStart.toISOString().split('T')[0],
+                    period_end: periodEnd.toISOString().split('T')[0],
+                    description: notes || `VAT Reconciliation for ${period}`,
+                    vat_collected: vatOutput,
+                    vat_paid: vatInput,
+                    net_vat_liability: netVat,
+                    status: 'draft',
+                    vat_rate: vatSummary.vat_rate || 14.0
+                };
+
+                try {
+                    const response = await fetch(`${VAT_ENDPOINT}/reconciliations`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(reconciliationData)
+                    });
+
+                    if (response.ok) {
+                        // Refresh data
+                        await fetchVatReconciliations();
+                        await fetchVatSummary();
+                        updateCharts();
+
+                        // Close modal and reset form
+                        bootstrap.Modal.getInstance(document.getElementById('createReconciliationModal')).hide();
+                        form.reset();
+
+                        if (window.modernUI) {
+                            window.modernUI.showNotification('VAT reconciliation created successfully', 'success');
+                        }
+                    } else {
+                        throw new Error('Failed to create VAT reconciliation');
+                    }
+                } catch (error) {
+                    console.error('Error creating VAT reconciliation:', error);
+                    if (window.modernUI) {
+                        window.modernUI.showNotification('Failed to create VAT reconciliation', 'error');
+                    }
+                }
+            } else {
+                form.reportValidity();
+            }
+        }
+
+        // View reconciliation
+        function viewReconciliation(id) {
+            const reconciliation = vatReconciliations.find(r => r.id === id);
+            if (reconciliation) {
+                alert(`VAT Reconciliation Details:\n\nPeriod: ${formatPeriod(reconciliation.period)}\nType: ${reconciliation.type}\nVAT Output: ${formatCurrency(reconciliation.vatOutput)}\nVAT Input: ${formatCurrency(reconciliation.vatInput)}\nNet VAT: ${formatCurrency(reconciliation.netVat)}\nStatus: ${reconciliation.status}\nDue Date: ${formatDate(reconciliation.dueDate)}\nNotes: ${reconciliation.notes || 'No notes'}`);
+            }
+        }
+
+        // Edit reconciliation
+        function editReconciliation(id) {
+            alert(`Editing VAT reconciliation ${id}...`);
+        }
+
+        // Delete reconciliation
+        async function deleteReconciliation(id) {
+            if (confirm('Are you sure you want to delete this VAT reconciliation?')) {
+                try {
+                    const response = await fetch(`${VAT_ENDPOINT}/reconciliations/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        await fetchVatReconciliations(); // Refresh the list
+                        if (window.modernUI) {
+                            window.modernUI.showNotification('VAT reconciliation deleted successfully', 'success');
+                        }
+                    } else {
+                        throw new Error('Failed to delete reconciliation');
+                    }
+                } catch (error) {
+                    console.error('Error deleting reconciliation:', error);
+                    if (window.modernUI) {
+                        window.modernUI.showNotification('Failed to delete reconciliation', 'error');
+                    }
+                }
+            }
+        }
+
+        // Submit reconciliations
+        function submitReconciliations() {
+            const selectedReconciliations = document.querySelectorAll('#vatReconciliationsTable input[type="checkbox"]:checked');
+            if (selectedReconciliations.length === 0) {
+                alert('Please select reconciliations to submit');
+                return;
+            }
+
+            if (confirm(`Submit ${selectedReconciliations.length} VAT reconciliation(s)?`)) {
+                selectedReconciliations.forEach(checkbox => {
+                    const id = parseInt(checkbox.value);
+                    const reconciliation = vatReconciliations.find(r => r.id === id);
+                    if (reconciliation) {
+                        reconciliation.status = 'submitted';
+                    }
+                });
+                renderVatReconciliations();
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('VAT reconciliations submitted successfully', 'success');
+                }
+            }
+        }
+
+        // Generate VAT report
+        function generateVatReport() {
+            alert('Generating VAT report...');
+        }
+
+        // Export VAT data
+        function exportVatData() {
+            alert('Exporting VAT data...');
+        }
+
+        // Add event listeners
+        document.getElementById('periodFilter').addEventListener('change', filterReconciliations);
+        document.getElementById('statusFilter').addEventListener('change', filterReconciliations);
+        document.getElementById('typeFilter').addEventListener('change', filterReconciliations);
+        document.getElementById('searchFilter').addEventListener('input', filterReconciliations);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Debug navbar container
+            const navbarContainer = document.getElementById('navbar-container');
+            console.log('🔍 Navbar container:', navbarContainer);
+            if (navbarContainer) {
+                console.log('📝 Navbar container HTML:', navbarContainer.innerHTML);
+                console.log('📏 Navbar container style:', navbarContainer.style.cssText);
+                // Add temporary visible border for debugging
+                navbarContainer.style.border = '3px solid navy';
+                navbarContainer.style.backgroundColor = '#000080';
+                navbarContainer.style.padding = '10px';
+                navbarContainer.style.margin = '10px';
+            }
+
+            // Initialize charts first
+            initializeCharts();
+
+            // Load data
+            await loadSettings();
+            await Promise.all([
+                fetchVatSummary(),
+                fetchVatReconciliations()
+            ]);
+
+            // Update charts with real data
+            updateCharts();
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNPERP - Navigation Test with System Logs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .navbar {
+            background: linear-gradient(135deg, #0d6efd, #198754);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+
+        .badge-new {
+            background: #28a745;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+
+        .user-menu {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 16px;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 8px;
+        }
+
+        .highlight-new {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                background-color: transparent;
+            }
+
+            50% {
+                background-color: rgba(40, 167, 69, 0.1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar with System Logs -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-building me-2"></i>
+                CNPERP ERP
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-speedometer2 me-1"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- User Menu -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown user-menu">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            Admin User
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <h6 class="dropdown-header">User Account</h6>
+                            </li>
+                            <li><a class="dropdown-item" href="profile.html">
+                                    <i class="bi bi-person"></i>
+                                    My Profile
+                                </a></li>
+                            <li><a class="dropdown-item" href="settings.html">
+                                    <i class="bi bi-gear"></i>
+                                    Account Settings
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="admin-panel.html">
+                                    <i class="bi bi-shield-lock"></i>
+                                    Admin Panel
+                                </a></li>
+                            <li><a class="dropdown-item" href="system-settings.html">
+                                    <i class="bi bi-gear-fill"></i>
+                                    System Settings
+                                </a></li>
+                            <li><a class="dropdown-item highlight-new" href="logs-viewer.html">
+                                    <i class="bi bi-file-text"></i>
+                                    System Logs
+                                    <span class="badge-new">New</span>
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="help.html">
+                                    <i class="bi bi-question-circle"></i>
+                                    Help & Support
+                                </a></li>
+                            <li><a class="dropdown-item" href="about.html">
+                                    <i class="bi bi-info-circle"></i>
+                                    About CNPERP
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="#">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    Logout
+                                </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Demo Content -->
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-success">
+                    <h4 class="alert-heading">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        System Logs Added to Navigation!
+                    </h4>
+                    <p>The <strong>System Logs</strong> link has been successfully added to the settings dropdown menu
+                        in the navigation bar.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <strong>How to access:</strong>
+                    </p>
+                    <ol>
+                        <li>Click on the <strong>"Admin User"</strong> dropdown in the top-right corner</li>
+                        <li>Look for <strong>"System Logs"</strong> with the <span class="badge bg-success">New</span>
+                            badge</li>
+                        <li>Click to access the comprehensive logging dashboard</li>
+                    </ol>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            What's New in the Menu
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Location in Navigation:</h6>
+                        <div class="ms-3 mb-3">
+                            <code>User Menu → Admin Panel → System Settings → <strong>System Logs</strong> → Help & Support</code>
+                        </div>
+
+                        <h6>Features Available:</h6>
+                        <ul>
+                            <li>📊 <strong>Real-time Statistics</strong> - View total logs, errors, warnings, and file
+                                sizes</li>
+                            <li>📝 <strong>Recent Logs</strong> - Browse and filter recent log entries</li>
+                            <li>⚠️ <strong>Error Summary</strong> - See errors grouped by type with occurrence counts
+                            </li>
+                            <li>⚡ <strong>Performance Metrics</strong> - Monitor function execution times</li>
+                            <li>🔍 <strong>Search Logs</strong> - Full-text search with highlighting</li>
+                            <li>📁 <strong>Log Files</strong> - View file metadata and sizes</li>
+                        </ul>
+
+                        <h6>API Endpoints:</h6>
+                        <ul>
+                            <li><code>GET /api/v1/logs/logs</code> - Get recent log entries</li>
+                            <li><code>GET /api/v1/logs/stats</code> - Get log statistics</li>
+                            <li><code>GET /api/v1/logs/errors/summary</code> - Get error summary</li>
+                            <li><code>GET /api/v1/logs/performance</code> - Get performance metrics</li>
+                            <li><code>GET /api/v1/logs/search</code> - Search through logs</li>
+                            <li><code>GET /api/v1/logs/files</code> - Get log file information</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            Quick Access Instructions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p>To access the System Logs viewer:</p>
+                        <div class="alert alert-light border">
+                            <ol class="mb-0">
+                                <li>Open any page with the updated navigation bar</li>
+                                <li>Click on <strong>"Admin User"</strong> (or your username) in the top-right corner
+                                </li>
+                                <li>In the dropdown menu, locate <strong>"System Logs"</strong> with the green <span
+                                        class="badge bg-success">New</span> badge</li>
+                                <li>Click to open the comprehensive logging dashboard</li>
+                            </ol>
+                        </div>
+
+                        <div class="mt-3">
+                            <a href="logs-viewer.html" class="btn btn-primary">
+                                <i class="bi bi-file-text me-2"></i>
+                                Open System Logs Viewer
+                            </a>
+                            <a href="navbar.html" class="btn btn-secondary">
+                                <i class="bi bi-list me-2"></i>
+                                View Full Navigation
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-open the user menu dropdown to show the new item
+        document.addEventListener('DOMContentLoaded', function () {
+            // Show a toast notification
+            setTimeout(() => {
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed top-0 end-0 p-3';
+                toast.style.zIndex = 9999;
+                toast.innerHTML = `
+                    <div class="toast show" role="alert">
+                        <div class="toast-header bg-success text-white">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong class="me-auto">System Logs Added!</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            Click on "Admin User" to see the new System Logs menu item.
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => {
+                    toast.remove();
+                }, 5000);
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>

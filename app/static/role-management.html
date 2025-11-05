@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Management - CNP ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .privilege-chart {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .module-section {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .module-header {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .module-header:hover {
+            background: #0056b3;
+        }
+
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+
+        .permission-item input[type="checkbox"] {
+            margin: 0;
+        }
+
+        .role-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .role-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .role-body {
+            padding: 15px;
+        }
+
+        .system-role {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .custom-role {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .audit-log {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .audit-entry {
+            border-left: 3px solid #007bff;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+
+        .audit-entry.creation {
+            border-left-color: #28a745;
+        }
+
+        .audit-entry.modification {
+            border-left-color: #ffc107;
+        }
+
+        .audit-entry.deletion {
+            border-left-color: #dc3545;
+        }
+
+        /* Added for permission origin visualization */
+        .badge-auto {
+            background-color: #6f42c1;
+        }
+
+        .auto-permission-row {
+            background-color: #f5ecff;
+        }
+
+        .permission-origin-badge {
+            font-size: 0.65rem;
+            vertical-align: middle;
+        }
+
+        /* Workflow styles */
+        .workflow-card {
+            transition: all 0.3s ease;
+        }
+
+        .workflow-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .workflow-diagram {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .workflow-state {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 6px;
+            background: white;
+            border: 2px solid #dee2e6;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .workflow-state.initial {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .workflow-state.final {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .workflow-arrow {
+            display: inline-block;
+            margin: 0 10px;
+            color: #6c757d;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">
+                    <i class="fas fa-users-cog"></i> Role Management
+                </h1>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-roles">-</div>
+                    <div class="stats-label">Total Roles</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-permissions">-</div>
+                    <div class="stats-label">Total Permissions</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="total-users">-</div>
+                    <div class="stats-label">Total Users</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number" id="audit-entries">-</div>
+                    <div class="stats-label">Audit Entries</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <ul class="nav nav-tabs" id="roleManagementTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles"
+                    type="button" role="tab">
+                    <i class="fas fa-users"></i> Roles
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions"
+                    type="button" role="tab">
+                    <i class="fas fa-key"></i> Permissions
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="privilege-chart-tab" data-bs-toggle="tab" data-bs-target="#privilege-chart"
+                    type="button" role="tab">
+                    <i class="fas fa-chart-pie"></i> Privilege Chart
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="workflows-tab" data-bs-toggle="tab" data-bs-target="#workflows"
+                    type="button" role="tab">
+                    <i class="fas fa-project-diagram"></i> Workflows
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="audit-tab" data-bs-toggle="tab" data-bs-target="#audit" type="button"
+                    role="tab">
+                    <i class="fas fa-history"></i> Audit Log
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="roleManagementTabContent">
+            <!-- Roles Tab -->
+            <div class="tab-pane fade show active" id="roles" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>Manage Roles</h3>
+                            <button class="btn btn-primary" onclick="showCreateRoleModal()">
+                                <i class="fas fa-plus"></i> Create New Role
+                            </button>
+                        </div>
+                        <div id="roles-container">
+                            <!-- Roles will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permissions Tab -->
+            <div class="tab-pane fade" id="permissions" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>System Permissions</h3>
+                            <button class="btn btn-primary" onclick="showCreatePermissionModal()">
+                                <i class="fas fa-plus"></i> Create Permission
+                            </button>
+                        </div>
+                        <div id="permissions-container">
+                            <!-- Permissions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privilege Chart Tab -->
+            <div class="tab-pane fade" id="privilege-chart" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>Privilege Assignment Chart</h3>
+                            <button class="btn btn-success" onclick="savePrivilegeAssignments()">
+                                <i class="fas fa-save"></i> Save Assignments
+                            </button>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-4 mb-3">
+                            <div id="privilege-legend" class="small">
+                                <strong>Legend:</strong>
+                                <span class="badge bg-success me-1">DIRECT</span>
+                                <span class="badge badge-auto me-1">AUTO</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="hideAutoToggle">
+                                <label class="form-check-label" for="hideAutoToggle">Hide AUTO rows</label>
+                            </div>
+                        </div>
+                        <div id="privilege-chart-container">
+                            <!-- Privilege chart will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflows Tab -->
+            <div class="tab-pane fade" id="workflows" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>Workflow Management</h3>
+                            <button class="btn btn-primary" onclick="showCreateWorkflowModal()">
+                                <i class="fas fa-plus"></i> Create Workflow
+                            </button>
+                        </div>
+
+                        <!-- Workflow Filters -->
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Module</label>
+                                        <select class="form-select" id="workflow-module-filter"
+                                            onchange="loadWorkflows()">
+                                            <option value="">All Modules</option>
+                                            <option value="accounting">Accounting</option>
+                                            <option value="accounting-dimensions">Accounting Dimensions</option>
+                                            <option value="sales">Sales</option>
+                                            <option value="purchases">Purchases</option>
+                                            <option value="inventory">Inventory</option>
+                                            <option value="manufacturing">Manufacturing</option>
+                                            <option value="pos">Point of Sale</option>
+                                            <option value="banking">Banking</option>
+                                            <option value="assets">Asset Management</option>
+                                            <option value="budgeting">Budgeting</option>
+                                            <option value="vat">VAT</option>
+                                            <option value="procurement">Procurement</option>
+                                            <option value="hr">Human Resources</option>
+                                            <option value="reports">Reports</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Status</label>
+                                        <select class="form-select" id="workflow-status-filter"
+                                            onchange="loadWorkflows()">
+                                            <option value="">All</option>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button class="btn btn-secondary w-100" onclick="loadWorkflows()">
+                                            <i class="fas fa-sync"></i> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="workflows-container">
+                            <!-- Workflows will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Tab -->
+            <div class="tab-pane fade" id="audit" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>Audit Log</h3>
+                            <div>
+                                <select class="form-select d-inline-block w-auto me-2" id="audit-filter">
+                                    <option value="">All Actions</option>
+                                    <option value="create">Create</option>
+                                    <option value="update">Update</option>
+                                    <option value="delete">Delete</option>
+                                </select>
+                                <button class="btn btn-secondary" onclick="refreshAuditLog()">
+                                    <i class="fas fa-refresh"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div id="audit-container" class="audit-log">
+                            <!-- Audit entries will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Role Modal -->
+    <div class="modal fade" id="createRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createRoleForm">
+                        <div class="mb-3">
+                            <label for="roleName" class="form-label">Role Name</label>
+                            <input type="text" class="form-control" id="roleName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="roleDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="roleDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isSystemRole">
+                                <label class="form-check-label" for="isSystemRole">
+                                    System Role (Cannot be deleted)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createRole()">Create Role</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Permission Modal -->
+    <div class="modal fade" id="createPermissionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Permission</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createPermissionForm">
+                        <div class="mb-3">
+                            <label for="permissionName" class="form-label">Permission Name</label>
+                            <input type="text" class="form-control" id="permissionName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="permissionDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionModule" class="form-label">Module</label>
+                            <select class="form-control" id="permissionModule" required>
+                                <option value="">Select Module</option>
+                                <option value="users">Users</option>
+                                <option value="roles">Roles & Permissions</option>
+                                <option value="branches">Branches</option>
+                                <option value="accounting">Accounting</option>
+                                <option value="accounting-dimensions">Accounting Dimensions</option>
+                                <option value="general-ledger">General Ledger</option>
+                                <option value="vat">VAT</option>
+                                <option value="budgeting">Budgeting</option>
+                                <option value="inventory">Inventory</option>
+                                <option value="sales">Sales</option>
+                                <option value="purchases">Purchases</option>
+                                <option value="procurement">Procurement</option>
+                                <option value="pos">Point of Sale</option>
+                                <option value="banking">Banking</option>
+                                <option value="assets">Asset Management</option>
+                                <option value="manufacturing">Manufacturing</option>
+                                <option value="job-cards">Job Cards</option>
+                                <option value="quotations">Quotations</option>
+                                <option value="reports">Reports</option>
+                                <option value="business-intelligence">Business Intelligence</option>
+                                <option value="settings">Settings</option>
+                                <option value="backup">Backup</option>
+                                <option value="workflows">Workflows</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionAction" class="form-label">Action</label>
+                            <select class="form-control" id="permissionAction" required>
+                                <option value="">Select Action</option>
+                                <option value="view">View</option>
+                                <option value="create">Create</option>
+                                <option value="update">Update</option>
+                                <option value="delete">Delete</option>
+                                <option value="manage">Manage</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="permissionResource" class="form-label">Resource</label>
+                            <input type="text" class="form-control" id="permissionResource" value="all"
+                                placeholder="all">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createPermission()">Create
+                        Permission</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Role Modal -->
+    <div class="modal fade" id="editRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editRoleForm">
+                        <input type="hidden" id="editRoleId">
+                        <div class="mb-3">
+                            <label for="editRoleName" class="form-label">Role Name</label>
+                            <input type="text" class="form-control" id="editRoleName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editRoleDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editRoleDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateRole()">Update Role</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Workflow Modal -->
+    <div class="modal fade" id="createWorkflowModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Workflow</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createWorkflowForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="workflowName" class="form-label">Workflow Name *</label>
+                                <input type="text" class="form-control" id="workflowName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="workflowCode" class="form-label">Code *</label>
+                                <input type="text" class="form-control" id="workflowCode" required>
+                                <small class="text-muted">Unique identifier (e.g., ACC_INVOICE_APPROVAL)</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="workflowModule" class="form-label">Module *</label>
+                                <select class="form-select" id="workflowModule" required>
+                                    <option value="">Select Module</option>
+                                    <option value="accounting">Accounting</option>
+                                    <option value="accounting-dimensions">Accounting Dimensions</option>
+                                    <option value="sales">Sales</option>
+                                    <option value="purchases">Purchases</option>
+                                    <option value="procurement">Procurement</option>
+                                    <option value="inventory">Inventory</option>
+                                    <option value="manufacturing">Manufacturing</option>
+                                    <option value="pos">Point of Sale</option>
+                                    <option value="banking">Banking</option>
+                                    <option value="assets">Asset Management</option>
+                                    <option value="budgeting">Budgeting</option>
+                                    <option value="vat">VAT</option>
+                                    <option value="hr">Human Resources</option>
+                                    <option value="reports">Reports</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="workflowMaxLevels" class="form-label">Max Approval Levels</label>
+                                <input type="number" class="form-control" id="workflowMaxLevels" value="3" min="1"
+                                    max="10">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="workflowDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="workflowDescription" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="workflowThreshold" class="form-label">Approval Threshold Amount</label>
+                                <input type="number" class="form-control" id="workflowThreshold" step="0.01" value="0">
+                                <small class="text-muted">Amount above which approval is required</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="workflowRequiresApproval"
+                                        checked>
+                                    <label class="form-check-label" for="workflowRequiresApproval">
+                                        Requires Approval
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="workflowAutoSubmit">
+                                    <label class="form-check-label" for="workflowAutoSubmit">
+                                        Auto Submit (skip draft)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="workflowIsDefault">
+                                    <label class="form-check-label" for="workflowIsDefault">
+                                        Default Workflow for Module
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="workflowIsActive" checked>
+                                    <label class="form-check-label" for="workflowIsActive">
+                                        Active
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createWorkflow()">Create Workflow</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Workflow Modal -->
+    <div class="modal fade" id="editWorkflowModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Workflow</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editWorkflowForm">
+                        <input type="hidden" id="editWorkflowId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editWorkflowName" class="form-label">Workflow Name *</label>
+                                <input type="text" class="form-control" id="editWorkflowName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editWorkflowModule" class="form-label">Module *</label>
+                                <select class="form-select" id="editWorkflowModule" required>
+                                    <option value="accounting">Accounting</option>
+                                    <option value="accounting-dimensions">Accounting Dimensions</option>
+                                    <option value="sales">Sales</option>
+                                    <option value="purchases">Purchases</option>
+                                    <option value="procurement">Procurement</option>
+                                    <option value="inventory">Inventory</option>
+                                    <option value="manufacturing">Manufacturing</option>
+                                    <option value="pos">Point of Sale</option>
+                                    <option value="banking">Banking</option>
+                                    <option value="assets">Asset Management</option>
+                                    <option value="budgeting">Budgeting</option>
+                                    <option value="vat">VAT</option>
+                                    <option value="hr">Human Resources</option>
+                                    <option value="reports">Reports</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editWorkflowDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editWorkflowDescription" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editWorkflowThreshold" class="form-label">Approval Threshold</label>
+                                <input type="number" class="form-control" id="editWorkflowThreshold" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editWorkflowMaxLevels" class="form-label">Max Approval Levels</label>
+                                <input type="number" class="form-control" id="editWorkflowMaxLevels" min="1" max="10">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editWorkflowRequiresApproval">
+                                <label class="form-check-label" for="editWorkflowRequiresApproval">
+                                    Requires Approval
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editWorkflowIsActive">
+                                <label class="form-check-label" for="editWorkflowIsActive">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateWorkflow()">Update Workflow</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Workflow Details Modal -->
+    <div class="modal fade" id="viewWorkflowModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Workflow Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="workflow-details-container">
+                        <!-- Workflow details will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+
+    <script>
+        // Global variables
+        let roles = [];
+        let permissions = [];
+        let privilegeChart = {};
+        let auditLogs = [];
+        let workflows = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function () {
+            loadStatistics();
+            loadRoles();
+            loadPermissions();
+            loadPrivilegeChart();
+            loadAuditLog();
+            loadWorkflows();
+        });
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const [rolesResponse, permissionsResponse, auditResponse] = await Promise.all([
+                    fetch('/api/v1/roles/', { headers: auth.authHeader() }),
+                    fetch('/api/v1/roles/permissions/', { headers: auth.authHeader() }),
+                    fetch('/api/v1/roles/audit-logs/', { headers: auth.authHeader() })
+                ]);
+
+                if (rolesResponse.ok) {
+                    const rolesData = await rolesResponse.json();
+                    document.getElementById('total-roles').textContent = rolesData.length;
+                }
+
+                if (permissionsResponse.ok) {
+                    const permissionsData = await permissionsResponse.json();
+                    document.getElementById('total-permissions').textContent = permissionsData.length;
+                }
+
+                if (auditResponse.ok) {
+                    const auditData = await auditResponse.json();
+                    document.getElementById('audit-entries').textContent = auditData.length;
+                }
+
+                // Get total users (this would need a separate endpoint)
+                document.getElementById('total-users').textContent = '-';
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Load roles
+        async function loadRoles() {
+            try {
+                const response = await fetch('/api/v1/roles/', { headers: auth.authHeader() });
+                if (response.ok) {
+                    roles = await response.json();
+                    displayRoles();
+                } else {
+                    console.error('Failed to load roles');
+                }
+            } catch (error) {
+                console.error('Error loading roles:', error);
+            }
+        }
+
+        // Display roles
+        function displayRoles() {
+            const container = document.getElementById('roles-container');
+            container.innerHTML = '';
+
+            roles.forEach(role => {
+                const roleCard = document.createElement('div');
+                roleCard.className = `role-card ${role.is_system_role ? 'system-role' : 'custom-role'}`;
+
+                roleCard.innerHTML = `
+                    <div class="role-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">${role.name}</h5>
+                                <small class="text-muted">${role.description || 'No description'}</small>
+                            </div>
+                            <div>
+                                ${role.is_system_role ? '<span class="badge bg-primary">System</span>' : ''}
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editRole('${role.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${!role.is_system_role ? `
+                                    <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteRole('${role.id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="role-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Created:</strong> ${new Date(role.created_at).toLocaleDateString()}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Status:</strong>
+                                <span class="badge ${role.is_active ? 'bg-success' : 'bg-danger'}">
+                                    ${role.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(roleCard);
+            });
+        }
+
+        // Load permissions
+        async function loadPermissions() {
+            try {
+                const response = await fetch('/api/v1/roles/permissions/', { headers: auth.authHeader() });
+                if (response.ok) {
+                    permissions = await response.json();
+                    displayPermissions();
+                } else {
+                    console.error('Failed to load permissions');
+                }
+            } catch (error) {
+                console.error('Error loading permissions:', error);
+            }
+        }
+
+        // Display permissions
+        function displayPermissions() {
+            const container = document.getElementById('permissions-container');
+            container.innerHTML = '';
+
+            // Group permissions by module
+            const moduleGroups = {};
+            permissions.forEach(permission => {
+                if (!moduleGroups[permission.module]) {
+                    moduleGroups[permission.module] = [];
+                }
+                moduleGroups[permission.module].push(permission);
+            });
+
+            Object.keys(moduleGroups).forEach(module => {
+                const moduleSection = document.createElement('div');
+                moduleSection.className = 'module-section';
+
+                moduleSection.innerHTML = `
+                    <div class="module-header" onclick="toggleModule('${module}')">
+                        <i class="fas fa-chevron-down"></i> ${module.charAt(0).toUpperCase() + module.slice(1)}
+                        <span class="badge bg-secondary ms-2">${moduleGroups[module].length}</span>
+                    </div>
+                    <div class="permissions-grid" id="module-${module}">
+                        ${moduleGroups[module].map(permission => `
+                            <div class="permission-item">
+                                <i class="fas fa-key"></i>
+                                <div>
+                                    <strong>${permission.name}</strong><br>
+                                    <small class="text-muted">${permission.action} ${permission.resource}</small>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                container.appendChild(moduleSection);
+            });
+        }
+
+        // Toggle module visibility
+        function toggleModule(module) {
+            const moduleContent = document.getElementById(`module-${module}`);
+            const header = moduleContent.previousElementSibling;
+            const icon = header.querySelector('i');
+
+            if (moduleContent.style.display === 'none') {
+                moduleContent.style.display = 'grid';
+                icon.className = 'fas fa-chevron-down';
+            } else {
+                moduleContent.style.display = 'none';
+                icon.className = 'fas fa-chevron-right';
+            }
+        }
+
+        // Load privilege chart
+        async function loadPrivilegeChart() {
+            try {
+                const response = await fetch('/api/v1/roles/privilege-chart/', { headers: auth.authHeader() });
+                if (response.ok) {
+                    privilegeChart = await response.json();
+                    displayPrivilegeChart();
+                } else {
+                    console.error('Failed to load privilege chart');
+                }
+            } catch (error) {
+                console.error('Error loading privilege chart:', error);
+            }
+        }
+
+        // Display privilege chart
+        function displayPrivilegeChart() {
+            const container = document.getElementById('privilege-chart-container');
+            container.innerHTML = '';
+
+            if (!privilegeChart.modules || !privilegeChart.roles) {
+                container.innerHTML = '<div class="alert alert-info">No privilege chart data available</div>';
+                return;
+            }
+
+            const hideAuto = document.getElementById('hideAutoToggle')?.checked;
+
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'privilege-chart';
+
+            let chartHTML = `
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Module/Permission</th>
+                                ${privilegeChart.roles.map(role => `<th>${role.name}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            privilegeChart.modules.forEach(module => {
+                chartHTML += `
+                    <tr class="table-primary">
+                        <td colspan="${privilegeChart.roles.length + 1}">
+                            <strong>${module.name}</strong>
+                        </td>
+                    </tr>
+                `;
+
+                module.permissions.forEach(permission => {
+                    const isAutoPermission = permission.name === 'reports.view';
+                    if (hideAuto && isAutoPermission) {
+                        return; // skip auto rows if toggle active
+                    }
+                    chartHTML += '<tr>';
+                    chartHTML += `<td>${permission.name}</td>`;
+
+                    privilegeChart.roles.forEach(role => {
+                        const hasPermission = role.permissions.some(p =>
+                            p.permission_id === permission.id
+                        );
+                        const originBadge = isAutoPermission && hasPermission
+                            ? '<span class="badge badge-auto permission-origin-badge ms-1">AUTO</span>'
+                            : (hasPermission ? '<span class="badge bg-success permission-origin-badge ms-1">DIRECT</span>' : '');
+                        chartHTML += `
+                            <td class="text-center ${isAutoPermission ? 'auto-permission-row' : ''}">
+                                <div class="d-inline-flex align-items-center">
+                                    <input type="checkbox"
+                                           class="form-check-input"
+                                           ${hasPermission ? 'checked' : ''}
+                                           ${isAutoPermission ? 'data-origin="auto" disabled' : ''}
+                                           onchange="updatePrivilegeAssignment('${role.id}', '${permission.id}', this.checked)">
+                                    ${originBadge}
+                                </div>
+                            </td>
+                        `;
+                    });
+
+                    chartHTML += '</tr>';
+                });
+            });
+
+            chartHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            chartDiv.innerHTML = chartHTML;
+            container.appendChild(chartDiv);
+        }
+
+        // Re-render privilege chart when toggle changes
+        document.getElementById('hideAutoToggle')?.addEventListener('change', () => {
+            displayPrivilegeChart();
+        });
+
+        // Update privilege assignment
+        function updatePrivilegeAssignment(roleId, permissionId, hasPermission) {
+            // guard: skip auto-origin permissions edits
+            if (event && event.target && event.target.getAttribute('data-origin') === 'auto') {
+                event.target.checked = true;
+                return;
+            }
+            if (!privilegeChart.assignments) {
+                privilegeChart.assignments = [];
+            }
+
+            const existingIndex = privilegeChart.assignments.findIndex(
+                a => a.role_id === roleId && a.permission_id === permissionId
+            );
+
+            if (hasPermission && existingIndex === -1) {
+                privilegeChart.assignments.push({
+                    role_id: roleId,
+                    permission_id: permissionId
+                });
+            } else if (!hasPermission && existingIndex !== -1) {
+                privilegeChart.assignments.splice(existingIndex, 1);
+            }
+        }
+
+        // Save privilege assignments
+        async function savePrivilegeAssignments() {
+            try {
+                const response = await fetch('/api/v1/roles/assign-privileges', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify({
+                        assignments: privilegeChart.assignments || []
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Privilege assignments saved successfully!', 'success');
+                    loadPrivilegeChart(); // Refresh the chart
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to save assignments: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving privilege assignments:', error);
+                showNotification('Error saving privilege assignments', 'error');
+            }
+        }
+
+        // Load audit log
+        async function loadAuditLog() {
+            try {
+                const filter = document.getElementById('audit-filter').value;
+                const url = filter ? `/api/v1/roles/audit-logs/?action=${filter}` : '/api/v1/roles/audit-logs/';
+
+                const response = await fetch(url, { headers: auth.authHeader() });
+                if (response.ok) {
+                    auditLogs = await response.json();
+                    displayAuditLog();
+                } else {
+                    console.error('Failed to load audit log');
+                }
+            } catch (error) {
+                console.error('Error loading audit log:', error);
+            }
+        }
+
+        // Display audit log
+        function displayAuditLog() {
+            const container = document.getElementById('audit-container');
+            container.innerHTML = '';
+
+            if (auditLogs.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No audit entries found</div>';
+                return;
+            }
+
+            auditLogs.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = `audit-entry ${entry.action}`;
+
+                entryDiv.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>${entry.action.toUpperCase()}</strong> - ${entry.module}
+                            ${entry.resource_type ? `(${entry.resource_type})` : ''}
+                        </div>
+                        <small class="text-muted">${new Date(entry.created_at).toLocaleString()}</small>
+                    </div>
+                    <div class="mt-2">
+                        <strong>User:</strong> ${entry.user?.username || 'Unknown'}
+                        ${entry.details ? `<br><strong>Details:</strong> ${JSON.stringify(entry.details)}` : ''}
+                    </div>
+                `;
+
+                container.appendChild(entryDiv);
+            });
+        }
+
+        // Refresh audit log
+        function refreshAuditLog() {
+            loadAuditLog();
+        }
+
+        // Modal functions
+        function showCreateRoleModal() {
+            document.getElementById('createRoleForm').reset();
+            new bootstrap.Modal(document.getElementById('createRoleModal')).show();
+        }
+
+        function showCreatePermissionModal() {
+            document.getElementById('createPermissionForm').reset();
+            new bootstrap.Modal(document.getElementById('createPermissionModal')).show();
+        }
+
+        function showEditRoleModal(roleId) {
+            const role = roles.find(r => r.id === roleId);
+            if (role) {
+                document.getElementById('editRoleId').value = role.id;
+                document.getElementById('editRoleName').value = role.name;
+                document.getElementById('editRoleDescription').value = role.description || '';
+                new bootstrap.Modal(document.getElementById('editRoleModal')).show();
+            }
+        }
+
+        // Create role
+        async function createRole() {
+            const formData = {
+                name: document.getElementById('roleName').value,
+                description: document.getElementById('roleDescription').value,
+                is_system_role: document.getElementById('isSystemRole').checked
+            };
+
+            try {
+                const response = await fetch('/api/v1/roles/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Role created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createRoleModal')).hide();
+                    loadRoles();
+                    loadStatistics();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to create role: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating role:', error);
+                showNotification('Error creating role', 'error');
+            }
+        }
+
+        // Create permission
+        async function createPermission() {
+            const formData = {
+                name: document.getElementById('permissionName').value,
+                description: document.getElementById('permissionDescription').value,
+                module: document.getElementById('permissionModule').value,
+                action: document.getElementById('permissionAction').value,
+                resource: document.getElementById('permissionResource').value
+            };
+
+            try {
+                const response = await fetch('/api/v1/roles/permissions/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Permission created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createPermissionModal')).hide();
+                    loadPermissions();
+                    loadStatistics();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to create permission: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating permission:', error);
+                showNotification('Error creating permission', 'error');
+            }
+        }
+
+        // Edit role
+        function editRole(roleId) {
+            showEditRoleModal(roleId);
+        }
+
+        // Update role
+        async function updateRole() {
+            const roleId = document.getElementById('editRoleId').value;
+            const formData = {
+                name: document.getElementById('editRoleName').value,
+                description: document.getElementById('editRoleDescription').value
+            };
+
+            try {
+                const response = await fetch(`/api/v1/roles/${roleId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Role updated successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editRoleModal')).hide();
+                    loadRoles();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to update role: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating role:', error);
+                showNotification('Error updating role', 'error');
+            }
+        }
+
+        // Delete role
+        async function deleteRole(roleId) {
+            if (!confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/roles/${roleId}`, {
+                    method: 'DELETE',
+                    headers: auth.authHeader()
+                });
+
+                if (response.ok) {
+                    showNotification('Role deleted successfully!', 'success');
+                    loadRoles();
+                    loadStatistics();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to delete role: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting role:', error);
+                showNotification('Error deleting role', 'error');
+            }
+        }
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // ========== WORKFLOW MANAGEMENT FUNCTIONS ==========
+
+        // Load workflows
+        async function loadWorkflows() {
+            try {
+                const moduleFilter = document.getElementById('workflow-module-filter')?.value || '';
+                const statusFilter = document.getElementById('workflow-status-filter')?.value || '';
+
+                let url = '/api/v1/workflows/definitions';
+                const params = new URLSearchParams();
+                if (moduleFilter) params.append('module', moduleFilter);
+                if (statusFilter) params.append('is_active', statusFilter);
+                if (params.toString()) url += `?${params.toString()}`;
+
+                const response = await fetch(url, { headers: auth.authHeader() });
+                if (response.ok) {
+                    workflows = await response.json();
+                    displayWorkflows();
+                } else {
+                    console.error('Failed to load workflows');
+                    showNotification('Failed to load workflows', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading workflows:', error);
+                showNotification('Error loading workflows', 'error');
+            }
+        }
+
+        // Display workflows
+        function displayWorkflows() {
+            const container = document.getElementById('workflows-container');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (workflows.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No workflows found. Create your first workflow!</div>';
+                return;
+            }
+
+            workflows.forEach(workflow => {
+                const workflowCard = document.createElement('div');
+                workflowCard.className = 'card mb-3';
+
+                const statusBadge = workflow.is_active
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Inactive</span>';
+                const defaultBadge = workflow.is_default
+                    ? '<span class="badge bg-primary ms-1">Default</span>'
+                    : '';
+                const approvalBadge = workflow.requires_approval
+                    ? '<span class="badge bg-warning text-dark ms-1">Requires Approval</span>'
+                    : '';
+
+                workflowCard.innerHTML = `
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    <i class="fas fa-project-diagram text-primary"></i> ${workflow.name}
+                                    ${statusBadge}
+                                    ${defaultBadge}
+                                    ${approvalBadge}
+                                </h5>
+                                <small class="text-muted">
+                                    <strong>Code:</strong> ${workflow.code} |
+                                    <strong>Module:</strong> ${workflow.module}
+                                </small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-info" onclick="viewWorkflowDetails('${workflow.id}')" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="editWorkflow('${workflow.id}')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteWorkflow('${workflow.id}')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <p class="mb-2">${workflow.description || 'No description'}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <ul class="list-unstyled mb-0">
+                                    <li><strong>Max Levels:</strong> ${workflow.max_approval_levels || 'N/A'}</li>
+                                    <li><strong>Threshold:</strong> ${workflow.approval_threshold_amount ? '$' + workflow.approval_threshold_amount : 'N/A'}</li>
+                                    <li><strong>Auto Submit:</strong> ${workflow.auto_submit ? 'Yes' : 'No'}</li>
+                                    <li><strong>States:</strong> ${workflow.states?.length || 0}</li>
+                                    <li><strong>Transitions:</strong> ${workflow.transitions?.length || 0}</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Created: ${new Date(workflow.created_at).toLocaleDateString()} |
+                                Updated: ${new Date(workflow.updated_at).toLocaleDateString()}
+                            </small>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(workflowCard);
+            });
+        }
+
+        // Show create workflow modal
+        function showCreateWorkflowModal() {
+            document.getElementById('createWorkflowForm').reset();
+            new bootstrap.Modal(document.getElementById('createWorkflowModal')).show();
+        }
+
+        // Create workflow
+        async function createWorkflow() {
+            const formData = {
+                name: document.getElementById('workflowName').value,
+                code: document.getElementById('workflowCode').value,
+                module: document.getElementById('workflowModule').value,
+                description: document.getElementById('workflowDescription').value,
+                requires_approval: document.getElementById('workflowRequiresApproval').checked,
+                auto_submit: document.getElementById('workflowAutoSubmit').checked,
+                is_default: document.getElementById('workflowIsDefault').checked,
+                is_active: document.getElementById('workflowIsActive').checked,
+                approval_threshold_amount: parseFloat(document.getElementById('workflowThreshold').value) || 0,
+                max_approval_levels: parseInt(document.getElementById('workflowMaxLevels').value) || 3
+            };
+
+            try {
+                const response = await fetch('/api/v1/workflows/definitions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Workflow created successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createWorkflowModal')).hide();
+                    loadWorkflows();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to create workflow: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating workflow:', error);
+                showNotification('Error creating workflow', 'error');
+            }
+        }
+
+        // Edit workflow
+        function editWorkflow(workflowId) {
+            const workflow = workflows.find(w => w.id === workflowId);
+            if (!workflow) return;
+
+            document.getElementById('editWorkflowId').value = workflow.id;
+            document.getElementById('editWorkflowName').value = workflow.name;
+            document.getElementById('editWorkflowModule').value = workflow.module;
+            document.getElementById('editWorkflowDescription').value = workflow.description || '';
+            document.getElementById('editWorkflowThreshold').value = workflow.approval_threshold_amount || 0;
+            document.getElementById('editWorkflowMaxLevels').value = workflow.max_approval_levels || 3;
+            document.getElementById('editWorkflowRequiresApproval').checked = workflow.requires_approval;
+            document.getElementById('editWorkflowIsActive').checked = workflow.is_active;
+
+            new bootstrap.Modal(document.getElementById('editWorkflowModal')).show();
+        }
+
+        // Update workflow
+        async function updateWorkflow() {
+            const workflowId = document.getElementById('editWorkflowId').value;
+            const formData = {
+                name: document.getElementById('editWorkflowName').value,
+                module: document.getElementById('editWorkflowModule').value,
+                description: document.getElementById('editWorkflowDescription').value,
+                requires_approval: document.getElementById('editWorkflowRequiresApproval').checked,
+                is_active: document.getElementById('editWorkflowIsActive').checked,
+                approval_threshold_amount: parseFloat(document.getElementById('editWorkflowThreshold').value) || 0,
+                max_approval_levels: parseInt(document.getElementById('editWorkflowMaxLevels').value) || 3
+            };
+
+            try {
+                const response = await fetch(`/api/v1/workflows/definitions/${workflowId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.authHeader()
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showNotification('Workflow updated successfully!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editWorkflowModal')).hide();
+                    loadWorkflows();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to update workflow: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating workflow:', error);
+                showNotification('Error updating workflow', 'error');
+            }
+        }
+
+        // Delete workflow
+        async function deleteWorkflow(workflowId) {
+            if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/workflows/definitions/${workflowId}`, {
+                    method: 'DELETE',
+                    headers: auth.authHeader()
+                });
+
+                if (response.ok) {
+                    showNotification('Workflow deleted successfully!', 'success');
+                    loadWorkflows();
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to delete workflow: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting workflow:', error);
+                showNotification('Error deleting workflow', 'error');
+            }
+        }
+
+        // View workflow details
+        async function viewWorkflowDetails(workflowId) {
+            try {
+                const response = await fetch(`/api/v1/workflows/definitions/${workflowId}`, {
+                    headers: auth.authHeader()
+                });
+
+                if (!response.ok) {
+                    showNotification('Failed to load workflow details', 'error');
+                    return;
+                }
+
+                const workflow = await response.json();
+                const container = document.getElementById('workflow-details-container');
+
+                // Create detailed view with states and transitions
+                container.innerHTML = `
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <table class="table table-sm">
+                                <tr><th>Name:</th><td>${workflow.name}</td></tr>
+                                <tr><th>Code:</th><td>${workflow.code}</td></tr>
+                                <tr><th>Module:</th><td>${workflow.module}</td></tr>
+                                <tr><th>Description:</th><td>${workflow.description || 'N/A'}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Configuration</h6>
+                            <table class="table table-sm">
+                                <tr><th>Status:</th><td>${workflow.is_active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</td></tr>
+                                <tr><th>Default:</th><td>${workflow.is_default ? 'Yes' : 'No'}</td></tr>
+                                <tr><th>Requires Approval:</th><td>${workflow.requires_approval ? 'Yes' : 'No'}</td></tr>
+                                <tr><th>Auto Submit:</th><td>${workflow.auto_submit ? 'Yes' : 'No'}</td></tr>
+                                <tr><th>Threshold:</th><td>$${workflow.approval_threshold_amount || 0}</td></tr>
+                                <tr><th>Max Levels:</th><td>${workflow.max_approval_levels || 'N/A'}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6>Workflow States (${workflow.states?.length || 0})</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Status</th>
+                                    <th>Type</th>
+                                    <th>Requires Approval</th>
+                                    <th>Color</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${workflow.states?.map(state => `
+                                    <tr>
+                                        <td>${state.name}</td>
+                                        <td>${state.code}</td>
+                                        <td><span class="badge bg-info">${state.status}</span></td>
+                                        <td>
+                                            ${state.is_initial ? '<span class="badge bg-success">Initial</span>' : ''}
+                                            ${state.is_final ? '<span class="badge bg-danger">Final</span>' : ''}
+                                        </td>
+                                        <td>${state.requires_approval ? 'Yes' : 'No'}</td>
+                                        <td><span class="badge" style="background-color: ${state.color}">${state.color}</span></td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="6" class="text-center text-muted">No states defined</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6>Workflow Transitions (${workflow.transitions?.length || 0})</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Action</th>
+                                    <th>From State</th>
+                                    <th>To State</th>
+                                    <th>Requires Comment</th>
+                                    <th>Notify</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${workflow.transitions?.map(trans => `
+                                    <tr>
+                                        <td>${trans.name}</td>
+                                        <td><span class="badge bg-primary">${trans.action}</span></td>
+                                        <td>${workflow.states?.find(s => s.id === trans.from_state_id)?.name || 'N/A'}</td>
+                                        <td>${workflow.states?.find(s => s.id === trans.to_state_id)?.name || 'N/A'}</td>
+                                        <td>${trans.requires_comment ? 'Yes' : 'No'}</td>
+                                        <td>${trans.notify_on_transition ? 'Yes' : 'No'}</td>
+                                    </tr>
+                                `).join('') || '<tr><td colspan="6" class="text-center text-muted">No transitions defined</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                new bootstrap.Modal(document.getElementById('viewWorkflowModal')).show();
+            } catch (error) {
+                console.error('Error viewing workflow details:', error);
+                showNotification('Error loading workflow details', 'error');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('audit-filter').addEventListener('change', loadAuditLog);
+    </script>
+    <script src="/static/js/navbar.js?v=20250126001"></script>
+</body>
+
+</html>

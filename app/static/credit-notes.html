@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Notes - CNPERP ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Auth bootstrap must load first to prevent auth race conditions -->
+    <script src="js/auth-bootstrap.js"></script>
+    <!-- Early auth scripts to ensure token & auth fetch wrapper available before any API calls -->
+    <script src="/static/js/auth.js"></script>
+    <!-- Page Access Guard - Restrict POS users to POS page only -->
+    <script src="/static/js/page-guard.js"></script>
+
+    <script src="js/auth-fetch.js"></script>
+    <script src="js/ui-guard.js"></script>
+    <!-- Document Logo Manager -->
+    <script src="js/document-logo-manager.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #0dcaf0;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        body[data-theme="dark"] {
+            --bg-primary: #212529;
+            --bg-secondary: #343a40;
+            --text-primary: #ffffff;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            padding-top: 0;
+        }
+
+        /* Pulsing animation for Load Items button */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .card {
+            background-color: var(--bg-primary);
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-badge {
+            font-size: 0.8em;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .credit-note-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .credit-note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .amount-display {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .filter-section {
+            background-color: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, var(--success-color), #146c43);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-create:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+            color: white;
+        }
+
+        .table-responsive {
+            background-color: var(--bg-primary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .table td {
+            border-color: var(--border-color);
+            vertical-align: middle;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Standardized Navbar -->
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+    <!-- Include Navigation -->
+    <div id="navbar-container"></div>
+    <div style="height: 70px;"></div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="bi bi-arrow-return-left me-3"></i>Credit Notes Management
+                    </h1>
+                    <p class="mb-0 mt-2">Manage customer returns, refunds, and credit adjustments</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-create" onclick="showCreateCreditNoteModal()">
+                        <i class="bi bi-plus-circle me-2"></i>Create Credit Note
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-earmark-text text-primary fs-1"></i>
+                        <h5 class="mt-2">Total Credit Notes</h5>
+                        <h3 id="totalCreditNotes" class="text-primary">-</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock text-warning fs-1"></i>
+                        <h5 class="mt-2">Pending Approval</h5>
+                        <h3 id="pendingApproval" class="text-warning">-</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-cash-stack text-success fs-1"></i>
+                        <h5 class="mt-2">Pending Refunds</h5>
+                        <h3 id="pendingRefunds" class="text-success">-</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-currency-dollar text-info fs-1"></i>
+                        <h5 class="mt-2">Total Value</h5>
+                        <h3 id="totalValue" class="text-info">-</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">Status Filter</label>
+                    <select class="form-select" id="statusFilter" onchange="filterCreditNotes()">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="issued">Issued</option>
+                        <option value="processed">Processed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Refund Status</label>
+                    <select class="form-select" id="refundStatusFilter" onchange="filterCreditNotes()">
+                        <option value="">All Refund Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="processed">Processed</option>
+                        <option value="completed">Completed</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="dateFrom" onchange="filterCreditNotes()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="dateTo" onchange="filterCreditNotes()">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by credit note number, customer, or invoice..." onkeyup="filterCreditNotes()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Customer</label>
+                    <select class="form-select" id="customerFilter" onchange="filterCreditNotes()">
+                        <option value="">All Customers</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary me-2" onclick="clearFilters()">
+                        <i class="bi bi-x-circle me-1"></i>Clear Filters
+                    </button>
+                    <button class="btn btn-primary" onclick="loadCreditNotes()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credit Notes List -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul me-2"></i>Credit Notes
+                    <span id="creditNotesCount" class="badge bg-primary ms-2">0</span>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <!-- Loading State -->
+                <div id="loadingState" class="loading-spinner" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <i class="bi bi-file-earmark-x fs-1 text-muted"></i>
+                    <h4>No Credit Notes Found</h4>
+                    <p>Create your first credit note to get started with customer returns and refunds.</p>
+                    <button class="btn btn-create" onclick="showCreateCreditNoteModal()">
+                        <i class="bi bi-plus-circle me-2"></i>Create First Credit Note
+                    </button>
+                </div>
+
+                <!-- Credit Notes Table -->
+                <div id="creditNotesTable" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Credit Note #</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Original Invoice</th>
+                                <th>Reason</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Refund Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="creditNotesTableBody">
+                            <!-- Credit notes will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Credit Note Modal -->
+    <div class="modal fade" id="createCreditNoteModal" tabindex="-1" aria-labelledby="createCreditNoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="createCreditNoteModalLabel">
+                        <i class="bi bi-plus-circle me-2"></i>Create Credit Note - Return Items
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createCreditNoteForm">
+                        <!-- Step 1: Select Document Type -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-1-circle me-2"></i>Select Document Type
+                                </label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="sourceType" id="sourceTypeInvoice" value="invoice" checked>
+                                    <label class="btn btn-outline-primary" for="sourceTypeInvoice">
+                                        <i class="bi bi-receipt me-2"></i>Invoice
+                                    </label>
+                                    <input type="radio" class="btn-check" name="sourceType" id="sourceTypePOS" value="pos_receipt">
+                                    <label class="btn btn-outline-primary" for="sourceTypePOS">
+                                        <i class="bi bi-cash-register me-2"></i>POS Receipt
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Select Document -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-2-circle me-2"></i>Select Document <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <select class="form-select" id="documentSelect" required>
+                                        <option value="">Choose an invoice or receipt...</option>
+                                    </select>
+                                    <button type="button" class="btn btn-primary btn-lg pulse-animation" onclick="loadDocumentDetails()" id="loadItemsBtn">
+                                        <i class="bi bi-search me-1"></i><strong>Load Items</strong>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="refreshDocumentList()">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Shows documents from the last 90 days. <strong class="text-primary">← Click "Load Items" after selecting!</strong></small>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Return Details -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Return Reason <span class="text-danger">*</span></label>
+                                <select class="form-select" id="returnReason" required>
+                                    <option value="">Select reason...</option>
+                                    <option value="faulty_product">Faulty Product</option>
+                                    <option value="wrong_item">Wrong Item Ordered</option>
+                                    <option value="damaged">Damaged Item</option>
+                                    <option value="customer_request">Customer Request</option>
+                                    <option value="duplicate_order">Duplicate Order</option>
+                                    <option value="quality_issue">Quality Issue</option>
+                                    <option value="size_issue">Wrong Size</option>
+                                    <option value="color_issue">Wrong Color</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Refund Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="refundMethod" required>
+                                    <option value="">Select method...</option>
+                                    <option value="cash">Cash Refund</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="credit_adjustment">Account Credit Adjustment</option>
+                                    <option value="store_credit">Store Credit</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Additional Description</label>
+                                <textarea class="form-control" id="returnDescription" rows="2" placeholder="Optional: Add details about the return..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Document Details (loaded dynamically) -->
+                        <div id="documentDetailsSection" style="display: none;">
+                            <hr>
+                            <h6 class="fw-bold">
+                                <i class="bi bi-3-circle me-2"></i>Document Information
+                            </h6>
+                            <div id="documentInfo" class="alert alert-info mb-3"></div>
+                            
+                            <!-- Return Items Selection -->
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-4-circle me-2"></i>Select Items to Return
+                                <button type="button" class="btn btn-sm btn-outline-primary float-end" onclick="selectAllItems()">
+                                    <i class="bi bi-check-all me-1"></i>Select All
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary float-end me-2" onclick="clearAllItems()">
+                                    <i class="bi bi-x-lg me-1"></i>Clear All
+                                </button>
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered" id="returnItemsTable">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th style="width: 50px;">
+                                                <input type="checkbox" class="form-check-input" id="selectAllCheckbox" onchange="toggleAllItems(this.checked)">
+                                            </th>
+                                            <th>Product</th>
+                                            <th style="width: 120px;">Original Qty</th>
+                                            <th style="width: 150px;">Return Qty</th>
+                                            <th style="width: 120px;">Unit Price</th>
+                                            <th style="width: 150px;">Item Condition</th>
+                                            <th style="width: 120px;">Line Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="returnItemsBody">
+                                        <!-- Items will be loaded here -->
+                                    </tbody>
+                                    <tfoot id="returnItemsFooter">
+                                        <tr class="table-light">
+                                            <td colspan="6" class="text-end fw-bold">Total Refund Amount:</td>
+                                            <td class="fw-bold text-success" id="totalRefundAmount">BWP 0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <div class="flex-grow-1">
+                        <small class="text-muted" id="buttonHelpText">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <span id="buttonStatusText">Please select a document and items to return</span>
+                        </small>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="createCreditNote()" id="createCreditNoteBtn" disabled 
+                            title="Select document, check items, and fill return details to enable">
+                        <i class="bi bi-check-circle me-1"></i>Create Credit Note
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit Note Details Modal -->
+    <div class="modal fade" id="creditNoteDetailsModal" tabindex="-1" aria-labelledby="creditNoteDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="creditNoteDetailsModalLabel">
+                        <i class="bi bi-file-earmark-text me-2"></i>Credit Note Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="creditNoteDetailsContent">
+                    <!-- Details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printCreditNote()" id="printCreditNoteBtn">
+                        <i class="bi bi-printer me-1"></i>Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    
+    
+    <!-- Auth Fetch Wrapper (ensures Authorization header) -->
+    <script src="js/auth-fetch.js"></script>
+    <!-- Modern Interactions -->
+    <script src="js/modern-interactions.js"></script>
+
+    <script>
+        // Global variables
+        let creditNotes = [];
+        let customers = [];
+        let currentCreditNote = null;
+        let loading = false;
+
+        // Currency settings
+        let currentCurrency = 'BWP';
+        let currencySymbol = 'P';
+
+        // API endpoints
+        const API_BASE = '/api/v1';
+        const CREDIT_NOTES_ENDPOINT = `${API_BASE}/credit-notes`;
+        const INVOICES_ENDPOINT = `${API_BASE}/invoices`;
+        const CUSTOMERS_ENDPOINT = `${API_BASE}/sales/customers`;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Require authentication for this page
+            if (!window.auth || !auth.isAuthenticated()) {
+                window.location.replace('/static/login.html');
+            }
+
+            initializePage();
+        });
+
+        // Unified fetch wrapper adding Authorization header automatically
+        function apiFetch(url, options = {}) {
+            const tokenHeaders = (window.auth && auth.getToken()) ? auth.authHeader() : {};
+            const mergedHeaders = { ...(options.headers || {}), ...tokenHeaders };
+            return fetch(url, { ...options, headers: mergedHeaders });
+        }
+
+        // Initialize page
+        async function initializePage() {
+            try {
+                await loadCustomers();
+                await loadCreditNotes();
+                
+                // Check for URL parameters to auto-open credit note creation
+                const urlParams = new URLSearchParams(window.location.search);
+                const invoiceId = urlParams.get('invoice_id');
+                
+                if (invoiceId) {
+                    // Auto-open create credit note modal with prefilled invoice ID
+                    setTimeout(() => {
+                        showCreateCreditNoteModal(invoiceId);
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to initialize page', 'error');
+                }
+            }
+        }
+
+        // Load customers for filter dropdown
+        async function loadCustomers() {
+            try {
+                const response = await apiFetch(CUSTOMERS_ENDPOINT);
+                if (!response.ok) throw new Error('Failed to load customers');
+                
+                const data = await response.json();
+                customers = data.customers || [];
+                
+                // Populate customer filter
+                const customerFilter = document.getElementById('customerFilter');
+                customerFilter.innerHTML = '<option value="">All Customers</option>';
+                
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = customer.name;
+                    customerFilter.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+
+        // Load credit notes
+        async function loadCreditNotes() {
+            try {
+                loading = true;
+                showLoadingState();
+                
+                const params = new URLSearchParams();
+                
+                // Apply filters
+                const statusFilter = document.getElementById('statusFilter').value;
+                const refundStatusFilter = document.getElementById('refundStatusFilter').value;
+                const dateFrom = document.getElementById('dateFrom').value;
+                const dateTo = document.getElementById('dateTo').value;
+                const customerFilter = document.getElementById('customerFilter').value;
+                
+                if (statusFilter) params.append('status', statusFilter);
+                if (refundStatusFilter) params.append('refund_status', refundStatusFilter);
+                if (dateFrom) params.append('date_from', dateFrom);
+                if (dateTo) params.append('date_to', dateTo);
+                if (customerFilter) params.append('customer_id', customerFilter);
+                
+                const response = await apiFetch(`${CREDIT_NOTES_ENDPOINT}?${params}`);
+                if (!response.ok) throw new Error('Failed to load credit notes');
+                
+                const data = await response.json();
+                creditNotes = Array.isArray(data) ? data : [];
+                
+                displayCreditNotes();
+                updateStatistics();
+                
+            } catch (error) {
+                console.error('Error loading credit notes:', error);
+                showEmptyState();
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load credit notes', 'error');
+                }
+            } finally {
+                loading = false;
+                hideLoadingState();
+            }
+        }
+
+        // Display credit notes in table
+        function displayCreditNotes() {
+            const tbody = document.getElementById('creditNotesTableBody');
+            const countBadge = document.getElementById('creditNotesCount');
+            
+            if (!creditNotes || creditNotes.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            // Apply search filter
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredNotes = creditNotes.filter(note => 
+                (note.credit_note_number || '').toLowerCase().includes(searchTerm) ||
+                (note.customer_name || '').toLowerCase().includes(searchTerm) ||
+                (note.invoice_number || '').toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredNotes.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            showCreditNotesTable();
+            countBadge.textContent = filteredNotes.length;
+            
+            tbody.innerHTML = filteredNotes.map(note => {
+                const statusBadge = getStatusBadge(note.status);
+                const refundStatusBadge = getRefundStatusBadge(note.refund_status);
+                
+                return `
+                    <tr>
+                        <td><strong>${note.credit_note_number || 'N/A'}</strong></td>
+                        <td>${formatDate(note.issue_date)}</td>
+                        <td>${note.customer_name || 'N/A'}</td>
+                        <td>${note.invoice_number || 'N/A'}</td>
+                        <td>${formatReturnReason(note.return_reason)}</td>
+                        <td class="amount-display">${formatCurrency(note.total_amount || 0)}</td>
+                        <td>${statusBadge}</td>
+                        <td>${refundStatusBadge}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCreditNote('${note.id}')" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success ${note.status === 'draft' ? '' : 'disabled'}" onclick="approveCreditNote('${note.id}')" title="Approve" ${note.status !== 'draft' ? 'disabled' : ''}>
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning ${note.status === 'issued' && note.refund_status === 'pending' ? '' : 'disabled'}" onclick="processRefund('${note.id}')" title="Process Refund" ${note.status !== 'issued' || note.refund_status !== 'pending' ? 'disabled' : ''}>
+                                    <i class="bi bi-cash-stack"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="printCreditNote('${note.id}')" title="Print">
+                                    <i class="bi bi-printer"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const total = creditNotes.length;
+            const pending = creditNotes.filter(note => note.status === 'draft').length;
+            const pendingRefunds = creditNotes.filter(note => note.refund_status === 'pending').length;
+            const totalValue = creditNotes.reduce((sum, note) => sum + (parseFloat(note.total_amount) || 0), 0);
+            
+            document.getElementById('totalCreditNotes').textContent = total;
+            document.getElementById('pendingApproval').textContent = pending;
+            document.getElementById('pendingRefunds').textContent = pendingRefunds;
+            document.getElementById('totalValue').textContent = formatCurrency(totalValue);
+        }
+
+        // Show/hide states
+        function showLoadingState() {
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('creditNotesTable').style.display = 'none';
+        }
+
+        function hideLoadingState() {
+            document.getElementById('loadingState').style.display = 'none';
+        }
+
+        function showEmptyState() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('creditNotesTable').style.display = 'none';
+            document.getElementById('creditNotesCount').textContent = '0';
+        }
+
+        function showCreditNotesTable() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('creditNotesTable').style.display = 'block';
+        }
+
+        // Filter functions
+        function filterCreditNotes() {
+            loadCreditNotes();
+        }
+
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('refundStatusFilter').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.getElementById('customerFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            loadCreditNotes();
+        }
+
+        // Modal functions
+        let currentDocumentData = null;  // Store loaded document data
+        let currentDocumentItems = [];   // Store document line items
+
+        function showCreateCreditNoteModal(prefilledInvoiceId = null) {
+            const modal = new bootstrap.Modal(document.getElementById('createCreditNoteModal'));
+            
+            // Reset form
+            document.getElementById('createCreditNoteForm').reset();
+            document.getElementById('documentDetailsSection').style.display = 'none';
+            document.getElementById('createCreditNoteBtn').disabled = true;
+            currentDocumentData = null;
+            currentDocumentItems = [];
+            
+            // Set default to invoice
+            document.getElementById('sourceTypeInvoice').checked = true;
+            
+            // Update button state to show help text
+            updateCreateButtonState();
+            
+            // Load available documents
+            refreshDocumentList();
+            
+            // If invoice ID is provided, prefill it
+            if (prefilledInvoiceId) {
+                setTimeout(() => {
+                    document.getElementById('documentSelect').value = prefilledInvoiceId;
+                    loadDocumentDetails();
+                }, 500);
+            }
+            
+            modal.show();
+        }
+
+        // Refresh document list based on selected type
+        async function refreshDocumentList() {
+            const sourceType = document.querySelector('input[name="sourceType"]:checked').value;
+            const select = document.getElementById('documentSelect');
+            
+            select.innerHTML = '<option value="">Loading...</option>';
+            select.disabled = true;
+            
+            try {
+                let endpoint;
+                if (sourceType === 'invoice') {
+                    endpoint = '/api/v1/credit-notes/invoices/available?days=90';
+                } else {
+                    endpoint = '/api/v1/credit-notes/sales/available?days=90';
+                }
+                
+                const response = await apiFetch(endpoint);
+                if (!response.ok) throw new Error('Failed to load documents');
+                
+                const documents = await response.json();
+                
+                select.innerHTML = '<option value="">Choose a document...</option>';
+                
+                documents.forEach(doc => {
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    
+                    if (sourceType === 'invoice') {
+                        // Show: INV-2024-001 - Customer Name (BWP 1,500.00) - 2024-10-15
+                        const displayText = `${doc.invoice_number} - ${doc.customer_name} (BWP ${doc.total_amount.toFixed(2)}) - ${doc.date}`;
+                        option.textContent = displayText;
+                        option.dataset.invoiceNumber = doc.invoice_number;
+                    } else {
+                        // Show: RCT-ABC123 - Customer Name (BWP 450.00) - 2024-10-15
+                        const displayText = `${doc.receipt_number} - ${doc.customer_name} (BWP ${doc.total_amount.toFixed(2)}) - ${doc.date.substring(0,10)}`;
+                        option.textContent = displayText;
+                        option.dataset.receiptNumber = doc.receipt_number;
+                    }
+                    
+                    option.dataset.document = JSON.stringify(doc);
+                    select.appendChild(option);
+                });
+                
+                select.disabled = false;
+                
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                select.innerHTML = '<option value="">Error loading documents</option>';
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load documents', 'error');
+                }
+            }
+        }
+
+        // Listen to source type changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const sourceTypeInputs = document.querySelectorAll('input[name="sourceType"]');
+            sourceTypeInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    refreshDocumentList();
+                    // Reset document details
+                    document.getElementById('documentDetailsSection').style.display = 'none';
+                    document.getElementById('createCreditNoteBtn').disabled = true;
+                    currentDocumentData = null;
+                    currentDocumentItems = [];
+                });
+            });
+        });
+
+        // Load document details (invoice or POS receipt)
+        async function loadDocumentDetails() {
+            const sourceType = document.querySelector('input[name="sourceType"]:checked').value;
+            const documentId = document.getElementById('documentSelect').value;
+            const loadBtn = document.getElementById('loadItemsBtn');
+            
+            if (!documentId) {
+                alert('Please select a document first');
+                return;
+            }
+
+            // Disable button and show loading
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Loading...';
+            loadBtn.classList.remove('pulse-animation');
+
+            try {
+                let endpoint, sourceDocument, items;
+                
+                if (sourceType === 'invoice') {
+                    // Load invoice
+                    const response = await apiFetch(`/api/v1/invoices/${documentId}`);
+                    if (!response.ok) throw new Error('Invoice not found');
+                    sourceDocument = await response.json();
+                    items = sourceDocument.invoice_items || sourceDocument.items || [];
+                } else {
+                    // Load POS sale - Note: sales endpoint uses /by-id/ prefix
+                    const response = await apiFetch(`/api/v1/sales/by-id/${documentId}`);
+                    if (!response.ok) throw new Error('Sale/Receipt not found');
+                    sourceDocument = await response.json();
+                    items = sourceDocument.sale_items || sourceDocument.items || [];
+                }
+                
+                console.log('Loaded document:', sourceDocument);
+                console.log('Document items:', items);
+                
+                if (items.length === 0) {
+                    alert('No items found in this document');
+                    // Re-enable button
+                    loadBtn.disabled = false;
+                    loadBtn.innerHTML = '<i class="bi bi-search me-1"></i><strong>Load Items</strong>';
+                    loadBtn.classList.add('pulse-animation');
+                    return;
+                }
+                
+                // Store document data
+                currentDocumentData = sourceDocument;
+                currentDocumentItems = items;
+                
+                // Display document info
+                displayDocumentInfo(sourceDocument, sourceType);
+                
+                // Display items for selection
+                displayReturnItems(items, sourceType);
+                
+                // Show the document details section
+                document.getElementById('documentDetailsSection').style.display = 'block';
+                
+                // Update button to show success
+                loadBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Items Loaded';
+                loadBtn.classList.remove('btn-primary');
+                loadBtn.classList.add('btn-success');
+                
+                // Enable create button state check
+                updateCreateButtonState();
+                
+            } catch (error) {
+                console.error('Error loading document details:', error);
+                alert('Failed to load document details: ' + error.message);
+                
+                // Re-enable button on error
+                const loadBtn = document.getElementById('loadItemsBtn');
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = '<i class="bi bi-search me-1"></i><strong>Load Items</strong>';
+                loadBtn.classList.remove('btn-success');
+                loadBtn.classList.add('btn-primary', 'pulse-animation');
+            }
+        }
+
+        // Display document information
+        function displayDocumentInfo(sourceDocument, sourceType) {
+            const docInfo = document.getElementById('documentInfo');
+            
+            if (sourceType === 'invoice') {
+                docInfo.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong><i class="bi bi-receipt me-1"></i>Invoice:</strong><br>
+                            ${sourceDocument.invoice_number}
+                        </div>
+                        <div class="col-md-3">
+                            <strong><i class="bi bi-person me-1"></i>Customer:</strong><br>
+                            ${sourceDocument.customer?.name || sourceDocument.customer_name || 'N/A'}
+                        </div>
+                        <div class="col-md-3">
+                            <strong><i class="bi bi-calendar me-1"></i>Date:</strong><br>
+                            ${formatDate(sourceDocument.date || sourceDocument.invoice_date)}
+                        </div>
+                        <div class="col-md-3">
+                            <strong><i class="bi bi-currency-dollar me-1"></i>Total:</strong><br>
+                            ${formatCurrency(sourceDocument.total_amount || sourceDocument.total)}
+                        </div>
+                    </div>
+                `;
+            } else {
+                const receiptNumber = sourceDocument.reference || `RCT-${sourceDocument.id.substring(0,8).toUpperCase()}`;
+                docInfo.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong><i class="bi bi-cash-register me-1"></i>Receipt:</strong><br>
+                            ${receiptNumber}
+                        </div>
+                        <div class="col-md-3">
+                            <strong><i class="bi bi-person me-1"></i>Customer:</strong><br>
+                            ${sourceDocument.customer?.name || 'Walk-in Customer'}
+                        </div>
+                        <div class="col-md-3">
+                            <strong><i class="bi bi-calendar me-1"></i>Date:</strong><br>
+                            ${formatDate(sourceDocument.date || sourceDocument.sale_time)}
+                        </div>
+                        <div class="col-md-3">
+                            <strong><i class="bi bi-currency-dollar me-1"></i>Total:</strong><br>
+                            ${formatCurrency(sourceDocument.total_amount)}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Display return items in table
+        function displayReturnItems(items, sourceType) {
+            const tbody = document.getElementById('returnItemsBody');
+            
+            tbody.innerHTML = items.map((item, index) => {
+                const productName = item.product?.name || item.product_name || 'Unknown Product';
+                const quantity = item.quantity || 0;
+                const unitPrice = item.price || item.unit_price || item.selling_price || 0;
+                const productId = item.product_id;
+                
+                return `
+                    <tr id="item-row-${index}">
+                        <td class="text-center">
+                            <input type="checkbox" class="form-check-input item-checkbox" data-index="${index}" onchange="toggleItemRow(${index})">
+                        </td>
+                        <td>
+                            <strong>${productName}</strong><br>
+                            <small class="text-muted">SKU: ${item.product?.code || item.product_code || 'N/A'}</small>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">${quantity}</span>
+                        </td>
+                        <td>
+                            <input type="number" 
+                                   class="form-control form-control-sm return-qty-input" 
+                                   id="return-qty-${index}"
+                                   data-index="${index}"
+                                   min="0" 
+                                   max="${quantity}" 
+                                   step="0.01" 
+                                   value="0"
+                                   disabled
+                                   onchange="updateLineTotal(${index})">
+                        </td>
+                        <td class="text-end">BWP ${parseFloat(unitPrice).toFixed(2)}</td>
+                        <td>
+                            <select class="form-select form-select-sm item-condition-select" 
+                                    id="condition-${index}"
+                                    data-index="${index}"
+                                    disabled>
+                                <option value="unopened">Unopened</option>
+                                <option value="good">Good Condition</option>
+                                <option value="used">Used</option>
+                                <option value="damaged">Damaged</option>
+                                <option value="faulty">Faulty</option>
+                            </select>
+                        </td>
+                        <td class="text-end fw-bold">
+                            <span id="line-total-${index}">BWP 0.00</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            updateTotalRefund();
+        }
+
+        // Toggle item row (enable/disable inputs)
+        function toggleItemRow(index) {
+            const checkbox = document.querySelector(`[data-index="${index}"].item-checkbox`);
+            const isChecked = checkbox.checked;
+            const qtyInput = document.getElementById(`return-qty-${index}`);
+            const conditionSelect = document.getElementById(`condition-${index}`);
+            
+            qtyInput.disabled = !isChecked;
+            conditionSelect.disabled = !isChecked;
+            
+            if (isChecked) {
+                // Set default return quantity to full quantity
+                const maxQty = parseFloat(qtyInput.max);
+                qtyInput.value = maxQty;
+                updateLineTotal(index);
+            } else {
+                qtyInput.value = 0;
+                updateLineTotal(index);
+            }
+            
+            updateCreateButtonState();
+        }
+
+        // Toggle all items
+        function toggleAllItems(checked) {
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checked;
+                const index = parseInt(cb.dataset.index);
+                toggleItemRow(index);
+            });
+        }
+
+        // Select all items helper
+        function selectAllItems() {
+            document.getElementById('selectAllCheckbox').checked = true;
+            toggleAllItems(true);
+        }
+
+        // Clear all items helper
+        function clearAllItems() {
+            document.getElementById('selectAllCheckbox').checked = false;
+            toggleAllItems(false);
+        }
+
+        // Update line total for an item
+        function updateLineTotal(index) {
+            const qtyInput = document.getElementById(`return-qty-${index}`);
+            const quantity = parseFloat(qtyInput.value) || 0;
+            
+            // Get unit price from the original item
+            const item = currentDocumentItems[index];
+            const unitPrice = parseFloat(item.price || item.unit_price || item.selling_price || 0);
+            
+            const lineTotal = quantity * unitPrice;
+            
+            document.getElementById(`line-total-${index}`).textContent = `BWP ${lineTotal.toFixed(2)}`;
+            
+            updateTotalRefund();
+        }
+
+        // Update total refund amount
+        function updateTotalRefund() {
+            let total = 0;
+            
+            currentDocumentItems.forEach((item, index) => {
+                const checkbox = document.querySelector(`[data-index="${index}"].item-checkbox`);
+                if (checkbox && checkbox.checked) {
+                    const qtyInput = document.getElementById(`return-qty-${index}`);
+                    const quantity = parseFloat(qtyInput.value) || 0;
+                    const unitPrice = parseFloat(item.price || item.unit_price || item.selling_price || 0);
+                    total += quantity * unitPrice;
+                }
+            });
+            
+            document.getElementById('totalRefundAmount').textContent = `BWP ${total.toFixed(2)}`;
+        }
+
+        // Update create button state
+        function updateCreateButtonState() {
+            const returnReason = document.getElementById('returnReason').value;
+            const refundMethod = document.getElementById('refundMethod').value;
+            const hasSelectedItems = Array.from(document.querySelectorAll('.item-checkbox')).some(cb => cb.checked);
+            
+            console.log('updateCreateButtonState:', {
+                returnReason,
+                refundMethod,
+                hasSelectedItems,
+                currentDocumentData: !!currentDocumentData
+            });
+            
+            const canCreate = returnReason && refundMethod && hasSelectedItems && currentDocumentData;
+            console.log('Create button enabled:', canCreate);
+            
+            const button = document.getElementById('createCreditNoteBtn');
+            const statusText = document.getElementById('buttonStatusText');
+            
+            button.disabled = !canCreate;
+            
+            // Update help text based on what's missing
+            if (!currentDocumentData) {
+                statusText.textContent = 'Select a document and click "Load Items"';
+                statusText.className = 'text-warning fw-bold';
+            } else if (!hasSelectedItems) {
+                statusText.textContent = 'Check at least one item to return';
+                statusText.className = 'text-warning fw-bold';
+            } else if (!returnReason) {
+                statusText.textContent = 'Select a return reason';
+                statusText.className = 'text-warning fw-bold';
+            } else if (!refundMethod) {
+                statusText.textContent = 'Select a refund method';
+                statusText.className = 'text-warning fw-bold';
+            } else {
+                statusText.textContent = 'Ready to create credit note!';
+                statusText.className = 'text-success fw-bold';
+            }
+        }
+
+        // Listen to return reason and refund method changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const returnReasonSelect = document.getElementById('returnReason');
+            const refundMethodSelect = document.getElementById('refundMethod');
+            
+            if (returnReasonSelect) {
+                returnReasonSelect.addEventListener('change', updateCreateButtonState);
+            }
+            if (refundMethodSelect) {
+                refundMethodSelect.addEventListener('change', updateCreateButtonState);
+            }
+        });
+
+        // Create credit note with selected items
+        async function createCreditNote() {
+            console.log('createCreditNote() called!');
+            try {
+                const form = document.getElementById('createCreditNoteForm');
+                if (!form.checkValidity()) {
+                    console.log('Form validation failed');
+                    form.reportValidity();
+                    return;
+                }
+
+                // Get source type and document
+                const sourceType = document.querySelector('input[name="sourceType"]:checked').value;
+                const documentId = document.getElementById('documentSelect').value;
+                const returnReason = document.getElementById('returnReason').value;
+                const returnDescription = document.getElementById('returnDescription').value;
+                const refundMethod = document.getElementById('refundMethod').value;
+
+                // Collect selected return items
+                const returnItems = [];
+                
+                currentDocumentItems.forEach((item, index) => {
+                    const checkbox = document.querySelector(`[data-index="${index}"].item-checkbox`);
+                    if (checkbox && checkbox.checked) {
+                        const qtyInput = document.getElementById(`return-qty-${index}`);
+                        const conditionSelect = document.getElementById(`condition-${index}`);
+                        const quantity = parseFloat(qtyInput.value) || 0;
+                        
+                        if (quantity > 0) {
+                            const itemId = item.id;  // invoice_item_id or sale_item_id
+                            const productId = item.product_id;
+                            
+                            returnItems.push({
+                                product_id: productId,
+                                quantity_returned: quantity,
+                                item_condition: conditionSelect.value,
+                                return_reason: returnReason,
+                                description: returnDescription,
+                                // Include original item reference
+                                original_item_id: itemId
+                            });
+                        }
+                    }
+                });
+
+                console.log('Collected return items:', returnItems);
+
+                if (returnItems.length === 0) {
+                    alert('Please select at least one item to return');
+                    return;
+                }
+
+                // Build request payload based on source type
+                const creditNoteData = {
+                    source_type: sourceType,
+                    source_id: documentId,
+                    return_reason: returnReason,
+                    return_description: returnDescription,
+                    refund_method: refundMethod,
+                    return_items: returnItems
+                };
+
+                console.log('Creating credit note with data:', creditNoteData);
+
+                const response = await apiFetch(CREDIT_NOTES_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(creditNoteData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({detail: 'Unknown error'}));
+                    throw new Error(errorData.detail || 'Failed to create credit note');
+                }
+
+                const created = await response.json();
+                
+                if (window.modernUI) {
+                    window.modernUI.showNotification(`Credit note ${created.credit_note_number} created successfully`, 'success');
+                }
+
+                // Close modal and refresh
+                bootstrap.Modal.getInstance(document.getElementById('createCreditNoteModal')).hide();
+                form.reset();
+                document.getElementById('documentDetailsSection').style.display = 'none';
+                document.getElementById('createCreditNoteBtn').disabled = true;
+                currentDocumentData = null;
+                currentDocumentItems = [];
+                
+                await loadCreditNotes();
+                
+            } catch (error) {
+                console.error('Error creating credit note:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to create credit note: ' + error.message, 'error');
+                } else {
+                    alert('Failed to create credit note: ' + error.message);
+                }
+            }
+        }
+
+        // View credit note details
+        async function viewCreditNote(creditNoteId) {
+            try {
+                const response = await apiFetch(`${CREDIT_NOTES_ENDPOINT}/${creditNoteId}`);
+                if (!response.ok) throw new Error('Failed to load credit note details');
+                
+                const creditNote = await response.json();
+                currentCreditNote = creditNote;
+                
+                const content = document.getElementById('creditNoteDetailsContent');
+                content.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Credit Note Information</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>Credit Note #:</strong></td><td>${creditNote.credit_note_number}</td></tr>
+                                <tr><td><strong>Date:</strong></td><td>${formatDate(creditNote.issue_date)}</td></tr>
+                                <tr><td><strong>Status:</strong></td><td>${getStatusBadge(creditNote.status)}</td></tr>
+                                <tr><td><strong>Refund Status:</strong></td><td>${getRefundStatusBadge(creditNote.refund_status)}</td></tr>
+                                <tr><td><strong>Total Amount:</strong></td><td>${formatCurrency(creditNote.total_amount)}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Customer & Invoice</h6>
+                            <table class="table table-sm">
+                                <tr><td><strong>Customer:</strong></td><td>${creditNote.customer_name || 'N/A'}</td></tr>
+                                <tr><td><strong>Original Invoice:</strong></td><td>${creditNote.invoice_number || 'N/A'}</td></tr>
+                                <tr><td><strong>Return Reason:</strong></td><td>${formatReturnReason(creditNote.return_reason)}</td></tr>
+                                <tr><td><strong>Refund Method:</strong></td><td>${formatRefundMethod(creditNote.refund_method)}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    ${creditNote.return_description ? `
+                        <div class="mt-3">
+                            <h6>Description</h6>
+                            <p class="alert alert-light">${creditNote.return_description}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="mt-3">
+                        <h6>Return Items</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Condition</th>
+                                        <th>Reason</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${(creditNote.credit_note_items || []).map(item => `
+                                        <tr>
+                                            <td>${item.product_name || 'N/A'}</td>
+                                            <td>${item.quantity_returned}</td>
+                                            <td>${formatItemCondition(item.item_condition)}</td>
+                                            <td>${formatReturnReason(item.item_return_reason)}</td>
+                                            <td>${formatCurrency(item.amount)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                
+                const modal = new bootstrap.Modal(document.getElementById('creditNoteDetailsModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error loading credit note details:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to load credit note details', 'error');
+                }
+            }
+        }
+
+        // Approve credit note
+        async function approveCreditNote(creditNoteId) {
+            if (!confirm('Are you sure you want to approve this credit note? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await apiFetch(`${CREDIT_NOTES_ENDPOINT}/${creditNoteId}/approve`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Credit note approved successfully', 'success');
+                }
+
+                await loadCreditNotes();
+                
+            } catch (error) {
+                console.error('Error approving credit note:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to approve credit note: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // Process refund
+        async function processRefund(creditNoteId) {
+            const refundAmount = prompt('Enter refund amount:');
+            if (refundAmount === null) return;
+
+            const refundMethod = prompt('Enter refund method (cash/bank_transfer/credit_adjustment):');
+            if (refundMethod === null) return;
+
+            try {
+                const response = await apiFetch(`${CREDIT_NOTES_ENDPOINT}/${creditNoteId}/process-refund`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: parseFloat(refundAmount),
+                        refund_method: refundMethod,
+                        reference: `REFUND-${creditNoteId}-${Date.now()}`
+                    })
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Refund processed successfully', 'success');
+                }
+
+                await loadCreditNotes();
+                
+            } catch (error) {
+                console.error('Error processing refund:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to process refund: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // Print credit note
+        async function printCreditNote(creditNoteId) {
+            try {
+                const response = await apiFetch(`${CREDIT_NOTES_ENDPOINT}/${creditNoteId}/print?format=pdf`);
+                if (!response.ok) throw new Error('Failed to generate PDF');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `credit_note_${creditNoteId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+            } catch (error) {
+                console.error('Error printing credit note:', error);
+                if (window.modernUI) {
+                    window.modernUI.showNotification('Failed to print credit note', 'error');
+                }
+            }
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            return `${currencySymbol}${parseFloat(amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'draft': '<span class="badge bg-secondary">Draft</span>',
+                'issued': '<span class="badge bg-primary">Issued</span>',
+                'processed': '<span class="badge bg-success">Processed</span>',
+                'cancelled': '<span class="badge bg-danger">Cancelled</span>'
+            };
+            return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+        }
+
+        function getRefundStatusBadge(status) {
+            const badges = {
+                'pending': '<span class="badge bg-warning">Pending</span>',
+                'processed': '<span class="badge bg-info">Processed</span>',
+                'completed': '<span class="badge bg-success">Completed</span>',
+                'failed': '<span class="badge bg-danger">Failed</span>'
+            };
+            return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+        }
+
+        function formatReturnReason(reason) {
+            const reasons = {
+                'faulty_product': 'Faulty Product',
+                'wrong_item': 'Wrong Item',
+                'damaged': 'Damaged',
+                'customer_request': 'Customer Request',
+                'duplicate_order': 'Duplicate Order',
+                'quality_issue': 'Quality Issue',
+                'size_issue': 'Wrong Size',
+                'color_issue': 'Wrong Color',
+                'other': 'Other'
+            };
+            return reasons[reason] || reason || 'N/A';
+        }
+
+        function formatRefundMethod(method) {
+            const methods = {
+                'cash': 'Cash Refund',
+                'bank_transfer': 'Bank Transfer',
+                'credit_adjustment': 'Account Credit',
+                'store_credit': 'Store Credit'
+            };
+            return methods[method] || method || 'N/A';
+        }
+
+        function formatItemCondition(condition) {
+            const conditions = {
+                'unopened': 'Unopened',
+                'good': 'Good',
+                'used': 'Used',
+                'damaged': 'Damaged',
+                'faulty': 'Faulty'
+            };
+            return conditions[condition] || condition || 'N/A';
+        }
+    </script>
+    <script src="js/navbar.js?v=20250106001"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof initializeNavbar === 'function') {
+                initializeNavbar('sales');
+            } else if (typeof createNavbar === 'function') {
+                const navbarContainer = document.getElementById('navbar-container');
+                if (navbarContainer) {
+                    navbarContainer.innerHTML = createNavbar('sales');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
